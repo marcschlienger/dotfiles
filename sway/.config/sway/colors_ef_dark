@@ -1,0 +1,43 @@
+### Define colors
+set $bg-main         #000000
+set $bg-dim          #1a1a1a
+set $bg-alt          #2b2b2b
+set $fg-main         #d0d0d0
+set $fg-dim          #857f8f
+set $fg-alt          #89afef
+set $red             #ef6560
+set $red-warmer      #f47360
+set $red-cooler      #ff5a7a
+set $red-faint       #d56f72
+set $green           #0faa26
+set $green-warmer    #6aad0f
+set $green-cooler    #00a692
+set $green-faint     #61a06c
+set $yellow          #bf9032
+set $yellow-warmer   #d1843f
+set $yellow-cooler   #df8a5a
+set $yellow-faint    #cf9f8f
+set $blue            #3f95f6
+set $blue-warmer     #6a9fff
+set $blue-cooler     #029fff
+set $blue-faint      #7a94df
+set $magenta         #d369af
+set $magenta-warmer  #e580ea
+set $magenta-cooler  #af85ff
+set $magenta-faint   #c58faf
+set $cyan            #4fbaef
+set $cyan-warmer     #6fafff
+set $cyan-cooler     #1dbfcf
+set $cyan-faint      #8aa0df
+
+set $trueblack	     #000000
+
+### Set window colors
+#                         border		    background		    text          indicator       child_border
+client.focused          	$cyan-cooler    $cyan-warmer 		$bg-main    	$yellow         $cyan-cooler
+client.focused_inactive 	$magenta-warmer $magenta 	      $bg-main     	$yellow         $magenta-warmer
+client.focused_tab_title  $cyan-warmer    $cyan-warmer    $bg-main    	$yellow         $cyan-warmer
+client.unfocused        	#3c3c3c     	  #3c3c3c         $fg-main      $yellow      	  #3c3c3c
+client.urgent           	$red         	  $red           	$bg-main      $yellow         $red
+client.placeholder        $cyan-faint     $cyan-faint    	$bg-main      $yellow         $cyan-faint
+client.background       	$bg-main

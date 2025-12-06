@@ -1,0 +1,24 @@
+bar {
+    status_command      i3blocks
+    position            top
+    workspace_buttons   yes
+    workspace_min_width 30
+    mode                dock
+    modifier            none
+    font                pango:Noto Sans 11, NotoSans Nerd Font 12
+    separator_symbol    " "
+    height              24
+
+    colors {
+        background  $bg-main
+        statusline  $fg-main
+        separator   $yellow
+
+        #                   border          background      text
+        focused_workspace   $cyan-cooler    $cyan-warmer    $bg-main
+        active_workspace    $magenta-warmer $magenta        $bg-main
+        inactive_workspace  $bg-alt         $bg-dim         $fg-main
+        urgent_workspace    $red            $red            $bg-main
+        binding_mode        $yellow         $yellow-warmer  $bg-main
+    }
+}

@@ -1,0 +1,1526 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-01-17 Fri 12:52 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GNU Emacs configuration</title>
+<meta name="author" content="Marc Schlienger" />
+<meta name="generator" content="Org Mode" />
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">GNU Emacs configuration</h1>
+<p>
+<b>Last revised and exported on 2025-01-17 12:52:01 +0100 with a word
+count of 6880.</b>
+</p>
+
+<p>
+This is my literate Emacs configuration file. It is a combination of
+prose and code. You can either read this page or check my dotfiles to
+find everything related to my Emacs setup.
+</p>
+
+<div id="outline-container-orgd7d79b6" class="outline-2">
+<h2 id="orgd7d79b6"><span class="section-number-2">1.</span> The early initialization file</h2>
+<div class="outline-text-2" id="text-1">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(dolist (var '(default-frame-alist initial-frame-alist))
+  (add-to-list var '(width . (text-pixels . 800)))
+  (add-to-list var '(height . (text-pixels . 900))))
+
+(setq frame-inhibit-implied-resize t
+      frame-resize-pixelwise t
+      frame-title-format '("%b")
+      inhibit-startup-buffer-menu t
+      inhibit-startup-echo-area-message user-login-name
+      inhibit-startup-screen t
+      inhibit-x-resources t
+      ring-bell-function 'ignore
+      use-dialog-box t
+      use-file-dialog nil
+      use-short-answers t)
+
+;; Disable GUI elements.
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; Initialise installed packages.
+(setq package-enable-at-startup t)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4f373a5" class="outline-2">
+<h2 id="org4f373a5"><span class="section-number-2">2.</span> The initialization file</h2>
+<div class="outline-text-2" id="text-2">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;; Save backup files in a dedicated backup directory.
+(setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
+
+;; Do not create lock files.
+(setq create-lockfiles nil)
+
+;; Write persistant cutomisations to a temporary file.
+(setq custom-file (make-temp-file "custom.el"))
+
+;; Package settings.
+(require 'package)
+(setq package-name-column-width 40)
+(setq package-version-column-width 14)
+(setq package-status-column-width 12)
+(setq package-archive-column-width 8)
+(add-hook 'package-menu-mode-hook #'hl-line-mode)
+
+(setq package-archives
+      '(("elpa" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa" . "https://melpa.org/packages/")))
+
+;;; The higher the number assigned to a archive the higher its priority.
+(setq package-archive-priorities
+      '(("elpa" . 3)
+        ("melpa" . 2)
+        ("nongnu" . 1)))
+
+;;; Upgrade built-in packages.
+(setq package-install-upgrade-built-in t)
+
+;; Real auto save mode.
+(auto-save-visited-mode 1)
+(setq auto-save-visited-interval 30)
+
+;; Load config modules.
+(dolist (path '("elisp" "init.d"))
+  (add-to-list 'load-path (locate-user-emacs-file path)))
+
+(require 'init-basic)
+(require 'init-dired)
+(require 'init-theme)
+(require 'init-evil)
+(require 'init-lang)
+(require 'init-completion)
+(require 'init-org)
+(require 'init-latex)
+(require 'init-vc)
+(require 'init-elfeed)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org49f1424" class="outline-2">
+<h2 id="org49f1424"><span class="section-number-2">3.</span> Basic settings</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(defun move-line-up ()
+  "Move up the current line."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
+
+(defun move-line-down ()
+  "Move down the current line."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+(global-set-key (kbd "M-&lt;down&gt;") 'move-line-down)
+(global-set-key (kbd "M-&lt;up&gt;") 'move-line-up)
+
+(provide 'init-basic)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfa1a448" class="outline-2">
+<h2 id="orgfa1a448"><span class="section-number-2">4.</span> Dired settings</h2>
+<div class="outline-text-2" id="text-4">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; init-dired.el -*- lexical-binding: t -*-
+
+(use-package dired
+  :ensure nil
+  :commands (dired)
+  :config
+  (setq dired-recursive-copies 'always)
+  (setq dired-recursive-deletes 'always)
+  (setq delete-by-moving-to-trash t)
+  (setq dired-listing-switches
+        "-AGFhlv --group-directories-first --time-style=long-iso")
+  (setq dired-dwim-target t)
+  (setq dired-guess-shell-alist-user ; those are the suggestions for ! and &amp;
+	'(("\\.\\(png\\|jpe?g\\|tiff\\)" "sxiv" "xdg-open")
+	  ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)" "mpv" "xdg-open")
+	  (".*" "xdg-open")))
+  (setq dired-auto-revert-buffer #'dired-directory-changed-p)
+  (setq dired-make-directory-clickable t) ; Emacs 29.1
+  (setq dired-free-space nil) ; Emacs 29.1
+  (setq dired-mouse-drag-files t) ; Emacs 29.1
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode)
+  (add-hook 'dired-mode-hook #'hl-line-mode))
+
+(use-package dired-aux
+  :ensure nil
+  :after dired
+  :bind (:map dired-mode-map
+	      ("C-+" . dired-create-empty-file))
+  :config
+  (setq dired-isearch-filenames 'dwim)
+  (setq dired-create-destination-dirs 'ask)
+  (setq dired-vc-rename-file t)
+  (setq dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir))))
+  (setq dired-create-destination-dirs-on-trailing-dirsep t))
+
+;(use-package emacs
+ ; :ensure nil
+  ;:config
+;  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
+;  (file-name-shadow-mode t))
+
+(use-package dired-x
+  :ensure nil
+  :after dired
+  :bind (:map dired-mode-map
+	      ("I" . dired-info))
+  :config
+  (setq dired-clean-up-buffers-too t)
+  (setq dired-clean-confirm-killing-deleted-buffers t)
+  (setq dired-bind-man nil)
+  (setq dired-bind-info nil))
+
+(use-package dired-subtree
+  :ensure t
+  :after dired
+  :bind (:map dired-mode-map
+	      ("&lt;tab&gt;" . dired-subtree-toggle)
+	      ("&lt;backtab&gt;" . dired-subtree-remove))
+  :config
+  (setq dired-subtree-use-backgrounds nil))
+
+(use-package wdired
+  :ensure nil
+  :config
+  (setq wdired-allow-to-change-permissions t)
+  (setq wdired-create-parent-directories t))
+
+(use-package image-dired
+  :ensure nil
+  :bind (:map image-dired-thumbnail-mode-map
+	      ("&lt;return&gt;" . image-dired-thumbnail-display-external))
+  :config
+  (setq image-dired-external-viewer "xdg-open")
+  (setq image-dired-thumb-size 80)
+  (setq image-dired-thumb-margin 2)
+  (setq image-dired-thumb-relief 0)
+  (setq image-dired-thumbs-per-row 4))
+
+;; Dired-like mode for the system trash can
+(use-package trashed
+  :ensure t
+  :init
+  (setq trashed-action-confirmer 'y-or-n-p)
+  (setq trashed-use-header-line t)
+  (setq trashed-sort-key '("Date deleted" . t))
+  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+
+;; Ibuffer is a dired-like advanced replacement for BufferMenu
+(use-package ibuffer
+  :ensure t
+  :init
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 40 40 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " "
+                (name 16 -1)
+                " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (add-hook 'ibuffer-mode-hook #'hl-line-mode)
+  :bind (:map global-map
+	      ("C-x C-b" . ibuffer))
+  :bind (:map ibuffer-mode-map
+	      ("* f" . ibuffer-mark-by-file-name-regexp)
+	      ("* g" . ibuffer-mark-by-content-regexp) ; "g" is for "grep"
+	      ("* n" . ibuffer-mark-by-name-regexp)
+	      ("s n" . ibuffer-do-sort-by-alphabetic)  ; "sort name" mnemonic
+	      ("/ g" . ibuffer-filter-by-content)))
+
+(provide 'init-dired)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgafaf347" class="outline-2">
+<h2 id="orgafaf347"><span class="section-number-2">5.</span> Theme settings</h2>
+<div class="outline-text-2" id="text-5">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;; Set the default font.
+(add-to-list 'default-frame-alist '(font . "FiraCode Nerd Font 13"))
+
+;; Set the theme - I use the built-in Modus themes created by Prot. 
+(use-package emacs
+  :bind (("&lt;f5&gt;" . modus-themes-toggle)
+         ("C-&lt;f5&gt;" . modus-themes-select)
+         ("M-&lt;f5&gt;" . modus-themes-rotate))
+  :init
+  (setq modus-themes-to-toggle '(modus-operandi modus-vivendi)
+        modus-themes-mode-line '(accented borderless)
+        modus-themes-bold-constructs t
+        modus-themes-italic-constructs t
+        modus-themes-fringes 'subtle
+        modus-themes-tabs-accented t
+        modus-themes-paren-match '(bold intense)
+        modus-themes-prompts '(bold intense)
+        modus-themes-completions
+        (quote ((matches . (extrabold background intense))
+                (selection . (semibold accented intense))
+                (popup . (accented))))
+        modus-themes-org-blocks 'tinted-background
+        modus-themes-scale-headings t
+        modus-themes-region '(bg-only no-extend))
+  (setq modus-themes-headings
+        '((1 . (rainbow overline background 1.4))
+          (2 . (rainbow background 1.3))
+          (3 . (rainbow bold 1.2))
+          (t . (semilight 1.1))))
+  (setq modus-themes-scale-headings t))
+
+(use-package solar
+  :config
+  (setq calendar-latitude 48.96
+        calendar-longitude 8.58))
+
+(use-package circadian
+  :ensure t
+  :after solar
+  :config
+  (setq circadian-themes '((:sunrise . modus-operandi)
+                           (:sunset  . modus-vivendi)))
+  (circadian-setup))
+
+;; Increase padding of windows and frames.
+(use-package spacious-padding
+  :ensure t
+  :hook (after-init . spacious-padding-mode)
+  :bind ("&lt;f8&gt;" . spacious-padding-mode)
+  :init
+  (setq spacious-padding-widths
+        '( :internal-border-width 30
+           :header-line-width 4
+           :mode-line-width 0
+           :tab-width 4
+           :right-divider-width 30
+           :scroll-bar-width 8
+           :left-fringe-width 20
+           :right-fringe-width 20)))
+
+;; Rainbow mode for colour previewing.
+(use-package rainbow-mode
+  :ensure t
+  :init
+  (setq rainbow-ansi-colors nil)
+  (setq rainbow-x-colors nil)
+  :hook
+  (prog-mode-hook . rainbow-mode)
+  :config
+  (rainbow-mode t))
+
+;; My custom modeline.
+;;; Show the number of the current column.
+(column-number-mode t)
+
+;;; Show the current line number.
+(global-display-line-numbers-mode)
+(dolist (mode '(org-mode-hook
+		pdf-view-mode-hook
+		term-mode-hook
+		eshell-mode-hook
+		vterm-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode -1))))
+(setq display-line-numbers-type 'relative)
+
+;; Highlight the current line only in the active window and not in the shell.
+(global-hl-line-mode)
+(setq hl-line-sticky-flag nil)
+(add-hook 'eshell-mode-hook (lambda () (setq-local global-hl-line-mode nil)))
+(add-hook 'shell-mode-hook (lambda () (hl-line-mode -1)))
+(add-hook 'term-mode-hook (lambda () (setq-local global-hl-line-mode nil)))
+
+(provide 'init-theme)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9ee007c" class="outline-2">
+<h2 id="org9ee007c"><span class="section-number-2">6.</span> <code>init-evil</code></h2>
+<div class="outline-text-2" id="text-6">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; ms-emacs-evil.el -*- lexical-binding: t -*-
+
+;;; Evil mode
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)
+  (setq evil-mode-line-format nil)
+  (setq evil-undo-system 'undo-redo) ;; Make C-r work again
+  :bind ( :map evil-insert-state-map
+               ("C-g" . 'evil-normal-state)
+          :map evil-normal-state-map
+               ("j" . 'evil-next-visual-line)
+               ("k" . 'evil-previous-visual-line))
+  :config
+  (evil-mode 1)
+  (dolist (mode '(ag-mode
+                  dired-mode
+                  elfeed-show-mode
+                  elfeed-search-mode
+                  eshell-mode
+                  flycheck-error-list-mode
+                  git-rebase-mode
+                  org-capture-mode
+                  term-mode
+                  Info-mode))
+    (add-to-list 'evil-emacs-state-modes mode)))
+
+;;; Define leader key and bindings using genral.el
+(use-package general
+  :ensure t
+  :config
+  (general-evil-setup t)
+  (general-create-definer ms-leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC"))
+
+(ms-leader-keys
+  "b" 'mode-line-other-buffer
+  "n" 'ms-toggle-line-number-type
+  "w" 'kill-buffer
+  )
+
+(defun ms-toggle-line-number-type ()
+  "Toggle absolute and relative line numbering type."
+  (interactive)
+  (if (eq display-line-numbers 'relative)
+      (setq display-line-numbers t)
+    (setq display-line-numbers 'relative)))
+
+;;; Exit insert mode quickly
+(use-package evil-escape
+  :ensure t
+  :config
+  (evil-escape-mode t)
+  (setq-default evil-escape-delay 0.2)
+  (setq-default evil-escape-key-sequence "jk"))
+
+;;; Additional key bindings for evil mode
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
+
+;;; Highlighting
+(use-package evil-goggles
+  :after evil
+  :ensure t
+  :config
+  (evil-goggles-mode)
+  (setq evil-goggles-duration 0.500)
+  (evil-goggles-use-diff-faces))
+
+;;; Evil surround
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+
+;;; Evil Commentary
+(use-package evil-commentary
+  :ensure t
+  :config
+  (evil-commentary-mode))
+
+;;; Evil tex
+(use-package evil-tex
+  :ensure t
+  :config
+  (add-hook 'LaTeX-mode-hook #'evil-tex-mode))
+
+(provide 'init-evil)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9808f67" class="outline-2">
+<h2 id="org9808f67"><span class="section-number-2">7.</span> <code>init-lang</code></h2>
+<div class="outline-text-2" id="text-7">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; init-lang.el -*- lexical-binding: t -*-
+
+;; Flyspell (spell checking)
+(use-package flyspell
+  :ensure nil
+  :config
+  (setq flyspell-issue-message-flag nil)
+  (setq flyspell-issue-welcome-flag nil)
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "en_US,de_DE")
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "en_US,de_DE")
+  :hook
+  (text-mode . flyspell-mode)
+  (prog-mode . flyspell-prog-mode))
+
+(use-package emacs
+  :bind
+  (:map global-map
+        ("\C-m" . newline-and-indent))
+  :hook (before-save . (lambda()
+                              (when (not (or (derived-mode-p 'markdown-mode)
+                                             (derived-mode-p 'org-mode)))
+                                (delete-trailing-whitespace))))
+  :config
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 2))
+
+;; Clojure(Script)
+(use-package cider
+  :ensure t)
+
+;; C , C++, Java, ...
+(use-package cc-mode
+  :config
+  (setq indent-tabs-mode nil)
+  (setq tab-width 4)
+  (setq c-basic-offset 2)
+  :bind
+  (:map c-mode-base-map
+        ("\C-m" . c-context-line-break))
+  :hook
+  (c-initialization-hook . my-make-CR-do-indent))
+
+;; Pyhon
+(use-package python-mode
+  :ensure t
+  :config
+  (setq indent-tabs-mode nil)
+  (setq tab-width 4)
+  (setq python-indent 4))
+
+;; Rust
+(use-package rust-mode
+  :ensure t
+  :config
+  (setq rust-format-on-save t)
+  :init
+  (setq rust-mode-treesitter-derive t)
+  :hook
+  (rust-mode-hook . (lambda () (prettify-symbols-mode)))
+  (rust-mode-hook . (lambda () (setq indent-tabs-mode nil))))
+
+(use-package rustic
+  :ensure t
+  :after (rust-mode)
+  :config
+  (setq rustic-lsp-client 'eglot))
+
+;; Shell
+(use-package sh-script
+  :config
+  (setq indent-tabs-mode nil)
+  (setq tab-width 2)
+  (setq sh-basic-offset 2)
+  (setq sh-indentation 2))
+
+(provide 'init-lang)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgb3eaddb" class="outline-2">
+<h2 id="orgb3eaddb"><span class="section-number-2">8.</span> <code>init-completion</code></h2>
+<div class="outline-text-2" id="text-8">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; init-completion.el -*- lexical-binding: t -*-
+
+;; Eglot mode
+(use-package eglot
+  :ensure nil
+  :config
+  (setq completion-category-defaults nil)
+  (add-to-list 'eglot-stay-out-of 'flymake)
+  (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
+  (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
+  (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
+  (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
+  (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
+  (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
+  (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
+  (add-to-list 'eglot-server-programs
+               '((rust-ts-mode rust-mode) .
+               ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+  :custom
+  (eglot-ignored-server-capabilities
+   '(:hoverProvider
+     :documentHighlightProvider
+     :documentFormattingProvider
+     :documentRangeFormattingProvider
+     :documentOnTypeFormattingProvider
+     :colorProvider
+     :foldingRangeProvider))
+  :hook
+  (c-mode . eglot-ensure)
+  (c-ts-mode . eglot-ensure)
+  (c++-mode . eglot-ensure)
+  (c++-ts-mode . eglot-ensure)
+  (LaTeX-mode . eglot-ensure)
+  (LaTeX-ts-mode . eglot-ensure)
+  (python-mode . eglot-ensure)
+  (python-ts-mode . eglot-ensure)
+  (rust-mode-hook . eglot-ensure)
+  (rust-ts-mode-hook . eglot-ensure))
+
+;;
+(use-package rfn-eshadow
+  :ensure nil
+  :config
+  (file-name-shadow-mode 1))
+
+;; In-buffer completion with corfu
+(use-package corfu
+  :ensure t
+  :bind
+  ( :map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
+  :custom
+  (corfu-cycle t)
+  (corfu-auto t)
+  ;(corfu-quit-at-boundary nil)
+  ;(corfu-quit-no-match nil)
+  ;(corfu-preview-current nil)
+  ;(corfu-preselect 'prompt)
+  ;(corfu-on-exact-match nil)
+  :init
+  (global-corfu-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :ensure nil
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete)
+
+  ;; Emacs 30 and newer: Disable Ispell completion function. As an alternative,
+  ;; try `cape-dict'.
+  (setq text-mode-ispell-word-completion nil)
+
+  ;; Emacs 28 and newer: Hide commands in M-x which do not apply to the current
+  ;; mode.  Corfu commands are hidden, since they are not used via M-x. This
+  ;; setting is useful beyond Corfu.
+  (setq read-extended-command-predicate #'command-completion-default-include-p))
+
+;; Cape
+(use-package cape
+  :ensure t
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("C-c p p" . completion-at-point)
+         ("C-c p t" . complete-tag)
+         ("C-c p d" . cape-dabbrev)
+         ("C-c p h" . cape-history)
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-elisp-symbol)
+         ("C-c p e" . cape-elisp-block)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p :" . cape-emoji)
+         ("C-c p \\" . cape-tex)
+         ("C-c p _" . cape-tex)
+         ("C-c p ^" . cape-tex)
+         ("C-c p &amp;" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :config
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+  :init
+  (add-hook 'completion-at-point-functions #'cape-keyword)
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-tex))
+
+;; Which key
+(use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
+;; Flycheck
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
+;; Consult
+;; Example configuration for Consult
+(use-package consult
+  ;; Replace bindings. Lazily loaded by `use-package'.
+  :bind (;; C-c bindings in `mode-specific-map'
+         ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings in `goto-map'
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark))
+
+  ;; Enable automatic preview at point in the *Completions* buffer. This is
+  ;; relevant when you use the default completion UI.
+  :hook (completion-list-mode . consult-preview-at-point-mode)
+
+  :init
+  ;; Optionally configure the register formatting. This improves the register
+  ;; preview for `consult-register', `consult-register-load',
+  ;; `consult-register-store' and the Emacs built-ins.
+  (setq register-preview-delay 0.5
+        register-preview-function #'consult-register-format)
+
+  ;; Optionally tweak the register preview window.
+  ;; This adds thin lines, sorting and hides the mode line of the window.
+  (advice-add #'register-preview :override #'consult-register-window)
+
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
+  ;; Configure other variables and modes in the :config section,
+  ;; after lazily loading the package.
+  :config
+
+  ;; Optionally configure preview. The default value
+  ;; is 'any, such that any key triggers the preview.
+  ;; (setq consult-preview-key 'any)
+  ;; (setq consult-preview-key "M-.")
+  ;; (setq consult-preview-key '("S-&lt;down&gt;" "S-&lt;up&gt;"))
+  ;; For some commands and buffer sources it is useful to configure the
+  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (consult-customize
+   consult-theme :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-bookmark consult--source-file-register
+   consult--source-recent-file consult--source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
+
+  ;; Optionally configure the narrowing key.
+  ;; Both &lt; and C-+ work reasonably well.
+  (setq consult-narrow-key "&lt;") ;; "C-+"
+
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; You may want to use `embark-prefix-help-command' or which-key instead.
+  ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
+  )
+
+;; Vertico
+(use-package vertico
+  :ensure t
+  :bind
+  ( :map vertico-map
+    ("TAB" . minibuffer-complete))
+  :custom
+  (vertico-scroll-margin 0)
+  (vertico-count 8)
+  (vertico-resize nil)
+  (vertico-cycle t)
+  :config
+  (with-eval-after-load 'rfn-eshadow
+    ;; This works with `file-name-shadow-mode' enabled.  When you are in
+    ;; a sub-directory and use, say, `find-file' to go to your home '~/'
+    ;; or root '/' directory, Vertico will clear the old path to keep
+    ;; only your current input.
+    (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
+  :init
+  (vertico-mode))
+
+;;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :ensure t
+  :config
+  (setq savehist-file (locate-user-emacs-file "savehist"))
+  (setq history-length 200)
+  (setq history-delete-duplicates t)
+  (setq savehist-save-minibuffer-history t)
+  (add-to-list 'savehist-additional-variables 'kill-ring)
+  :init
+  (savehist-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :custom
+  ;; Support opening new minibuffers from inside existing minibuffers.
+  (enable-recursive-minibuffers t)
+  ;; Hide commands in M-x which do not work in the current mode.  Vertico
+  ;; commands are hidden in normal buffers. This setting is useful beyond
+  ;; Vertico.
+  (read-extended-command-predicate #'command-completion-default-include-p)
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM&lt;separator&gt;], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
+
+;; Enable rich annotations using the Marginalia package
+(use-package marginalia
+  :ensure t
+  :bind
+  ( :map minibuffer-local-map
+    ("M-A" . marginalia-cycle))
+  :init
+  (marginalia-mode))
+
+;;; Embark
+(use-package embark
+  :ensure t
+  :bind
+  (("C-." . embark-act)
+   ("C-;" . embark-dwim)
+   ("C-h B" . embark-bindings))
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command)
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Embark-Consult
+(use-package embark-consult
+  :ensure t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package all-the-icons
+  :ensure t
+  :if (or (daemonp) (display-graphic-p)))
+
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+;; Template system for Emacs.
+(use-package yasnippet
+  :ensure t
+  :config
+  (yas-global-mode 1))
+
+;; Use Meta-z to exapnd a snippet
+(define-key yas-minor-mode-map (kbd "M-z") 'yas-expand)
+
+;; Use Meta-j and Meta-k to jump between fields
+(define-key yas-keymap (kbd "M-j") 'yas-next-field-or-maybe-expand)
+(define-key yas-keymap (kbd "M-k") 'yas-prev-field)
+
+(use-package yasnippet-snippets
+  :ensure t
+  :after yasnippet)
+
+(provide 'init-completion)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgb3b377f" class="outline-2">
+<h2 id="orgb3b377f"><span class="section-number-2">9.</span> <code>init-org</code></h2>
+<div class="outline-text-2" id="text-9">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;; Calendar
+(use-package calendar
+  :ensure nil
+  :commands (calendar)
+  :config
+  (setq calendar-mark-diary-entries-flag nil)
+  (setq calendar-mark-holidays-flag t)
+  (setq calendar-mode-line-format nil)
+  (setq calendar-time-display-form
+        '( 24-hours ":" minutes
+           (when time-zone (format "(%s)" time-zone))))
+  (setq calendar-week-start-day 1)
+  (setq calendar-date-style 'iso)
+  (setq calendar-time-zone-style 'numeric)
+  (require 'cal-dst)
+  (setq calendar-standard-time-zone-name "+0100")
+  (setq calendar-daylight-time-zone-name "+0200"))
+
+;; Appt
+(use-package appt
+  :ensure nil
+  :commands (appt-activate)
+  :config
+  (setq appt-display-diary nil
+        appt-display-format nil
+        appt-display-mode-line t
+        appt-display-interval 3
+        appt-audible nil)
+  (with-eval-after-load 'org-agenda
+    (appt-activate 1)
+    (org-agenda-to-appt)))
+
+;; Org mode
+(use-package org
+  :ensure nil
+  :init
+  (setq org-directory (expand-file-name "~/org/"))
+  (setq org-imenu-depth 7)
+
+  (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
+  (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
+  :bind
+  ( :map global-map
+    ("C-c l" . org-store-link)
+    ("C-c o" . org-open-at-point-global)
+    :map org-mode-map
+    ;; I don't like that Org binds one zillion keys, so if I want one
+    ;; for something more important, I disable it from here.
+    ("C-'" . nil)
+    ("C-," . nil)
+    ("M-;" . nil)
+    ("&lt;C-return&gt;" . nil)
+    ("&lt;C-S-return&gt;" . nil)
+    ("C-M-S-&lt;right&gt;" . nil)
+    ("C-M-S-&lt;left&gt;" . nil)
+    ("C-c ;" . nil)
+    ("C-c M-l" . org-insert-last-stored-link)
+    ("C-c C-M-l" . org-toggle-link-display)
+    ("M-." . org-edit-special) ; alias for C-c ' (mnenomic is global M-. that goes to source)
+    :map org-src-mode-map
+    ("M-," . org-edit-src-exit) ; see M-. above
+    :map narrow-map
+    ("b" . org-narrow-to-block)
+    ("e" . org-narrow-to-element)
+    ("s" . org-narrow-to-subtree))
+  :config
+  (setq org-ellipsis "⮧")
+  (setq org-adapt-indentation nil)
+  (setq org-special-ctrl-a/e nil)
+  (setq org-special-ctrl-k nil)
+  (setq org-M-RET-may-split-line '((default . nil)))
+  ;(setq org-hide-emphasis-markers nil)
+  (setq org-hide-emphasis-markers t)
+  (setq org-hide-macro-markers nil)
+  (setq org-hide-leading-stars nil)
+  (setq org-cycle-separator-lines 0)
+  (setq org-structure-template-alist
+        '(("s" . "src")
+          ("e" . "src emacs-lisp")
+          ("E" . "src emacs-lisp :results value code :lexical t")
+          ("t" . "src emacs-lisp :tangle FILENAME")
+          ("T" . "src emacs-lisp :tangle FILENAME :mkdirp yes")
+          ("x" . "example")
+          ("X" . "export")
+          ("q" . "quote")))
+  (setq org-catch-invisible-edits 'show)
+  (setq org-return-follows-link nil)
+  (setq org-loop-over-headlines-in-active-region 'start-level)
+  (setq org-modules '(ol-info ol-eww))
+  (setq org-use-sub-superscripts '{})
+  (setq org-insert-heading-respect-content t)
+  (setq org-read-date-prefer-future 'time)
+  (setq org-highlight-latex-and-related nil) ; other options affect elisp regexp in src blocks
+  (setq org-fontify-quote-and-verse-blocks t)
+  (setq org-fontify-whole-block-delimiter-line t)
+  (setq org-track-ordered-property-with-tag t)
+  (setq org-highest-priority ?A)
+  (setq org-lowest-priority ?C)
+  (setq org-default-priority ?A)
+  (setq org-priority-faces nil))
+
+;;; refile, todo
+(use-package org
+  :ensure nil
+  :config
+  ;(setq org-refile-targets
+  ;      '((org-agenda-files . (:maxlevel . 2))
+  ;        (nil . (:maxlevel . 2))))
+  (setq org-refile-targets
+        '(("todo.org" :maxlevel . 1)
+          ("someday.org" :maxlevel . 1)))
+  (setq org-refile-use-outline-path 'file)
+  ;(setq org-refile-use-outline-path t)
+  (setq org-refile-allow-creating-parent-nodes 'confirm)
+  (setq org-refile-use-cache t)
+  (setq org-reverse-note-order nil)
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "NEXT(n)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+  (setq org-fontify-done-headline nil)
+  (setq org-fontify-todo-headline nil)
+  (setq org-fontify-whole-heading-line nil)
+  (setq org-enforce-todo-dependencies t)
+  (setq org-enforce-todo-checkbox-dependencies t))
+
+;;; tags
+(use-package org
+  :ensure nil
+  :config
+  (setq org-tag-alist
+        '((sequence "home(h)" "work(w)" "@computer(c)")))
+  (setq org-auto-align-tags nil)
+  (setq org-tags-column 0))
+
+;;; log
+(use-package org
+  :ensure nil
+  :config
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+  (setq org-log-note-clock-out nil)
+  (setq org-log-redeadline 'time)
+  (setq org-log-reschedule 'time))
+
+;;; links
+(use-package org
+  :ensure nil
+  :config
+  (setq org-link-context-for-files t)
+  (setq org-link-keep-stored-after-insertion nil)
+  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id))
+
+;;; code blocks
+(use-package org
+  :ensure nil
+  :config
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-src-window-setup 'current-window)
+  (setq org-edit-src-persistent-message nil)
+  (setq org-src-fontify-natively t)
+  (setq org-src-preserve-indentation t)
+  (setq org-src-tab-acts-natively t)
+  (setq org-edit-src-content-indentation 0)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((C . t)
+     (clojure . t)
+     (python . t)
+     (R . t))))
+
+;;; export
+(use-package org
+  :ensure nil
+  :init
+  ;; NOTE 2023-05-20: Must be evaluated before Org is loaded,
+  ;; otherwise we have to use the Custom UI.  No thanks!
+  (setq org-export-backends '(html texinfo md))
+  :config
+  (setq org-export-with-toc t)
+  (setq org-export-headline-levels 8)
+  (setq org-export-dispatch-use-expert-ui nil)
+  (setq org-html-htmlize-output-type nil)
+  (setq org-html-head-include-default-style nil)
+  (setq org-html-head-include-scripts nil))
+
+;;; capture
+(use-package org-capture
+  :ensure nil
+  :bind ("C-c c" . org-capture)
+  :config
+  (setq org-capture-templates
+        `(("b" "Basic task for future review" entry
+           (file+headline "inbox.org" "Tasks to be reviewed")
+           ,(concat "* %^{Title}\n"
+                    ":PROPERTIES:\n"
+                    ":CAPTURED: %U\n"
+                    ":END:\n\n"
+                    "%i %l")
+           :empty-lines-after 1)
+          ("t" "Task with a due date" entry
+           (file+headline "inbox.org" "Tasks with a due date")
+           ,(concat "* TODO %^{Title} %^g\n"
+                    "SCHEDULED: %^t\n"
+                    ":PROPERTIES:\n"
+                    ":CAPTURED: %U\n"
+                    ":END:\n\n"
+                    "%?")
+           :empty-lines-after 1)
+          ("m" "Meeting" entry
+           (file+olp+datetree "meetings.org")
+           ,(concat "* MEETING %^{Title} %^g\n"
+                    ":CAPTURED: %U\n"
+                    ":END:\n\n"
+                    "%?")
+           :prepend t
+           :tree-type week
+           :clock-in t
+           :clock-keep t
+           :empty-lines-after 1)
+          ("e" "Email note" entry
+           (file+headline "inbox.org" "Tasks to be reviewed")
+           ,(concat "* TODO %:subject :mail:\n"
+                    ":PROPERTIES:\n"
+                    ":CAPTURED: %U\n"
+                    ":END:\n\n"
+                    "%a\n%i%?")
+           :empty-lines-after 1))))
+
+;;; agenda
+(use-package org-agenda
+  :ensure nil
+  :bind
+  ( :map global-map
+    ("C-c a" . org-agenda))
+  :config
+  (setq org-default-notes-file (make-temp-file "emacs-org-notes-")) ; send it to oblivion
+  (setq org-agenda-files `(,org-directory))
+  (setq org-agenda-span 'week)
+  (setq org-agenda-start-on-weekday 1)
+  (setq org-agenda-confirm-kill t)
+  (setq org-agenda-show-all-dates t)
+  (setq org-agenda-show-outline-path nil)
+  (setq org-agenda-window-setup 'current-window)
+  (setq org-agenda-skip-comment-trees t)
+  (setq org-agenda-menu-show-matcher t)
+  (setq org-agenda-menu-two-columns nil)
+  (setq org-agenda-sticky nil)
+  (setq org-agenda-custom-commands-contexts nil)
+  (setq org-agenda-custom-commands
+        '(("b"
+           "List of all active PyBaMM dev tasks"
+           tags-todo
+           "dev+CATEGORY=\"pybamm\"/TODO|STARTED")
+          ("p"
+           "List of all active projects"
+           tags
+           "+LEVEL=1+TODO=\"\"")
+          ("r"
+           "List of tasks to review"
+           tags
+           "review+LEVEL=2+TODO=\"\"")
+          ("v"
+           "Custom day agenda"
+           ((agenda "" ((org-agenda-span 1)))
+            (tags-todo "+PRIORITY=\"A\""
+                       ((org-agenda-overriding-header "Urgent")))))))
+  (setq org-agenda-max-entries nil)
+  (setq org-agenda-max-entries nil)
+  (setq org-agenda-max-todos nil)
+  (setq org-agenda-max-tags nil)
+  (setq org-agenda-max-effort nil)
+
+;;;; General agenda view options
+  (setq org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo . " %i %-12:c")
+          (tags . " %i %-12:c")
+          (search . " %i %-12:c")))
+  (setq org-agenda-sorting-strategy
+        '(((agenda habit-down time-up priority-down category-keep)
+           (todo priority-down category-keep)
+           (tags priority-down category-keep)
+           (search category-keep))))
+  (setq org-agenda-breadcrumbs-separator "-&gt;")
+  (setq org-agenda-todo-keyword-format "%-1s")
+  (setq org-agenda-fontify-priorities 'cookies)
+  (setq org-agenda-category-icon-alist nil)
+  (setq org-agenda-remove-times-when-in-prefix nil)
+  (setq org-agenda-remove-timeranges-from-blocks nil)
+  (setq org-agenda-compact-blocks nil)
+  (setq org-agenda-block-separator ?—)
+
+;;;; Agenda marks
+  (setq org-agenda-bulk-mark-char "#")
+  (setq org-agenda-persistent-marks nil)
+
+;;;; Agenda diary entries
+  (setq org-agenda-insert-diary-strategy 'date-tree)
+  (setq org-agenda-insert-diary-extract-time nil)
+  (setq org-agenda-include-diary nil)
+  ;; I do not want the diary, but there is no way to disable it
+  ;; altogether.  This creates a diary file in the /tmp directory.
+  (setq diary-file (make-temp-file "emacs-diary-"))
+  (setq org-agenda-diary-file 'diary-file) ; TODO 2023-05-20: review Org diary substitute
+
+;;;; Agenda follow mode
+  (setq org-agenda-start-with-follow-mode nil)
+  (setq org-agenda-follow-indirect t)
+
+;;;; Agenda multi-item tasks
+  (setq org-agenda-dim-blocked-tasks t)
+  (setq org-agenda-todo-list-sublevels t)
+
+;;;; Agenda filters and restricted views
+  (setq org-agenda-persistent-filter nil)
+  (setq org-agenda-restriction-lock-highlight-subtree t)
+
+;;;; Agenda items with deadline and scheduled timestamps
+  (setq org-agenda-include-deadlines t)
+  (setq org-deadline-warning-days 0)
+  (setq org-agenda-skip-scheduled-if-done nil)
+  (setq org-agenda-skip-scheduled-if-deadline-is-shown t)
+  (setq org-agenda-skip-timestamp-if-deadline-is-shown t)
+  (setq org-agenda-skip-deadline-if-done nil)
+  (setq org-agenda-skip-deadline-prewarning-if-scheduled 1)
+  (setq org-agenda-skip-scheduled-delay-if-deadline nil)
+  (setq org-agenda-skip-additional-timestamps-same-entry nil)
+  (setq org-agenda-skip-timestamp-if-done nil)
+  (setq org-agenda-search-headline-for-time nil)
+  (setq org-scheduled-past-days 365)
+  (setq org-deadline-past-days 365)
+  (setq org-agenda-move-date-from-past-immediately-to-today t)
+  (setq org-agenda-show-future-repeats t)
+  (setq org-agenda-prefer-last-repeat nil)
+  (setq org-agenda-timerange-leaders
+        '("" "(%d/%d): "))
+  (setq org-agenda-scheduled-leaders
+        '("Scheduled: " "Sched.%2dx: "))
+  (setq org-agenda-inactive-leader "[")
+  (setq org-agenda-deadline-leaders
+        '("Deadline:  " "In %3d d.: " "%2d d. ago: "))
+  ;; Time grid
+  (setq org-agenda-time-leading-zero t)
+  (setq org-agenda-timegrid-use-ampm nil)
+  (setq org-agenda-use-time-grid t)
+  (setq org-agenda-show-current-time-in-grid t)
+  (setq org-agenda-current-time-string (concat "Now " (make-string 70 ?_)))
+  (setq org-agenda-time-grid
+        '((daily today require-timed)
+          ( 0500 0600 0700 0800 0900 1000
+            1100 1200 1300 1400 1500 1600
+            1700 1800 1900 2000 2100 2200)
+          "" ""))
+  (setq org-agenda-default-appointment-duration nil)
+
+;;;; Agenda global to-do list
+  (setq org-agenda-todo-ignore-with-date t)
+  (setq org-agenda-todo-ignore-timestamp t)
+  (setq org-agenda-todo-ignore-scheduled t)
+  (setq org-agenda-todo-ignore-deadlines t)
+  (setq org-agenda-todo-ignore-time-comparison-use-seconds t)
+  (setq org-agenda-tags-todo-honor-ignore-options nil)
+
+;;;; Agenda tagged items
+  (setq org-agenda-show-inherited-tags t)
+  (setq org-agenda-use-tag-inheritance
+        '(todo search agenda))
+  (setq org-agenda-hide-tags-regexp nil)
+  (setq org-agenda-remove-tags nil)
+  (setq org-agenda-tags-column -100)
+
+;;;; Agenda entry
+  ;; NOTE: I do not use this right now.  Leaving everything to its
+  ;; default value.
+  (setq org-agenda-start-with-entry-text-mode nil)
+  (setq org-agenda-entry-text-maxlines 5)
+  (setq org-agenda-entry-text-exclude-regexps nil)
+  (setq org-agenda-entry-text-leaders "    &gt; ")
+
+;;;; Agenda logging and clocking
+  ;; NOTE: I do not use these yet, though I plan to.  Leaving everything
+  ;; to its default value for the time being.
+  (setq org-agenda-log-mode-items '(closed clock))
+  (setq org-agenda-clock-consistency-checks
+        '((:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
+                         ("4:00")
+                         :default-face ; This should definitely be reviewed
+                         ((:background "DarkRed")
+                          (:foreground "white"))
+                         :overlap-face nil :gap-face nil :no-end-time-face nil
+                         :long-face nil :short-face nil)))
+  (setq org-agenda-log-mode-add-notes t)
+  (setq org-agenda-start-with-log-mode nil)
+  (setq org-agenda-start-with-clockreport-mode nil)
+  (setq org-agenda-clockreport-parameter-plist '(:link t :maxlevel 2))
+  (setq org-agenda-search-view-always-boolean nil)
+  (setq org-agenda-search-view-force-full-words nil)
+  (setq org-agenda-search-view-max-outline-level 0)
+  (setq org-agenda-search-headline-for-time t)
+  (setq org-agenda-use-time-grid t)
+  (setq org-agenda-cmp-user-defined nil)
+  (setq org-agenda-sort-notime-is-late t) ; Org 9.4
+  (setq org-agenda-sort-noeffort-is-high t) ; Org 9.4
+
+;;;; Agenda column view
+  ;; NOTE I do not use these, but may need them in the future.
+  (setq org-agenda-view-columns-initially nil)
+  (setq org-agenda-columns-show-summaries t)
+  (setq org-agenda-columns-compute-summary-properties t)
+  (setq org-agenda-columns-add-appointments-to-effort-sum nil)
+  (setq org-agenda-auto-exclude-function nil)
+  (setq org-agenda-bulk-custom-functions nil))
+
+(provide 'init-org)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgad04942" class="outline-2">
+<h2 id="orgad04942"><span class="section-number-2">10.</span> <code>init-latex</code></h2>
+<div class="outline-text-2" id="text-10">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; init--latex.el -*- lexical-binding: t -*-
+
+;; AUCTeX
+(use-package tex
+  :ensure auctex
+  :mode ("\\.tex\\'" . latex-mode)
+  :bind
+  ("&lt;f7&gt;" . (lambda ()
+		     "Save the buffer and run `TeX-command-run-all`."
+		     (interactive)
+		     (save-buffer)
+		     (TeX-command-run-all nil)))
+  :custom
+  (TeX-save-query nil)
+  (TeX-source-correlate-mode t)
+  :hook
+  (LaTeX-mode . prettify-symbols-mode)
+  (LaTeX-mode . visual-line-mode)
+  (LaTeX-mode . flymake-mode)
+  (LaTeX-mode . LaTeX-math-mode)
+  (LaTeX-mode . turn-on-reftex)
+  (LaTeX-mode . turn-on-auto-fill)
+  (LaTeX-mode . outline-minor-mode)
+  (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)
+  :config
+  (setq LaTeX-item-indent 0)
+  (setq TeX-newline-function 'reindent-then-newline-and-indent)
+  (setq TeX-auto-save t)
+  (setq TeX-parse-self t)
+  (setq-default TeX-master nil)
+  (setq TeX-PDF-mode t)
+  (setq reftex-plug-into-AUCTeX t)
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
+  (setq TeX-source-correlate-start-server t))
+
+(use-package cdlatex
+  :ensure t
+  :hook ((LaTeX-mode  . turn-on-cdlatex)
+         (org-mode    . turn-on-org-cdlatex)
+         (cdlatex-tab . LaTeX-indent-line)))
+
+(use-package pdf-tools
+  :ensure t
+  :hook
+  (pdf-view-mode . (lambda () (auto-revert-mode 1)))
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-width))
+
+(provide 'init-latex)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgb31a511" class="outline-2">
+<h2 id="orgb31a511"><span class="section-number-2">11.</span> <code>init-vc</code></h2>
+<div class="outline-text-2" id="text-11">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; init-vc.el -*- lexical-binding: t -*-
+
+;; Version control framework
+(use-package vc
+  :ensure nil
+  :init
+  (setq vc-follow-symlinks t)
+  :config
+  (setq vc-handled-backends '(Git))
+  (require 'vc-annotate)
+  (require 'vc-dir)
+  (require 'vc-git)
+  (require 'add-log)
+  (require 'log-view)
+  (require 'log-edit))
+
+;; Magit
+(use-package magit
+  :ensure t
+  :init
+  (setq magit-define-global-key-bindings nil)
+  :config
+  (setq git-commit-summary-max-length 50)
+  (setq git-commit-style-convention-checks '(non-empty-second-line)))
+
+(provide 'init-vc)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge20d9df" class="outline-2">
+<h2 id="orge20d9df"><span class="section-number-2">12.</span> <code>init-elfeed</code></h2>
+<div class="outline-text-2" id="text-12">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">;;; init-elfeed.el -*- lexical-binding: t -*-
+
+;; Elfeed
+(use-package elfeed
+  :ensure t
+  :custom
+  ;(elfeed-db-directory
+  ; (expand-file-name "elfeed" user-emacs-directory))
+  (elfeed-show-entry-switch 'display-buffer)
+  :bind ("C-x w" . elfeed)
+  :config
+  (setq elfeed-feeds
+        '(("http://asert.arbornetworks.com/feed/" security)
+        ("http://feeds.trendmicro.com/Anti-MalwareBlog/" security)
+        ("http://researchcenter.paloaltonetworks.com/unit42/feed/" security)
+        ("https://www.proofpoint.com/rss.xml" security)
+        ("https://www.bellingcat.com/feed/" security)
+        ("http://www.reddit.com/r/ReverseEngineering/.rss" security  reddit)
+        ("https://fossacademic.tech/feed.xml" academic blog tech)
+        ("https://nomasters.io/index.xml" blog tech)
+        ("https://www.reddit.com/r/listentothis/.rss" music reddit)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC--DwaiMV-jtO-6EvmKOnqg" youtube) ;; OA Labs
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCbpMy0Fg74eXXkvxJrtEn3w" youtube) ;; Bon Apetit
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC5fdssPqmmGhkhsJi4VcckA" youtube) ;; Innuendo Studios
+        ("https://usesthis.com/feed.atom" tech)
+        ("https://www.kcrw.com/culture/shows/nocturne/rss.xml" podcast);; Nocturne
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCGzvjCcqc9U6KkmgNx9t6VA" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCTfabOKD7Yty6sDF4POBVqA" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC2eYFnH61tmytImy1mTYvhA" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCxQKHvKbmSzGMvUrVtJYnUA" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC3jSNmKWYA04R47fDcc1ImA" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCsnGwSIHyoYN0kiINAGUKxg" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCFFLP0dKesrKWccYscdAr9A" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC0A3ldncnGQ1M_RU2Wb4L2A" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCxwcmRAmBRzZMNS37dCgmHA" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCLx053rWZxCiYWsBETgdKrQ" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCHugE6eRhqB9_AZQh4DDbIw" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCEBb1b_L6zDS3xTUrIALZOw" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UC8uT9cgJorJPWu7ITLGo9Ww" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCts-8ZqS339n-9nxy3DN8Cg" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCVls1GmFKf6WlTraIb_IaJg" youtube)
+        ("https://www.youtube.com/feeds/videos.xml?channel_id=UCuHJawjMUOk4gjywwDg727w" youtube)
+        ("https://www.tecmint.com/feed/" tech)
+        ("https://www.archlinux.org/feeds/news/" tech)
+        ("https://karl-voit.at/feeds/lazyblorg-all.atom_1.0.links-and-content.xml" blog tech)
+        ("http://leancrew.com/all-this/feed/" blog tech)
+        ("http://stadt-bremerhaven.de/feed/" blog tech)
+        ("http://feeds.feedburner.com/Makeuseof" tech)
+        ("https://lukesmith.xyz/index.xml" blog tech)
+        ("https://100r.co/links/rss.xml" blog tech)
+        ("https://webzine.puffy.cafe/atom.xml" tech)
+        ("https://jmmv.dev/feed.xml" blog tech)
+        ("https://jcs.org/rss" blog tech)
+        ("https://dataswamp.org/~solene/rss.xml" blog tech)
+        ("https://bsdly.blogspot.com/feeds/posts/default" blog bsd tech)
+        ("https://xeiaso.net/blog.rss" blog tech)
+        ("https://www.tumfatig.net/index.xml" blog bsd tech)
+        ("https://www.kuketz-blog.de/category/artikel/feed/" blog security)
+        ("https://thevaluable.dev/index.xml" blog tech)
+        ("https://andreafortuna.org/feed.xml" blog tech)'
+        ("https://codemadness.org/atom_content.xml" blog tech)
+        ("https://begriffs.com/atom.xml" blog tech)
+        ("https://sive.rs/en.atom" blog literature misc tech)
+        ("https://news.nononsenseapps.com/index.atom" blog tech)
+        ("https://www.geeklan.co.uk/?feed=rss2" blog tech)
+        ("https://herrbischoff.com/index.xml" blog tech)
+        ("https://it-notes.dragas.net/index.xml" blog tech)
+        ("https://michael.stapelberg.ch/feed.xml" blog tech)
+        ("https://ratfactor.com/atom.xml" blog tech)
+        ("https://rubenerd.com/feed/" blog tech)
+        ("https://adol.pw/index.xml" blog tech)
+        ("https://electro.pizza/feed.xml" blog tech)
+        ("https://jcs.org/rss" blog tech)
+        ("https://kzimmermann.0x.no/articles/atom.xml" blog tech)
+        ("https://blog.meain.io/feed.xml" blog tech)
+        ("https://unixsheikh.com/feed.rss" blog tech)
+        ("https://vermaden.wordpress.com/feed/" blog tech)
+        ("https://crys.site/blog/index.xml" blog bsd tech)
+        ("https://www.boucek.me/index.xml" blog tech)
+        ("https://karthinks.com/software/index.xml" blog emacs tech)
+        ("https://batsov.com/atom.xml" blog emacs tech)
+        ("https://michaelneuper.com/index.xml" blog emacs tech)))
+  :commands (elfeed))
+
+(provide 'init-elfeed)
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Marc Schlienger</p>
+<p class="email">Email: <a href="mailto:marc.schliengerc@posteo.de">marc.schliengerc@posteo.de</a></p>
+<p class="date">Created: 2025-01-17 Fri 12:52</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

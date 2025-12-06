@@ -1,0 +1,32 @@
+#!/bin/bash
+
+winname=$(swaymsg --raw -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.focused) | .name')
+output=$(xdg-user-dir PICTURES)/$(date +'screenshot_%Y%m%d_%H%M%S.png')
+
+case $1 in
+    "window-clipboard")
+        grim -g \
+            "$(swaymsg --raw -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')" \
+            - | wl-copy \
+            && notify-send -t 3000 "Screenshot taken" "Screenshot of the $winname window copied to the clipboard"
+        ;;
+    "window")
+        grim -g \
+            "$(swaymsg --raw -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')" \
+            -o "$output" \
+            && notify-send -t 3000 "Screenshot taken" "Screenshot of the $winname window saved to $output"
+        ;;
+    "area-clipboard")
+        (slurp | grim -g - - | wl-copy) \
+        && notify-send -t 3000 "Screenshot taken" "Screenshot of the area copied to the clipboard"
+        ;;
+    "area")
+        (slurp | grim -g - -o "$output") \
+        && notify-send -t 3000 "Screenshot taken" "Screenshot of the area saved to $output"
+        ;;
+    "screen"|*)
+        grim -o \
+            $(swaymsg --raw -t get_outputs | jq -r '.[] | select(.focused) | .name') \
+            "$output" \
+            && notify-send -t 3000 "Screenshot taken" "Screenshot of the current screen saved to $output"
+esac

@@ -1,0 +1,114 @@
+# $XDG_CONFIG_DIRS/ls/lfrc --- Personal configuration file for lf.
+#
+# Copyright (C) 2023-2024 Marc Schlienger <marc.schlienger@psoteo.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software FOUNDATION, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# ---------------------------------------------------------------------------- 
+# Options
+# ---------------------------------------------------------------------------- 
+set autoquit true
+set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg"
+set icons
+set ifs "\n"
+set incsearch
+set period 1
+set scrolloff 10
+set shell zsh
+set shellopts "-eu"
+set wrapscan
+set wrapscroll
+
+set previewer ~/.config/lf/previewer
+set cleaner ~/.config/lf/cleaner
+
+# ---------------------------------------------------------------------------- 
+# Commands
+# ---------------------------------------------------------------------------- 
+cmd bulkrename ${{
+    printf '%s\n' "$fx" | vidir -
+}}
+
+cmd copypath ${{
+    printf "%s" "$fx" | xclip -selection clipboard
+}}
+
+cmd extract ${{
+	set -f
+	clear
+	printf '%s\n' $fx
+    echo '\nExtract file(s)? [y/N]'
+	read ans
+    [ $ans = 'y' ] && (echo 'Extracting files...' && IFS=':'; atool -x $fx) || (echo 'Cancelled...')
+	clear
+}}
+
+cmd mkdir %{{
+    IFS=" "
+    mkdir -p -- "$*"
+    lf -remote "send $id select \"$*\""
+}}
+
+cmd open ${{
+    case $(file -b --mime-type "$(readlink -f $f)") in
+    text/*|application/json|inode/x-empty|application/x-subrip)
+          $EDITOR $fx
+          ;;
+    image/x-xcf)
+        setsid -f gimp $f >/dev/null 2>&1
+        ;;
+    *)
+        for f in $fx; do setsid -f $OPENER $f >/dev/null 2>&1; done
+        ;;
+    esac
+}}
+
+cmd remove ${{
+	set -f
+	clear
+	printf '%s\n' $fx
+    echo '\nDelete file(s)? [y/N]'
+	read ans
+    [ $ans = 'y' ] && (echo 'Deleting file(s)...' && IFS=':'; rm -rf $fx) || (echo 'Cancelled...')
+	clear
+}}
+
+# ---------------------------------------------------------------------------- 
+# Key Mappings
+# ---------------------------------------------------------------------------- 
+map <f-2> bulkrename
+
+map Y copypath 
+
+map x extract
+
+map <c-n> push :mkdir<space>
+
+map d
+map dd cut
+map dD delete
+
+map o &mimeopen $f
+map O $mimeopen --ask $f
+
+map ga cd ~/action
+map gc cd ~/code
+map gd cd ~/documents
+map gm cd ~/media
+map gt cd ~/tmp
+
+map <c-s> set hidden!
+
+map <enter> shell
+map V push :!vim<space>

@@ -1,0 +1,46 @@
+# zathurarc --- Personal configuration file for zathura.
+#
+# Copyright (C) 2023-2024 Marc Schlienger <marc.schlienger@psoteo.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software FOUNDATION, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# General settings
+# ----------------
+set selection-clipboard     clipboard
+set statusbar-basename      true
+set statusbar-home-tilde    true
+set synctex                 true
+set synctex-editor-command  nvim
+set window-title-basename   true
+set window-title-home-tilde true
+
+# Key mappings
+# ----------------
+map <C-b> feedkeys ":bmark "
+map <C-l> feedkeys ":blist "
+map <C-k> feedkeys ":bdelete "
+map D set "first-page-column 1:1"
+map <C-d> set "first-page-column 1:2"
+
+# Layout
+# ----------------
+set font                    "FiraCode Nerd Font 13"
+set statusbar-h-padding     5
+set statusbar-v-padding     5
+
+# Theme
+# ----------------
+include theme-dracula
+#include theme-nord
+

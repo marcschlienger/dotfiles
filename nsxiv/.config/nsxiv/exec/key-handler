@@ -1,0 +1,16 @@
+#!/bin/sh
+
+while read file; do
+	case "$1" in
+	"C-d")
+		rm "$file"
+		;;
+	"w")
+		feh --bg-fill "$file"
+		notify-send -i "$(readlink -f $file)" "Wallpaper changed ..."
+		;;
+	"g")
+		gimp "$file" &
+		;;
+	esac
+done

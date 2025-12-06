@@ -1,0 +1,34 @@
+## Theme --- Sweet 
+# Window colors
+# class                 border  backgr. text    indicator child_border
+client.focused          #7b7bbd #222e39 #7b7bbd #71f79f   #7b7bbd
+client.focused_inactive #161925 #161925 #7cb7ff #71f79f   #161925 
+client.unfocused        #161925 #161925 #485a6c #71f79f   #161925
+client.urgent           #ed254e #222e39 #ed254e #71f79f   #161925 
+client.background #161925 
+
+# Start i3bar to display a workspace bar
+bar {
+    status_command      i3blocks
+    position            bottom
+    workspace_buttons   yes
+    workspace_min_width 30
+    mode                dock
+    modifier            none
+    font                pango:Noto Sans 13, FontAwesome 14
+    separator_symbol    "|"
+    height              25
+
+    colors {
+      background #161925
+      statusline #c3c7d1
+      separator  #ed254e
+
+      focused_workspace  #7cb7ff #222e39 #7cb7ff
+      active_workspace   #7cb7ff #222e39 #7cb7ff
+      inactive_workspace #161925 #161925 #485a6c
+      urgent_workspace   #ed254e #222e39 #ed254e
+      binding_mode       #222e39 #222e39 #f9dc5c
+    }
+}
+
