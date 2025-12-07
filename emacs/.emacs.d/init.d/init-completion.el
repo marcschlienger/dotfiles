@@ -14,8 +14,9 @@
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs
-               '((rust-ts-mode rust-mode) .
+  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom
   (eglot-ignored-server-capabilities
@@ -35,6 +36,8 @@
   (LaTeX-ts-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)
+  (swift-mode . eglot-ensure)
+  (swift-ts-mode . eglot-ensure)
   (rust-mode-hook . eglot-ensure)
   (rust-ts-mode-hook . eglot-ensure))
 

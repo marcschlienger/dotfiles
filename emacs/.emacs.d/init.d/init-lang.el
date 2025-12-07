@@ -155,6 +155,18 @@
   (setq sh-indentation 2)
   :hook (sh-mode . flymake-mode))
 
+;;; Swift development
+;; Swift mode
+(use-package swift-mode
+    :ensure t
+    :mode "\\.swift\\'"
+    :interpreter "swift")
+
+;; .editorconfig file support
+(use-package editorconfig
+    :ensure t
+    :config (editorconfig-mode +1))
+
 ;;; Plain text (text-mode)
 (use-package text-mode
   :ensure nil

@@ -474,6 +474,11 @@ find everything related to my Emacs setup.
   :config
   (rainbow-mode t))
 
+;;; Rainbow delimiters makes nested delimiters easier to understand
+(use-package rainbow-delimiters
+    :ensure t
+    :hook ((prog-mode . rainbow-delimiters-mode)))
+
 ;;; Modeline settings.
 (column-number-mode t)
 (setq mode-line-compact nil)
@@ -783,6 +788,18 @@ find everything related to my Emacs setup.
   (setq sh-indentation 2)
   :hook (sh-mode . flymake-mode))
 
+;;; Swift development
+;; Swift mode
+(use-package swift-mode
+    :ensure t
+    :mode "\\.swift\\'"
+    :interpreter "swift")
+
+;; .editorconfig file support
+(use-package editorconfig
+    :ensure t
+    :config (editorconfig-mode +1))
+
 ;;; Plain text (text-mode)
 (use-package text-mode
   :ensure nil
@@ -819,8 +836,9 @@ find everything related to my Emacs setup.
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs
-               '((rust-ts-mode rust-mode) .
+  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom
   (eglot-ignored-server-capabilities
@@ -840,6 +858,8 @@ find everything related to my Emacs setup.
   (LaTeX-ts-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)
+  (swift-mode . eglot-ensure)
+  (swift-ts-mode . eglot-ensure)
   (rust-mode-hook . eglot-ensure)
   (rust-ts-mode-hook . eglot-ensure))
 
@@ -1289,6 +1309,7 @@ find everything related to my Emacs setup.
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
   (setq org-edit-src-content-indentation 0)
+  (setq org-babel-python-command python3)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)

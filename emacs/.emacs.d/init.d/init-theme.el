@@ -183,6 +183,11 @@
   :config
   (rainbow-mode t))
 
+;;; Rainbow delimiters makes nested delimiters easier to understand
+(use-package rainbow-delimiters
+    :ensure t
+    :hook ((prog-mode . rainbow-delimiters-mode)))
+
 ;;; Modeline settings.
 (column-number-mode t)
 (setq mode-line-compact nil)
