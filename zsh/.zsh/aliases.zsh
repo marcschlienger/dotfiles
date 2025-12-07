@@ -47,9 +47,6 @@ tmp () {
     mkdir -p "$r" && pushd "$r"
 }
 
-# bat
-alias bat='batcat --theme ansi'
-
 # emacsclient
 alias ec='emacsclient -c -n -a ""'
 
@@ -134,4 +131,3 @@ alias -s org='firefox'
 alias -s dvi='zathura'
 alias -s pdf='zathura'
 alias -s ps='zathura'
-
