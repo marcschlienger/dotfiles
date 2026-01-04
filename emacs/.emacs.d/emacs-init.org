@@ -285,24 +285,29 @@ find everything related to my Emacs setup.
   :custom (dired-omit-files (rx (seq bol "."))))
 
 (provide 'init-dired)
-#+end_src
-
+#+end_sr
 * Theme settings
 #+begin_src emacs-lisp :tangle init.d/init-theme.el :mkdirp yes
 ;;; Set the font.
+(if (eq system-type 'darwin)
+  (setq height1 170
+        height2 200)
+  (setq height1 140
+        height2 170))
+
 (set-face-attribute 'default nil
                     :family "FiraCode Nerd Font"
-                    :height 130
+                    :height height1
                     :weight 'regular)
 
 (set-face-attribute 'fixed-pitch nil
                     :family "FiraCode Nerd Font"
-                    :height 130
+                    :height height1
                     :weight 'regular)
 
 (set-face-attribute 'variable-pitch nil
                     :family "Linux Libertine O"
-                    :height 170
+                    :height height2
                     :weight 'regular)
 
 ;;; Fontaine (font configurations)
@@ -377,7 +382,7 @@ find everything related to my Emacs setup.
     (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
       (variable-pitch-mode 1))))
 
-;; Set the theme - I use the Modus themes created by Prot. 
+;; Set the theme - I use the Modus themes created by Prot.
 (use-package modus-themes
   :ensure t
   :demand t
@@ -474,7 +479,7 @@ find everything related to my Emacs setup.
   :config
   (rainbow-mode t))
 
-;;; Rainbow delimiters makes nested delimiters easier to understand
+;;; Rainbow delimiters makes nested delimiters easier to understand.
 (use-package rainbow-delimiters
     :ensure t
     :hook ((prog-mode . rainbow-delimiters-mode)))
@@ -732,7 +737,7 @@ find everything related to my Emacs setup.
     ;; This choice of keybinding leaves cider-macroexpand-1 unbound
     (cljr-add-keybindings-with-prefix "C-c C-m"))
   (add-hook 'clojure-mode-hook #'my-clojure-mode-hook))
-  
+
 ;; This provides the basic features like highlighting, indentation,
 ;; navigation and basic refactoring.
 (use-package clojure-mode
@@ -755,7 +760,7 @@ find everything related to my Emacs setup.
   (c-initialization-hook . my-make-CR-do-indent))
 
 ;; Pyhon
-(use-package python-mode
+(use-package python
   :ensure t
   :config
   (setq indent-tabs-mode nil)
@@ -834,10 +839,10 @@ find everything related to my Emacs setup.
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright")))
+  (add-to-list 'eglot-server-programs '(python-mode . ("pyright")))
   (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom
@@ -1215,12 +1220,11 @@ find everything related to my Emacs setup.
     ("e" . org-narrow-to-element)
     ("s" . org-narrow-to-subtree))
   :config
-  (setq org-ellipsis "⮧")
+  (setq org-ellipsis " ▾")
   (setq org-adapt-indentation nil)
   (setq org-special-ctrl-a/e nil)
   (setq org-special-ctrl-k nil)
   (setq org-M-RET-may-split-line '((default . nil)))
-  ;(setq org-hide-emphasis-markers nil)
   (setq org-hide-emphasis-markers t)
   (setq org-hide-macro-markers nil)
   (setq org-hide-leading-stars nil)
@@ -1587,7 +1591,7 @@ find everything related to my Emacs setup.
 ;;; init--latex.el -*- lexical-binding: t -*-
 
 ;; AUCTeX
-(use-package tex
+(use-package tex-site
   :ensure auctex
   :mode ("\\.tex\\'" . latex-mode)
   :bind

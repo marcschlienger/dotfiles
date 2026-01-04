@@ -1,12 +1,12 @@
 ;;; Set the font.
 (set-face-attribute 'default nil
                     :family "FiraCode Nerd Font"
-                    :height 130
+                    :height 150
                     :weight 'regular)
 
 (set-face-attribute 'fixed-pitch nil
                     :family "FiraCode Nerd Font"
-                    :height 130
+                    :height 150
                     :weight 'regular)
 
 (set-face-attribute 'variable-pitch nil

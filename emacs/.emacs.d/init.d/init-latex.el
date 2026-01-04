@@ -1,7 +1,7 @@
 ;;; init--latex.el -*- lexical-binding: t -*-
 
 ;; AUCTeX
-(use-package tex
+(use-package tex-site
   :ensure auctex
   :mode ("\\.tex\\'" . latex-mode)
   :bind

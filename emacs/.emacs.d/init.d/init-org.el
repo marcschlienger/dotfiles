@@ -64,12 +64,11 @@
     ("e" . org-narrow-to-element)
     ("s" . org-narrow-to-subtree))
   :config
-  (setq org-ellipsis "⮧")
+  (setq org-ellipsis " ▾")
   (setq org-adapt-indentation nil)
   (setq org-special-ctrl-a/e nil)
   (setq org-special-ctrl-k nil)
   (setq org-M-RET-may-split-line '((default . nil)))
-  ;(setq org-hide-emphasis-markers nil)
   (setq org-hide-emphasis-markers t)
   (setq org-hide-macro-markers nil)
   (setq org-hide-leading-stars nil)
