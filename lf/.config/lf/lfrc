@@ -1,6 +1,6 @@
-# $XDG_CONFIG_DIRS/ls/lfrc --- Personal configuration file for lf.
+# $XDG_CONFIG_DIRS/lf/lfrc --- Personal configuration file for lf.
 #
-# Copyright (C) 2023-2024 Marc Schlienger <marc.schlienger@psoteo.de>
+# Copyright (C) 2023-2025 Marc Schlienger <marc.schlienger@psoteo.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# ---------------------------------------------------------------------------- 
+# ----------------------------------------------------------------------------
 # Options
-# ---------------------------------------------------------------------------- 
+# ----------------------------------------------------------------------------
 set autoquit true
 set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg"
 set icons
@@ -25,25 +25,17 @@ set ifs "\n"
 set incsearch
 set period 1
 set scrolloff 10
+set sixel true
 set shell zsh
 set shellopts "-eu"
 set wrapscan
 set wrapscroll
 
-set previewer ~/.config/lf/previewer
-set cleaner ~/.config/lf/cleaner
+set previewer ~/.config/lf/preview
 
-# ---------------------------------------------------------------------------- 
+# ----------------------------------------------------------------------------
 # Commands
-# ---------------------------------------------------------------------------- 
-cmd bulkrename ${{
-    printf '%s\n' "$fx" | vidir -
-}}
-
-cmd copypath ${{
-    printf "%s" "$fx" | xclip -selection clipboard
-}}
-
+# ----------------------------------------------------------------------------
 cmd extract ${{
 	set -f
 	clear
@@ -53,45 +45,26 @@ cmd extract ${{
     [ $ans = 'y' ] && (echo 'Extracting files...' && IFS=':'; atool -x $fx) || (echo 'Cancelled...')
 	clear
 }}
-
-cmd mkdir %{{
-    IFS=" "
-    mkdir -p -- "$*"
-    lf -remote "send $id select \"$*\""
-}}
-
-cmd open ${{
-    case $(file -b --mime-type "$(readlink -f $f)") in
-    text/*|application/json|inode/x-empty|application/x-subrip)
-          $EDITOR $fx
-          ;;
-    image/x-xcf)
-        setsid -f gimp $f >/dev/null 2>&1
-        ;;
-    *)
-        for f in $fx; do setsid -f $OPENER $f >/dev/null 2>&1; done
-        ;;
-    esac
-}}
-
-cmd remove ${{
-	set -f
-	clear
-	printf '%s\n' $fx
-    echo '\nDelete file(s)? [y/N]'
-	read ans
-    [ $ans = 'y' ] && (echo 'Deleting file(s)...' && IFS=':'; rm -rf $fx) || (echo 'Cancelled...')
-	clear
-}}
-
-# ---------------------------------------------------------------------------- 
-# Key Mappings
-# ---------------------------------------------------------------------------- 
-map <f-2> bulkrename
-
-map Y copypath 
-
 map x extract
+
+cmd fzf_jump ${{
+    res="$(fzf --walker=file,dir,follow,hidden --walker-skip=.git,node_modules,.Trash)"
+    if [ -n "$res" ]; then
+        if [ -d "$res" ]; then
+            cmd="cd"
+        else
+            cmd="select"
+        fi
+        res="$(printf '%s' "$res" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        lf -remote "send $id $cmd \"$res\""
+    fi
+}}
+map <c-o> :fzf_jump
+
+# ----------------------------------------------------------------------------
+# Key Mappings
+# ----------------------------------------------------------------------------
+map <enter> shell
 
 map <c-n> push :mkdir<space>
 
@@ -99,16 +72,7 @@ map d
 map dd cut
 map dD delete
 
-map o &mimeopen $f
-map O $mimeopen --ask $f
 
-map ga cd ~/action
-map gc cd ~/code
-map gd cd ~/documents
-map gm cd ~/media
-map gt cd ~/tmp
+map <c-d> set hidden!
 
-map <c-s> set hidden!
-
-map <enter> shell
-map V push :!vim<space>
+map nc cd ~/Nextcloud
