@@ -158,9 +158,9 @@
 
 ;;; Swift development
 ;; Swift mode
-(use-package swift-ts-mode
+(use-package swift-mode
     :ensure t
-    :mode "\\.swift\\'"
+    :mode (("\\.swift\\'" . swift-ts-mode))
     :interpreter "swift")
 
 ;; .editorconfig file support
