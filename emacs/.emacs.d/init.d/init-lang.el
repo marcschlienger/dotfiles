@@ -99,7 +99,7 @@
     ;; This choice of keybinding leaves cider-macroexpand-1 unbound
     (cljr-add-keybindings-with-prefix "C-c C-m"))
   (add-hook 'clojure-mode-hook #'my-clojure-mode-hook))
-  
+
 ;; This provides the basic features like highlighting, indentation,
 ;; navigation and basic refactoring.
 (use-package clojure-mode
@@ -121,13 +121,14 @@
   :hook
   (c-initialization-hook . my-make-CR-do-indent))
 
-;; Pyhon
-(use-package python-mode
-  :ensure t
-  :config
-  (setq indent-tabs-mode nil)
-  (setq tab-width 4)
-  (setq python-indent 4))
+;;; Pyhon
+;(use-package python-mode
+;  :ensure nil
+;  :mode (("\\.py\\'" . python-ts-mode))
+;  :config
+;  (setq indent-tabs-mode nil)
+;  (setq tab-width 4)
+;  (setq python-indent 4))
 
 ;;; Rust
 (use-package rust-mode
@@ -157,7 +158,7 @@
 
 ;;; Swift development
 ;; Swift mode
-(use-package swift-mode
+(use-package swift-ts-mode
     :ensure t
     :mode "\\.swift\\'"
     :interpreter "swift")

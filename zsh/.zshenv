@@ -7,7 +7,7 @@ OS="$(uname)"
 # Set PATH so it includes the texlive installation
 case "${OS}" in
   Darwin)
-    export PATH=/usr/local/texlive/2025/bin/universal-darwin:$PATH
+    export PATH="/usr/local/texlive/2025/bin/universal-darwin:$PATH"
     ;;
   Linux)
     export PATH="/usr/local/texlive/2025/bin/x86_64-linux:$PATH"

@@ -14,8 +14,9 @@
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
   (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
+  
   (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
+  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom

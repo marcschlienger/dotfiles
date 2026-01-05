@@ -1,7 +1,7 @@
 # ${HOME}/.zsh/lf.zsh
 
-# Shell function to automatically change the current working directory to the 
-# last visited directory after lf quits. To undo the effect of this 
+# Shell function to automatically change the current working directory to the
+# last visited directory after lf quits. To undo the effect of this
 # function, you can type "cd -" to return to the original directory.
 lfcd () {
     local tmp_file="$(mktemp)"
@@ -18,4 +18,4 @@ lfcd () {
     fi
 }
 
-bindkey -s '^o' 'lfcd\n'
+alias lf='lfcd'
