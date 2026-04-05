@@ -1,3 +1,5 @@
+;;-*- lexical-binding: t; -*-
+
 ;; Save backup files in a dedicated backup directory.
 (setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
 

@@ -1,4 +1,4 @@
-;;; ms-emacs-evil.el -*- lexical-binding: t -*-
+;;; init-evil.el -*- lexical-binding: t -*-
 
 ;;; Evil mode
 (use-package evil

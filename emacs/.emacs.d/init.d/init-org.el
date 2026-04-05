@@ -1,3 +1,5 @@
+;;-*- lexical-binding: t; -*-
+
 ;; Calendar
 (use-package calendar
   :ensure nil
@@ -34,7 +36,7 @@
 (use-package org
   :ensure nil
   :init
-  (setq org-directory (expand-file-name "~/org/"))
+  (setq org-directory (expand-file-name "~/Nextcloud/cloud.schlienger.xyz/org"))
   (setq org-imenu-depth 7)
 
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
@@ -157,7 +159,7 @@
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
   (setq org-edit-src-content-indentation 0)
-  (setq org-babel-python-command python3)
+  (setq org-babel-python-command 'python3)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)
@@ -426,4 +428,16 @@
   (setq org-agenda-auto-exclude-function nil)
   (setq org-agenda-bulk-custom-functions nil))
 
+;;; Sync the org agenda with a Nextcloud calendar
+(use-package org-caldav
+  :ensure t
+  :init
+  (setq org-caldav-url "https://cloud.schlienger.xyz/remote.php/dav/calendars/marc/")
+  (setq org-caldav-calendar-id "org")
+  (setq org-caldav-files nil)
+  (setq org-caldav-inbox "~/Nextcloud/cloud.schlienger.xyz/org/calendar.org")
+  (setq org-caldav-save-directory "~/Nextcloud/cloud.schlienger.xyz/org/.caldav-backups")
+  (setq org-icalendar-timezone "Europe/Berlin"))
+  ;:config
+  ;(add-hook 'org-agenda-mode-hook 'org-caldav-sync))
 (provide 'init-org)

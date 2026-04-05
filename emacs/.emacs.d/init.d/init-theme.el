@@ -1,17 +1,25 @@
+;;; init-theme.el -*- lexical-binding: t -*-
+
 ;;; Set the font.
+(if (eq system-type 'darwin)
+  (setq height1 170
+        height2 200)
+  (setq height1 140
+        height2 170))
+
 (set-face-attribute 'default nil
                     :family "FiraCode Nerd Font"
-                    :height 150
+                    :height height1
                     :weight 'regular)
 
 (set-face-attribute 'fixed-pitch nil
                     :family "FiraCode Nerd Font"
-                    :height 150
+                    :height height1
                     :weight 'regular)
 
 (set-face-attribute 'variable-pitch nil
                     :family "Linux Libertine O"
-                    :height 170
+                    :height height2
                     :weight 'regular)
 
 ;;; Fontaine (font configurations)
@@ -86,7 +94,7 @@
     (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
       (variable-pitch-mode 1))))
 
-;; Set the theme - I use the Modus themes created by Prot. 
+;; Set the theme - I use the Modus themes created by Prot.
 (use-package modus-themes
   :ensure t
   :demand t
@@ -183,7 +191,7 @@
   :config
   (rainbow-mode t))
 
-;;; Rainbow delimiters makes nested delimiters easier to understand
+;;; Rainbow delimiters makes nested delimiters easier to understand.
 (use-package rainbow-delimiters
     :ensure t
     :hook ((prog-mode . rainbow-delimiters-mode)))

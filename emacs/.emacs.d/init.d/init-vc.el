@@ -1,3 +1,5 @@
+;;-*- lexical-binding: t; -*-
+
 ;;; init-vc.el -*- lexical-binding: t -*-
 
 ;; Version control framework

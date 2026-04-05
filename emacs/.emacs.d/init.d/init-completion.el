@@ -12,8 +12,8 @@
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("ty" "server")))
+  (add-to-list 'eglot-server-programs '(python-mode . ("ty" "server")))
   
   (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))

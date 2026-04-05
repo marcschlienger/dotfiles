@@ -1,4 +1,4 @@
-;;; init--latex.el -*- lexical-binding: t -*-
+;;; init-latex.el -*- lexical-binding: t -*-
 
 ;; AUCTeX
 (use-package tex-site
@@ -40,7 +40,7 @@
          (cdlatex-tab . LaTeX-indent-line)))
 
 (use-package pdf-tools
-  :ensure t
+  :defer t
   :hook
   (pdf-view-mode . (lambda () (auto-revert-mode 1)))
   :config

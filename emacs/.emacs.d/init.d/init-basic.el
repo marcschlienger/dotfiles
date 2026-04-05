@@ -1,3 +1,5 @@
+;;-*- lexical-binding: t; -*-
+
 ;; Ensure environment variables inside Emacs look the same as in the shell.
 (use-package exec-path-from-shell
   :ensure t
@@ -39,9 +41,11 @@
 (use-package emacs
   :if (eq system-type 'darwin)
   :config
-  (setq mac-command-modifier 'meta) ; use the cmd key as modifier
-  (setq mac-option-modifier 'none) ; diable the option key as modifier
-  (setq ns-pop-up-frames nil) ; reuse existing frames whenever possible
-  )
+  (setq mac-command-modifier 'super) ; use the cmd key as modifier
+  ;(setq mac-option-modifier 'nil) ; diable the option key as modifier
+  (setq ns-alternate-modifier 'meta) ; diable the option key as modifier
+  (setq ns-right-alternate-modifier 'none) ; diable the option key as modifier
+  (setq ns-pop-up-frames 'nil) ; reuse existing frames whenever possible
+)
 
 (provide 'init-basic)

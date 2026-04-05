@@ -16,6 +16,8 @@ find everything related to my Emacs setup.
 
 * The early initialization file
 #+begin_src emacs-lisp :tangle early-init.el
+;;-*- lexical-binding: t; -*-
+
 (dolist (var '(default-frame-alist initial-frame-alist))
   (add-to-list var '(width . (text-pixels . 800)))
   (add-to-list var '(height . (text-pixels . 900))))
@@ -49,6 +51,8 @@ find everything related to my Emacs setup.
 * The initialization file
 
 #+begin_src emacs-lisp :tangle init.el
+;;-*- lexical-binding: t; -*-
+
 ;; Save backup files in a dedicated backup directory.
 (setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
 
@@ -103,6 +107,8 @@ find everything related to my Emacs setup.
 * Basic settings
 
 #+begin_src emacs-lisp :tangle init.d/init-basic.el :mkdirp yes
+;;-*- lexical-binding: t; -*-
+
 ;; Ensure environment variables inside Emacs look the same as in the shell.
 (use-package exec-path-from-shell
   :ensure t
@@ -144,10 +150,12 @@ find everything related to my Emacs setup.
 (use-package emacs
   :if (eq system-type 'darwin)
   :config
-  (setq mac-command-modifier 'meta) ; use the cmd key as modifier
-  (setq mac-option-modifier 'none) ; diable the option key as modifier
-  (setq ns-pop-up-frames nil) ; reuse existing frames whenever possible
-  )
+  (setq mac-command-modifier 'super) ; use the cmd key as modifier
+  ;(setq mac-option-modifier 'nil) ; diable the option key as modifier
+  (setq ns-alternate-modifier 'meta) ; diable the option key as modifier
+  (setq ns-right-alternate-modifier 'none) ; diable the option key as modifier
+  (setq ns-pop-up-frames 'nil) ; reuse existing frames whenever possible
+)
 
 (provide 'init-basic)
 #+end_src
@@ -285,9 +293,13 @@ find everything related to my Emacs setup.
   :custom (dired-omit-files (rx (seq bol "."))))
 
 (provide 'init-dired)
-#+end_sr
+#+end_src
+
 * Theme settings
+
 #+begin_src emacs-lisp :tangle init.d/init-theme.el :mkdirp yes
+;;; init-theme.el -*- lexical-binding: t -*-
+
 ;;; Set the font.
 (if (eq system-type 'darwin)
   (setq height1 170
@@ -535,7 +547,7 @@ find everything related to my Emacs setup.
 * Evil mode settings
 
 #+begin_src emacs-lisp :tangle init.d/init-evil.el :mkdirp yes
-;;; ms-emacs-evil.el -*- lexical-binding: t -*-
+;;; init-evil.el -*- lexical-binding: t -*-
 
 ;;; Evil mode
 (use-package evil
@@ -759,6 +771,13 @@ find everything related to my Emacs setup.
   :hook
   (c-initialization-hook . my-make-CR-do-indent))
 
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
+
 ;;; Pyhon
 ;(use-package python-mode
 ;  :ensure nil
@@ -840,8 +859,8 @@ find everything related to my Emacs setup.
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pylsp")))
-  (add-to-list 'eglot-server-programs '(python-mode . ("pylsp")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("ty" "server")))
+  (add-to-list 'eglot-server-programs '(python-mode . ("ty" "server")))
   
   (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
@@ -1156,6 +1175,8 @@ find everything related to my Emacs setup.
 * Org mode
 
 #+begin_src emacs-lisp :tangle init.d/init-org.el :mkdirp yes
+;;-*- lexical-binding: t; -*-
+
 ;; Calendar
 (use-package calendar
   :ensure nil
@@ -1192,7 +1213,7 @@ find everything related to my Emacs setup.
 (use-package org
   :ensure nil
   :init
-  (setq org-directory (expand-file-name "~/org/"))
+  (setq org-directory (expand-file-name "~/Nextcloud/cloud.schlienger.xyz/org"))
   (setq org-imenu-depth 7)
 
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
@@ -1315,7 +1336,7 @@ find everything related to my Emacs setup.
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
   (setq org-edit-src-content-indentation 0)
-  (setq org-babel-python-command python3)
+  (setq org-babel-python-command 'python3)
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)
@@ -1584,13 +1605,25 @@ find everything related to my Emacs setup.
   (setq org-agenda-auto-exclude-function nil)
   (setq org-agenda-bulk-custom-functions nil))
 
+;;; Sync the org agenda with a Nextcloud calendar
+(use-package org-caldav
+  :ensure t
+  :init
+  (setq org-caldav-url "https://cloud.schlienger.xyz/remote.php/dav/calendars/marc/")
+  (setq org-caldav-calendar-id "org")
+  (setq org-caldav-files nil)
+  (setq org-caldav-inbox "~/Nextcloud/cloud.schlienger.xyz/org/calendar.org")
+  (setq org-caldav-save-directory "~/Nextcloud/cloud.schlienger.xyz/org/.caldav-backups")
+  (setq org-icalendar-timezone "Europe/Berlin"))
+  ;:config
+  ;(add-hook 'org-agenda-mode-hook 'org-caldav-sync))
 (provide 'init-org)
 #+end_src
 
 * LaTeX
 
 #+begin_src emacs-lisp :tangle init.d/init-latex.el :mkdirp yes
-;;; init--latex.el -*- lexical-binding: t -*-
+;;; init-latex.el -*- lexical-binding: t -*-
 
 ;; AUCTeX
 (use-package tex-site
@@ -1632,7 +1665,7 @@ find everything related to my Emacs setup.
          (cdlatex-tab . LaTeX-indent-line)))
 
 (use-package pdf-tools
-  :ensure t
+  :defer t
   :hook
   (pdf-view-mode . (lambda () (auto-revert-mode 1)))
   :config
@@ -1645,6 +1678,8 @@ find everything related to my Emacs setup.
 * Version Control
 
 #+begin_src emacs-lisp :tangle init.d/init-vc.el :mkdirp yes
+;;-*- lexical-binding: t; -*-
+
 ;;; init-vc.el -*- lexical-binding: t -*-
 
 ;; Version control framework
