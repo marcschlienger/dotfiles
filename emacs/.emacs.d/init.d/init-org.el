@@ -36,9 +36,9 @@
 (use-package org
   :ensure nil
   :init
-  (setq org-directory (expand-file-name "~/Nextcloud/cloud.schlienger.xyz/org"))
+  ;(setq org-directory (expand-file-name "~/Nextcloud/cloud.schlienger.xyz/org"))
+  (setq org-directory (expand-file-name "~/Documents/org"))
   (setq org-imenu-depth 7)
-
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
   (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
   :bind
@@ -46,21 +46,8 @@
     ("C-c l" . org-store-link)
     ("C-c o" . org-open-at-point-global)
     :map org-mode-map
-    ;; I don't like that Org binds one zillion keys, so if I want one
-    ;; for something more important, I disable it from here.
-    ("C-'" . nil)
-    ("C-," . nil)
-    ("M-;" . nil)
-    ("<C-return>" . nil)
-    ("<C-S-return>" . nil)
-    ("C-M-S-<right>" . nil)
-    ("C-M-S-<left>" . nil)
-    ("C-c ;" . nil)
     ("C-c M-l" . org-insert-last-stored-link)
     ("C-c C-M-l" . org-toggle-link-display)
-    ("M-." . org-edit-special) ; alias for C-c ' (mnenomic is global M-. that goes to source)
-    :map org-src-mode-map
-    ("M-," . org-edit-src-exit) ; see M-. above
     :map narrow-map
     ("b" . org-narrow-to-block)
     ("e" . org-narrow-to-element)
@@ -107,26 +94,28 @@
   :ensure nil
   :config
   (setq org-refile-targets
-        '(("todo.org" :maxlevel . 1)
-          ("someday.org" :maxlevel . 1)))
-  (setq org-refile-use-outline-path 'file) ; to be able to refile targets to the top level
+        '(("projects.org" . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
+          ("someday.org" . (:maxlevel . 2))))
+  (setq org-refile-use-outline-path 'file)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
+  (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-use-cache t)
   (setq org-reverse-note-order nil)
   (setq org-todo-keywords
-        '((sequence "TODO(t)" "NEXT(n)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+        '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
   (setq org-fontify-done-headline nil)
   (setq org-fontify-todo-headline nil)
   (setq org-fontify-whole-heading-line nil)
   (setq org-enforce-todo-dependencies t)
-  (setq org-enforce-todo-checkbox-dependencies t))
+  (setq org-enforce-todo-checkbox-dependencies t)
+  )
 
 ;;; tags
 (use-package org
   :ensure nil
   :config
   (setq org-tag-alist
-        '((sequence "home(h)" "school(w)" "@computer(c)" "@phone(p)")))
+        '((sequence "@home(h)" "@work(w)" "@comp(c)")))
   (setq org-auto-align-tags nil)
   (setq org-tags-column 0))
 
@@ -188,69 +177,52 @@
   :bind ("C-c c" . org-capture)
   :config
   (setq org-capture-templates
-        `(("c" "Calendar entry" entry
-           (file+headline "inbox.org" "Calendar entries")
-           ,(concat "* CAL %^{Description} %^g\n%^T\n"
+        `(("i" "Inbox" entry (file "inbox.org")
+           ,(concat "* TODO %^{Task} %^g\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n\n"
-                    "%?")
-           :prepend t
-           :empty-lines-after 1)
-          ("m" "Meeting" entry
-           (file+olp "notes.org" "Notes" "Meetings")
-           ,(concat "* MEET %^{Description} :meeting:%^g\n"
+                    ":END:\n"
+                    "%?"))
+          ("n" "Note" entry (file "notes.org")
+           ,(concat "* %^{Note}\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n\n")
-           :prepend t
-           :clock-in t
-           :clock-resume t
-           :empty-lines-after 1)
-          ("n" "Note" entry
-           (file+headline "notes.org" "Notes")
-           ,(concat "* %^{Note} %^g\n"
+                    ":END:\n"))
+          ("N" "Meeting Note" entry (file "notes.org")
+           ,(concat "* Meeting Note (%a)\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n\n")
-           :prepend t
-           :empty-lines-after 1)
-          ("N" "Note with annotation" entry
-           (file+headline "notes.org" "Notes")
-           ,(concat "* %^{Note} %^g\n"
+                    ":END:\n"
+                    "%?"))
+          ("m" "Meeting" entry (file+headline "agenda.org" "Meetings")
+           ,(concat "* %^{Description} :meeting: %^g\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n\n"
-                    "%i\n%a")
-           :prepend t
-           :empty-lines-after 1)
-          ("t" "Task" entry
-           (file+headline "inbox.org" "Tasks")
-           ,(concat "* TODO %^{Title} %^g\n"
+                    ":END:\n"))
+          ("p" "Project" entry (file "projects.org")
+           ,(concat "* PROJECT %^{Project title} [/] :project: %^g\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n\n"
-                    "%?")
-           :prepend t
-           :empty-lines-after 1)
-          ("T" "Task with annotation" entry
-           (file+headline "inbox.org" "Tasks")
-           ,(concat "* TODO %^{Title} %^g\n"
+                    ":VISIBILITY: folded\n"
+                    ":COOKIE_DATA: recursive todo\n"
+                    ":END:\n"
+                    "** Information\n"
                     ":PROPERTIES:\n"
-                    ":CAPTURED: %U\n"
-                    ":END:\n\n"
-                    "%i\n%a\n%?")
-           :prepend t
-           :empty-lines-after 1)
-          ("w" "Wishlist" entry
-           (file+olp "notes.org" "Notes" "Wishlist")
-           ,(concat "* WISH %^{Title} :wish:%^g\n"
+                    ":VISIBILITY: folded\n"
+                    ":END:\n"
+                    "%^{Info}\n" 
+                    "** Notes\n"
                     ":PROPERTIES:\n"
-                    ":CAPTURED: %U\n"
-                    ":END:\n\n"
-                    "%a\n%?")
-           :prepend t
-           :empty-lines-after 1))))
+                    ":VISIBILITY: folded\n"
+                    ":END:\n"
+                    "** Tasks\n"
+                    ":PROPERTIES:\n"
+                    ":VISIBILITY: content\n"
+                    ":END:\n")))
+        )
+  :hook
+  (org-capture-mode-hook . delete-other-windows) ;; use full window for org-capture
+  )
 
 ;;; agenda
 (use-package org-agenda
@@ -259,9 +231,10 @@
   ( :map global-map
     ("C-c a" . org-agenda))
   :config
-  (setq org-default-notes-file (make-temp-file "emacs-org-notes-")) ; send it to oblivion
-  (setq org-agenda-files `(,org-directory))
-  (setq org-agenda-span 'week)
+  (setq org-default-notes-file (make-temp-file "org-default-notes-")) ;send it to oblivion
+  (setq org-agenda-files (list "inbox.org" "agenda.org" "notes.org" "projects.org"))
+  ;(setq org-agenda-files `(,org-directory))
+  (setq org-agenda-span 14)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
   (setq org-agenda-show-all-dates t)
@@ -273,14 +246,37 @@
   (setq org-agenda-sticky nil)
   (setq org-agenda-custom-commands-contexts nil)
   (setq org-agenda-custom-commands
-        '(("s"
-           "List all active projects that have to be done @school"
-           tags-todo
-           "@school+CATEGORY=\"@school\"/TODO|STARTED")
-          ("p"
-           "List all active projects"
-           tags
-           "+LEVEL=2+TODO=\"TODO\"")))
+        '(("g" "Getting Things Done (GTD)"
+         ((agenda ""
+                  ((org-agenda-span 'day)
+                   (org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'deadline))
+                   (org-deadline-warning-days 0)))
+          (todo "NEXT"
+                ((org-agenda-skip-function
+                  '(org-agenda-skip-entry-if 'deadline))
+                 (org-agenda-show-all-dates nil)
+                 (org-agenda-prefix-format "  %i %-12:c [%e] ")
+                 (org-agenda-overriding-header "\nTasks\n")))
+          (agenda nil
+                  ((org-agenda-entry-types '(:deadline))
+                   (org-agenda-format-date "")
+                   (org-deadline-warning-days 7)
+                   (org-agenda-show-all-dates nil)
+                   (org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'notregexp "\\* NEXT"))
+                   (org-agenda-overriding-header "\nDeadlines")))
+          (tags-todo "inbox"
+                     ((org-agenda-prefix-format "  %?-12t% s")
+                      (org-agenda-overriding-header "\nInbox\n")))
+          (tags "CLOSED>=\"<today>\""
+                ((org-agenda-overriding-header "\nCompleted today\n")))))
+          ("h" "List all active tasks that have to be done @home"
+           tags-todo "@home")
+          ("w" "List all active tasks that have to be done @work"
+           tags-todo "@work")
+          ("p" "List all active project-related tasks"
+           tags "+LEVEL=3+TODO=\"NEXT\"")))
   (setq org-agenda-max-entries nil)
   (setq org-agenda-max-entries nil)
   (setq org-agenda-max-todos nil)
@@ -288,9 +284,10 @@
   (setq org-agenda-max-effort nil)
 
 ;;;; General agenda view options
+  (setq org-agenda-hide-tags-regexp ".")
   (setq org-agenda-prefix-format
         '((agenda . " %i %-12:c%?-12t% s")
-          (todo . " %i %-12:c")
+          (todo . " ")
           (tags . " %i %-12:c")
           (search . " %i %-12:c")))
   (setq org-agenda-sorting-strategy
@@ -315,10 +312,8 @@
   (setq org-agenda-insert-diary-strategy 'date-tree)
   (setq org-agenda-insert-diary-extract-time nil)
   (setq org-agenda-include-diary nil)
-  ;; I do not want the diary, but there is no way to disable it
-  ;; altogether.  This creates a diary file in the /tmp directory.
-  (setq diary-file (make-temp-file "emacs-diary-"))
-  (setq org-agenda-diary-file 'diary-file) ; TODO 2023-05-20: review Org diary substitute
+  (setq diary-file (make-temp-file "diary-")) ;send it to oblivion
+  (setq org-agenda-diary-file 'diary-file)
 
 ;;;; Agenda follow mode
   (setq org-agenda-start-with-follow-mode nil)
@@ -386,22 +381,14 @@
   (setq org-agenda-remove-tags nil)
   (setq org-agenda-tags-column -100)
 
-;;;; Agenda entry
-  ;; NOTE: I do not use this right now.  Leaving everything to its
-  ;; default value.
-  (setq org-agenda-start-with-entry-text-mode nil)
-  (setq org-agenda-entry-text-maxlines 5)
-  (setq org-agenda-entry-text-exclude-regexps nil)
-  (setq org-agenda-entry-text-leaders "    > ")
-
 ;;;; Agenda logging and clocking
-  ;; NOTE: I do not use these yet, though I plan to.  Leaving everything
-  ;; to its default value for the time being.
+  ;; I plan to use this in the future.
+  ;; For the time being I leave everything to its default value.
   (setq org-agenda-log-mode-items '(closed clock))
   (setq org-agenda-clock-consistency-checks
         '((:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
                          ("4:00")
-                         :default-face ; This should definitely be reviewed
+                         :default-face
                          ((:background "DarkRed")
                           (:foreground "white"))
                          :overlap-face nil :gap-face nil :no-end-time-face nil
@@ -416,28 +403,7 @@
   (setq org-agenda-search-headline-for-time t)
   (setq org-agenda-use-time-grid t)
   (setq org-agenda-cmp-user-defined nil)
-  (setq org-agenda-sort-notime-is-late t) ; Org 9.4
-  (setq org-agenda-sort-noeffort-is-high t) ; Org 9.4
+  (setq org-agenda-sort-notime-is-late t) 
+  (setq org-agenda-sort-noeffort-is-high t))
 
-;;;; Agenda column view
-  ;; NOTE I do not use these, but may need them in the future.
-  (setq org-agenda-view-columns-initially nil)
-  (setq org-agenda-columns-show-summaries t)
-  (setq org-agenda-columns-compute-summary-properties t)
-  (setq org-agenda-columns-add-appointments-to-effort-sum nil)
-  (setq org-agenda-auto-exclude-function nil)
-  (setq org-agenda-bulk-custom-functions nil))
-
-;;; Sync the org agenda with a Nextcloud calendar
-(use-package org-caldav
-  :ensure t
-  :init
-  (setq org-caldav-url "https://cloud.schlienger.xyz/remote.php/dav/calendars/marc/")
-  (setq org-caldav-calendar-id "org")
-  (setq org-caldav-files nil)
-  (setq org-caldav-inbox "~/Nextcloud/cloud.schlienger.xyz/org/calendar.org")
-  (setq org-caldav-save-directory "~/Nextcloud/cloud.schlienger.xyz/org/.caldav-backups")
-  (setq org-icalendar-timezone "Europe/Berlin"))
-  ;:config
-  ;(add-hook 'org-agenda-mode-hook 'org-caldav-sync))
 (provide 'init-org)

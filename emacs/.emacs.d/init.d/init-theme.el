@@ -2,10 +2,10 @@
 
 ;;; Set the font.
 (if (eq system-type 'darwin)
-  (setq height1 170
-        height2 200)
+  (setq height1 160
+        height2 180)
   (setq height1 140
-        height2 170))
+        height2 160))
 
 (set-face-attribute 'default nil
                     :family "FiraCode Nerd Font"
