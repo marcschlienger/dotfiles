@@ -36,8 +36,10 @@
 (setq auto-save-visited-interval 30)
 
 ;; Load config modules.
-(dolist (path '("elisp" "init.d"))
-  (add-to-list 'load-path (locate-user-emacs-file path)))
+(mapc
+ (lambda (string)
+   (add-to-list 'load-path (locate-user-emacs-file string)))
+ '("lib.d" "init.d"))
 
 (require 'init-basic)
 (require 'init-dired)

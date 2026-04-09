@@ -1,5 +1,7 @@
 ;;-*- lexical-binding: t; -*-
 
+(require 'lib-org)
+
 ;; Calendar
 (use-package calendar
   :ensure nil
@@ -232,9 +234,12 @@
     ("C-c a" . org-agenda))
   :config
   (setq org-default-notes-file (make-temp-file "org-default-notes-")) ;send it to oblivion
-  (setq org-agenda-files (list "inbox.org" "agenda.org" "notes.org" "projects.org"))
+  (setq org-agenda-files 
+      (mapcar 'file-truename 
+	      (file-expand-wildcards "~/Documents/org/*.org")))
+  ;(setq org-agenda-files (list "inbox.org" "agenda.org" "notes.org" "projects.org"))
   ;(setq org-agenda-files `(,org-directory))
-  (setq org-agenda-span 14)
+  (setq org-agenda-span 'week)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
   (setq org-agenda-show-all-dates t)
@@ -284,7 +289,6 @@
   (setq org-agenda-max-effort nil)
 
 ;;;; General agenda view options
-  (setq org-agenda-hide-tags-regexp ".")
   (setq org-agenda-prefix-format
         '((agenda . " %i %-12:c%?-12t% s")
           (todo . " ")
@@ -374,11 +378,13 @@
   (setq org-agenda-tags-todo-honor-ignore-options nil)
 
 ;;;; Agenda tagged items
-  (setq org-agenda-show-inherited-tags t)
+  (setq org-agenda-show-inherited-tags nil)
   (setq org-agenda-use-tag-inheritance
         '(todo search agenda))
   (setq org-agenda-hide-tags-regexp nil)
+  ;(setq org-agenda-hide-tags-regexp ".")
   (setq org-agenda-remove-tags nil)
+  ;(setq org-agenda-remove-tags t)
   (setq org-agenda-tags-column -100)
 
 ;;;; Agenda logging and clocking
