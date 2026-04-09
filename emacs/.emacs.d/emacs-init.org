@@ -126,8 +126,13 @@ find everything related to my Emacs setup.
 ;; Always make sure that there is a final newline character when saving a file.
 (use-package emacs
   :custom
-  (require-final-newline t)
-)
+  (require-final-newline t))
+
+;; Revert buffers when the underlying file has changed
+(use-package emacs
+  :config
+  (global-auto-revert-mode 1)
+  (setq auto-revert-verbose t))
 
 ;; Easily move the current line up or down.
 (defun move-line-up ()
@@ -161,6 +166,9 @@ find everything related to my Emacs setup.
 
 (provide 'init-basic)
 #+end_src
+
+#+RESULTS:
+: init-basic
 
 * Dired settings
 
