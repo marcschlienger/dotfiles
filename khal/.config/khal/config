@@ -1,0 +1,18 @@
+[calendars]
+[[nextcloud]]
+path = ~/.local/share/calendars/nextcloud/*
+type = discover
+color = dark blue
+
+[default]
+default_calendar = personal
+highlight_event_days = True
+
+[locale]
+local_timezone= Europe/Berlin
+default_timezone= Europe/Berlin
+timeformat = %H:%M
+dateformat = %Y-%m-%d
+longdateformat = %Y-%m-%d
+datetimeformat = %Y-%m-%d %H:%M
+longdatetimeformat = %Y-%m-%d %H:%M
