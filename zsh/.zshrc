@@ -50,6 +50,9 @@ fi
 # Source ranger configuration
 [ -f ~/.zsh/ranger.zsh ] && . ~/.zsh/ranger.zsh
 
+# Source yazi configuration
+[ -f ~/.zsh/yazi.zsh ] && . ~/.zsh/yazi.zsh
+
 # Load plugins
 [ -f ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && . ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 [ -d ~/.zsh/plugins/zsh-completions/zsh-completions.plugin.zsh ] && fpath=(~/.zsh/plugins/zsh-completions/src $fpath)
@@ -58,3 +61,4 @@ fi
 # Load prompt
 fpath=(~/.zsh $fpath)
 autoload -Uz myprompt.zsh; myprompt.zsh
+

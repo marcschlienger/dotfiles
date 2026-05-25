@@ -11,7 +11,7 @@ alias cp='nocorrect cp -iv'
 alias cpd='cp -r'
 alias mv='nocorrect mv -iv'
 alias rm='nocorrect rm -v'
-alias rmd'rm -r'
+alias rmd='rm -r'
 
 # history
 alias h='history -20'
@@ -25,6 +25,16 @@ alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 alias d='dirs -v'
 for index ({1..9}) alias "$index"="cd +${index}"; unset index
+
+# diff
+diff='diff --color=always'
+
+# more or less
+alias more='more -R'
+alias less='less -R'
+
+# kitty
+alias s="kitten ssh"
 
 # make a directory and cd into it
 take () {
