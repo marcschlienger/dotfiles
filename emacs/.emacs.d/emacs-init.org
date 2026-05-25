@@ -161,7 +161,7 @@ find everything related to my Emacs setup.
   ;(setq mac-option-modifier 'nil) ; diable the option key as modifier
   (setq ns-alternate-modifier 'meta) ; diable the option key as modifier
   (setq ns-right-alternate-modifier 'none) ; diable the option key as modifier
-  (setq ns-pop-up-frames 'nil) ; reuse existing frames whenever possible
+  (setq ns-pop-up-frames nil) ; reuse existing frames whenever possible
 )
 
 (provide 'init-basic)
@@ -1523,7 +1523,7 @@ find everything related to my Emacs setup.
 
 ;;;; Agenda items with deadline and scheduled timestamps
   (setq org-agenda-include-deadlines t)
-  (setq org-deadline-warning-days 0)
+  (setq org-deadline-warning-days 7)
   (setq org-agenda-skip-scheduled-if-done nil)
   (setq org-agenda-skip-scheduled-if-deadline-is-shown t)
   (setq org-agenda-skip-timestamp-if-deadline-is-shown t)
@@ -1640,8 +1640,11 @@ find everything related to my Emacs setup.
   (setq-default TeX-master nil)
   (setq TeX-PDF-mode t)
   (setq reftex-plug-into-AUCTeX t)
-  (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
-  (setq TeX-source-correlate-start-server t))
+  ;;(setq TeX-view-program-selection '((output-pdf "PDF Tools")))
+  (setq TeX-view-program-selection '((output-pdf "Skim")))
+  (setq TeX-view-program-list
+        '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+setq TeX-source-correlate-start-server t))
 
 (use-package cdlatex
   :ensure t
@@ -1655,10 +1658,15 @@ find everything related to my Emacs setup.
   (pdf-view-mode . (lambda () (auto-revert-mode 1)))
   :config
   (pdf-tools-install)
-  (setq-default pdf-view-display-size 'fit-width))
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-view-use-scaling t)
+  (setq pdf-view-use-imagemagick nil))
 
 (provide 'init-latex)
 #+end_src
+
+#+RESULTS:
+: init-latex
 
 * Version Control
 

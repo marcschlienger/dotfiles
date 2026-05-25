@@ -333,7 +333,7 @@
 
 ;;;; Agenda items with deadline and scheduled timestamps
   (setq org-agenda-include-deadlines t)
-  (setq org-deadline-warning-days 0)
+  (setq org-deadline-warning-days 7)
   (setq org-agenda-skip-scheduled-if-done nil)
   (setq org-agenda-skip-scheduled-if-deadline-is-shown t)
   (setq org-agenda-skip-timestamp-if-deadline-is-shown t)

@@ -30,8 +30,11 @@
   (setq-default TeX-master nil)
   (setq TeX-PDF-mode t)
   (setq reftex-plug-into-AUCTeX t)
-  (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
-  (setq TeX-source-correlate-start-server t))
+  ;;(setq TeX-view-program-selection '((output-pdf "PDF Tools")))
+  (setq TeX-view-program-selection '((output-pdf "Skim")))
+  (setq TeX-view-program-list
+        '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+setq TeX-source-correlate-start-server t))
 
 (use-package cdlatex
   :ensure t
@@ -45,6 +48,8 @@
   (pdf-view-mode . (lambda () (auto-revert-mode 1)))
   :config
   (pdf-tools-install)
-  (setq-default pdf-view-display-size 'fit-width))
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-view-use-scaling t)
+  (setq pdf-view-use-imagemagick nil))
 
 (provide 'init-latex)

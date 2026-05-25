@@ -15,8 +15,13 @@
 ;; Always make sure that there is a final newline character when saving a file.
 (use-package emacs
   :custom
-  (require-final-newline t)
-)
+  (require-final-newline t))
+
+;; Revert buffers when the underlying file has changed
+(use-package emacs
+  :config
+  (global-auto-revert-mode 1)
+  (setq auto-revert-verbose t))
 
 ;; Easily move the current line up or down.
 (defun move-line-up ()
@@ -45,7 +50,7 @@
   ;(setq mac-option-modifier 'nil) ; diable the option key as modifier
   (setq ns-alternate-modifier 'meta) ; diable the option key as modifier
   (setq ns-right-alternate-modifier 'none) ; diable the option key as modifier
-  (setq ns-pop-up-frames 'nil) ; reuse existing frames whenever possible
+  (setq ns-pop-up-frames nil) ; reuse existing frames whenever possible
 )
 
 (provide 'init-basic)
