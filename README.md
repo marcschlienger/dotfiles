@@ -55,14 +55,13 @@ This is not a generic framework for everyone. It is my own setup, tracked in a f
 
 ## Installation
 
-Clone the repository and link the parts you want to use:
+Clone the repository and use GNU Stow to symlink the parts you want to enable:
 
 ```bash
 git clone https://codeberg.org/blutlauge/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
+stow nvim emacs
 ```
-
-Then create symlinks or source the relevant files from your local shell startup files.
 
 ## Notes
 
