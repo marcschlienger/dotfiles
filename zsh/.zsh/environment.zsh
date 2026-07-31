@@ -15,8 +15,10 @@ export SAVEHIST=1024
 
 # editor
 export ALTERNATE_EDITOR=""
-export EDITOR='emacsclient -t'
-export VISUAL='emacsclient -c -n'
+#export EDITOR='emacsclient -t'
+export EDITOR='nvim'
+#export VISUAL='emacsclient -c -n'
+export VISUAL='open -a Open\ in\ Neovim.app'
 
 # pager
 export PAGER='less -R'

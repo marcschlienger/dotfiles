@@ -32,7 +32,6 @@ export KEYTIMEOUT=1
 [ -f ~/.zsh/environment.zsh ] && . ~/.zsh/environment.zsh
 [ -f ~/.zsh/options.zsh ] && . ~/.zsh/options.zsh
 [ -f ~/.zsh/keys.zsh ] && . ~/.zsh/keys.zsh
-[ -f ~/.zsh/restic.zsh ] && . ~/.zsh/restic.zsh
 
 # Source fzf configuration
 if [ -f ~/.fzf.zsh ]; then
@@ -52,6 +51,9 @@ fi
 
 # Source yazi configuration
 [ -f ~/.zsh/yazi.zsh ] && . ~/.zsh/yazi.zsh
+
+# Source zoxide configuration
+[ -f ~/.zsh/zoxide.zsh ] && . ~/.zsh/zoxide.zsh
 
 # Load plugins
 [ -f ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && . ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
