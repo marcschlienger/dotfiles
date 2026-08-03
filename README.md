@@ -2,7 +2,7 @@
 
 My personal dotfiles for Linux and macOS.
 
-Repository: `https://codeberg.org/blutlauge/dotfiles`
+Repository: `https://github.com/marcschlienger/dotfiles`
 
 This repo contains the configuration I use for a Unix-like, keyboard-driven workflow across machines, with a focus on:
 
@@ -58,7 +58,7 @@ This is not a generic framework for everyone. It is my own setup, tracked in a f
 Clone the repository and use GNU Stow to symlink the parts you want to enable:
 
 ```bash
-git clone https://codeberg.org/blutlauge/dotfiles.git ~/.dotfiles
+git clone https://github.com/marcschlienger/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 stow nvim emacs
 ```
