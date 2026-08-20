@@ -6,6 +6,8 @@
 
 (when (eq system-type 'darwin)
   (progn
+    ;;(add-to-list 'default-frame-alist '(undecorated-round . t))
+    (setq ns-use-proxy-icon nil)
     (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
     (add-to-list 'default-frame-alist '(ns-appearance . dark))))
 
