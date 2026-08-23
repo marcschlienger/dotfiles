@@ -1,0 +1,38 @@
+#:schema https://yazi-rs.github.io/schemas/yazi.json
+
+# Keep this file small: Yazi merges it with its built-in defaults, so only
+# deliberate deviations live here.
+
+[mgr]
+ratio          = [ 1, 4, 3 ]
+sort_by        = "natural"
+sort_sensitive = false
+sort_reverse   = false
+sort_dir_first = true
+linemode       = "size"
+show_hidden    = false
+show_symlink   = true
+scrolloff      = 8
+
+[preview]
+wrap          = "yes"
+tab_size      = 4
+image_delay   = 30
+image_quality = 80
+
+[opener]
+# `ec` is a Zsh alias and is not available to Yazi's non-interactive shell, so
+# spell out the same command here. Emacs is the default; Neovim remains
+# available from the interactive "Open with" menu (`O`).
+edit = [
+	{ run = 'emacsclient -c -n -a "" %s', desc = "Emacs client", for = "unix", orphan = true },
+	{ run = 'nvim %s',                     desc = "Neovim",      for = "unix", block = true },
+]
+
+[tasks]
+# Enough parallelism for local disks without making copies and previews noisy.
+file_workers    = 4
+process_workers = 6
+
+[input]
+cursor_blink = true

@@ -1,0 +1,19 @@
+#:schema https://yazi-rs.github.io/schemas/keymap.json
+
+# Extend Yazi's excellent Vim-like defaults instead of copying them. This keeps
+# new upstream bindings available after upgrades.
+
+[mgr]
+prepend_keymap = [
+	{ on = "!",              run = 'shell "$SHELL" --block', desc = "Open a shell here", for = "unix" },
+	{ on = "<C-n>",          run = "create --dir",           desc = "Create a directory" },
+	{ on = [ "g", "." ],     run = "cd ~/.dotfiles",         desc = "Go to dotfiles", for = "unix" },
+	{ on = [ "g", "n" ],     run = "cd ~/Nextcloud",         desc = "Go to Nextcloud", for = "unix" },
+]
+
+[input]
+prepend_keymap = [
+	# A single Escape cancels prompts instead of first switching input mode.
+	{ on = "<Esc>", run = "close", desc = "Cancel input" },
+]
+
