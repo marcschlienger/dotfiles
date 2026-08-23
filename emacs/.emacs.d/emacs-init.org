@@ -1,6 +1,6 @@
 #+title: GNU Emacs configuration
 #+author: Marc Schlienger
-#+email: marc.schliengerc@posteo.de
+#+email: marc.schlienger@posteo.de
 #+language: en
 #+options: ':t toc:nil num:t author:t email:t
 #+startup: content indent
@@ -222,8 +222,7 @@ find everything related to my Emacs setup.
   (setq dired-isearch-filenames 'dwim)
   (setq dired-create-destination-dirs 'ask)
   (setq dired-vc-rename-file t)
-  (setq dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir))))
-  (setq dired-create-destination-dirs-on-trailing-dirsep t))
+  (setq dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir)))))
 
 ;(use-package emacs
  ; :ensure nil
@@ -235,12 +234,10 @@ find everything related to my Emacs setup.
   :ensure nil
   :after dired
   :bind (:map dired-mode-map
-	      ("I" . dired-info))
+	      ("I" . dired-do-info))
   :config
   (setq dired-clean-up-buffers-too t)
-  (setq dired-clean-confirm-killing-deleted-buffers t)
-  (setq dired-bind-man nil)
-  (setq dired-bind-info nil))
+  (setq dired-clean-confirm-killing-deleted-buffers t))
 
 (use-package dired-subtree
   :ensure t
@@ -740,7 +737,6 @@ find everything related to my Emacs setup.
   (setq flymake-no-changes-timeout nil)
   (setq flymake-start-on-flymake-mode t)
   (setq flymake-start-on-save-buffer t)
-  (setq flymake-proc-compilation-prevents-syntax-check t)
   (setq flymake-wrap-around nil)
   (setq flymake-mode-line-format
         '("" flymake-mode-line-exception flymake-mode-line-counters))
@@ -756,39 +752,84 @@ find everything related to my Emacs setup.
   :config
   (add-hook 'flymake-diagnostic-functions #'package-lint-flymake))
 
+;;; Tree-sitter
+(use-package treesit
+  :ensure nil
+  :if (treesit-available-p)
+  :init
+  (setq treesit-language-source-alist
+        '((c "https://github.com/tree-sitter/tree-sitter-c")
+          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (rust "https://github.com/tree-sitter/tree-sitter-rust")
+          (swift "https://github.com/alex-pinkus/tree-sitter-swift")))
+  (defconst ms/treesit-major-mode-remappings
+    '((c c-mode c-ts-mode)
+      (cpp c++-mode c++-ts-mode)
+      (go go-mode go-ts-mode)
+      (python python-mode python-ts-mode)
+      (swift swift-mode swift-ts-mode))
+    "Tree-sitter remappings enabled when their grammar is available.")
+  :config
+  (defun ms/treesit-activate-remappings ()
+    "Use tree-sitter modes whose grammar is available locally."
+    (dolist (entry ms/treesit-major-mode-remappings)
+      (pcase-let ((`(,language ,source-mode ,target-mode) entry))
+        (when (treesit-language-available-p language)
+          (setf (alist-get source-mode major-mode-remap-alist) target-mode)))))
+
+  (defun ms/treesit-install-missing-grammars ()
+    "Build missing configured grammars for the current platform."
+    (interactive)
+    (dolist (entry treesit-language-source-alist)
+      (let ((language (car entry)))
+        (unless (treesit-language-available-p language)
+          (condition-case error-data
+              (treesit-install-language-grammar language)
+            (error
+             (display-warning
+              'treesit
+              (format "Could not install %s grammar: %s"
+                      language (error-message-string error-data))
+              :warning))))))
+    (ms/treesit-activate-remappings))
+
+  (ms/treesit-activate-remappings))
+
 ;;; Clojure(Script)
 (use-package paredit
   :ensure t
-  :hook
-  ((clojure-mode . paredit-mode)))
+  :hook (clojure-mode . paredit-mode))
+
+(use-package clojure-mode
+  :ensure t
+  :mode (("\\.clj[csx]?\\'" . clojure-mode)
+         ("\\.edn\\'" . clojure-mode)))
 
 (use-package cider
-  :ensure t)
+  :ensure t
+  :commands (cider-jack-in cider-jack-in-cljs
+             cider-connect-clj cider-connect-cljs))
+
+(use-package flycheck
+  :ensure t
+  :hook (clojure-mode . flycheck-mode))
 
 ;; This brings the hints from clj-kondo to the screen.
 (use-package flycheck-clj-kondo
-  :ensure t)
+  :ensure t
+  :after (flycheck clojure-mode))
 
 ;; Provides all necessary refactoring tools.
 (use-package clj-refactor
   :ensure t
   :after clojure-mode
+  :hook (clojure-mode . clj-refactor-mode)
   :config
-  (defun my-clojure-mode-hook ()
-    (clj-refactor-mode 1)
-    (yas-minor-mode 1) ; for adding require/use/import statements
-    ;; This choice of keybinding leaves cider-macroexpand-1 unbound
-    (cljr-add-keybindings-with-prefix "C-c C-m"))
-  (add-hook 'clojure-mode-hook #'my-clojure-mode-hook))
-
-;; This provides the basic features like highlighting, indentation,
-;; navigation and basic refactoring.
-(use-package clojure-mode
-  :ensure t
-  :after flycheck-clj-kondo
-  :config
-  (require 'flycheck-clj-kondo)
-  (flycheck-mode 1))
+  ;; This choice of keybinding leaves cider-macroexpand-1 unbound.
+  (cljr-add-keybindings-with-prefix "C-c C-m"))
 
 ;;; C, C++, Java, ...
 (defun ms/c-mode-setup ()
@@ -842,20 +883,24 @@ find everything related to my Emacs setup.
   (setq rustic-lsp-client 'eglot))
 
 ;;; Shell mode
+(defun ms/sh-mode-setup ()
+  "Apply personal indentation settings to shell buffers."
+  (setq-local indent-tabs-mode nil
+              tab-width 2
+              sh-basic-offset 2))
+
 (use-package sh-script
-  :config
-  (setq indent-tabs-mode nil)
-  (setq tab-width 2)
-  (setq sh-basic-offset 2)
-  (setq sh-indentation 2)
-  :hook (sh-mode . flymake-mode))
+  :ensure nil
+  :hook ((sh-mode . ms/sh-mode-setup)
+         (sh-mode . flymake-mode)))
 
 ;;; Swift development
 ;; Swift mode
 (use-package swift-mode
-    :ensure t
-    :mode (("\\.swift\\'" . swift-ts-mode))
-    :interpreter "swift")
+  :ensure t
+  :commands (swift-mode swift-ts-mode)
+  :mode (("\\.swift\\'" . swift-mode))
+  :interpreter "swift")
 
 ;; .editorconfig file support
 (use-package editorconfig
@@ -889,7 +934,6 @@ find everything related to my Emacs setup.
   :ensure nil
   :config
   (setq completion-category-defaults nil)
-  (add-to-list 'eglot-stay-out-of 'flymake)
   (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
@@ -1179,10 +1223,6 @@ find everything related to my Emacs setup.
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package all-the-icons
-  :ensure t
-  :if (or (daemonp) (display-graphic-p)))
-
 (use-package orderless
   :ensure t
   :custom
@@ -1252,8 +1292,7 @@ find everything related to my Emacs setup.
 (use-package org
   :ensure nil
   :init
-  ;(setq org-directory (expand-file-name "~/Nextcloud/cloud.schlienger.xyz/org"))
-  (setq org-directory (expand-file-name "~/Documents/org"))
+  (setq org-directory (expand-file-name "~/org"))
   (setq org-imenu-depth 7)
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
   (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
@@ -1287,7 +1326,7 @@ find everything related to my Emacs setup.
           ("x" . "example")
           ("X" . "export")
           ("q" . "quote")))
-  (setq org-catch-invisible-edits 'show)
+  (setq org-fold-catch-invisible-edits 'show)
   (setq org-return-follows-link nil)
   (setq org-loop-over-headlines-in-active-region 'start-level)
   (setq org-modules '(ol-info ol-eww))
@@ -1450,11 +1489,9 @@ find everything related to my Emacs setup.
     ("C-c a" . org-agenda))
   :config
   (setq org-default-notes-file (make-temp-file "org-default-notes-")) ;send it to oblivion
-  (setq org-agenda-files 
-      (mapcar 'file-truename 
-	      (file-expand-wildcards "~/Documents/org/*.org")))
-  ;(setq org-agenda-files (list "inbox.org" "agenda.org" "notes.org" "projects.org"))
-  ;(setq org-agenda-files `(,org-directory))
+  ;; Directory entries are expanded whenever Org builds an agenda, so newly
+  ;; created Org files are picked up without restarting Emacs.
+  (setq org-agenda-files (list org-directory))
   (setq org-agenda-span 'week)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
@@ -1608,13 +1645,13 @@ find everything related to my Emacs setup.
   ;; For the time being I leave everything to its default value.
   (setq org-agenda-log-mode-items '(closed clock))
   (setq org-agenda-clock-consistency-checks
-        '((:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
-                         ("4:00")
-                         :default-face
-                         ((:background "DarkRed")
-                          (:foreground "white"))
-                         :overlap-face nil :gap-face nil :no-end-time-face nil
-                         :long-face nil :short-face nil)))
+        '(:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
+                       ("4:00")
+                       :default-face
+                       ((:background "DarkRed")
+                        (:foreground "white"))
+                       :overlap-face nil :gap-face nil :no-end-time-face nil
+                       :long-face nil :short-face nil))
   (setq org-agenda-log-mode-add-notes t)
   (setq org-agenda-start-with-log-mode nil)
   (setq org-agenda-start-with-clockreport-mode nil)
@@ -1730,22 +1767,23 @@ find everything related to my Emacs setup.
 ;; Magit
 (use-package magit
   :ensure t
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch))
+  :commands (magit-status magit-dispatch magit-file-dispatch)
   :init
   (setq magit-define-global-key-bindings nil)
-  :config
   (setq git-commit-summary-max-length 50)
   (setq git-commit-style-convention-checks '(non-empty-second-line)))
 
 ;; diff-hl-mode (https://github.com/dgutov/diff-hl) to highlight lines with uncommitted changes
 (use-package diff-hl
   :ensure t
-  :after magit
-  :init
-  (global-diff-hl-mode)
   :custom
   ; TODO Determine whether Tramp mode is slow without the following setting.
   (diff-hl-disable-on-remote t)
   :hook
+  (after-init . global-diff-hl-mode)
+  (dired-mode . diff-hl-dired-mode)
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh)
   (vc-checkin . diff-hl-update))
@@ -1758,88 +1796,12 @@ find everything related to my Emacs setup.
 #+begin_src emacs-lisp :tangle init.d/init-elfeed.el :mkdirp yes
 ;;; init-elfeed.el -*- lexical-binding: t -*-
 
-;; Elfeed
+;; Feed subscriptions will be supplied by Feedbin rather than maintained here.
 (use-package elfeed
   :ensure t
   :custom
-  ;(elfeed-db-directory
-  ; (expand-file-name "elfeed" user-emacs-directory))
   (elfeed-show-entry-switch 'display-buffer)
   :bind ("C-x w" . elfeed)
-  :config
-  (setq elfeed-feeds
-        '(("http://asert.arbornetworks.com/feed/" security)
-          ("http://feeds.trendmicro.com/Anti-MalwareBlog/" security)
-          ("http://researchcenter.paloaltonetworks.com/unit42/feed/" security)
-          ("https://www.proofpoint.com/rss.xml" security)
-          ("https://www.bellingcat.com/feed/" security)
-          ("http://www.reddit.com/r/ReverseEngineering/.rss" security  reddit)
-          ("https://fossacademic.tech/feed.xml" academic blog tech)
-          ("https://nomasters.io/index.xml" blog tech)
-          ("https://www.reddit.com/r/listentothis/.rss" music reddit)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC--DwaiMV-jtO-6EvmKOnqg" youtube) ;; OA Labs
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCbpMy0Fg74eXXkvxJrtEn3w" youtube) ;; Bon Apetit
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC5fdssPqmmGhkhsJi4VcckA" youtube) ;; Innuendo Studios
-          ("https://usesthis.com/feed.atom" tech)
-          ("https://www.kcrw.com/culture/shows/nocturne/rss.xml" podcast) ;; Nocturne
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCGzvjCcqc9U6KkmgNx9t6VA" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCTfabOKD7Yty6sDF4POBVqA" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC2eYFnH61tmytImy1mTYvhA" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCxQKHvKbmSzGMvUrVtJYnUA" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC3jSNmKWYA04R47fDcc1ImA" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCsnGwSIHyoYN0kiINAGUKxg" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCFFLP0dKesrKWccYscdAr9A" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC0A3ldncnGQ1M_RU2Wb4L2A" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCxwcmRAmBRzZMNS37dCgmHA" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCLx053rWZxCiYWsBETgdKrQ" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCHugE6eRhqB9_AZQh4DDbIw" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCEBb1b_L6zDS3xTUrIALZOw" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UC8uT9cgJorJPWu7ITLGo9Ww" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCts-8ZqS339n-9nxy3DN8Cg" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCVls1GmFKf6WlTraIb_IaJg" youtube)
-          ("https://www.youtube.com/feeds/videos.xml?channel_id=UCuHJawjMUOk4gjywwDg727w" youtube)
-          ("https://www.tecmint.com/feed/" tech)
-          ("https://www.archlinux.org/feeds/news/" tech)
-          ("https://karl-voit.at/feeds/lazyblorg-all.atom_1.0.links-and-content.xml" blog tech)
-          ("http://leancrew.com/all-this/feed/" blog tech)
-          ("http://stadt-bremerhaven.de/feed/" blog tech)
-          ("http://feeds.feedburner.com/Makeuseof" tech)
-          ("https://lukesmith.xyz/index.xml" blog tech)
-          ("https://100r.co/links/rss.xml" blog tech)
-          ("https://webzine.puffy.cafe/atom.xml" tech)
-          ("https://jmmv.dev/feed.xml" blog tech)
-          ("https://jcs.org/rss" blog tech)
-          ("https://dataswamp.org/~solene/rss.xml" blog tech)
-          ("https://bsdly.blogspot.com/feeds/posts/default" blog bsd tech)
-          ("https://xeiaso.net/blog.rss" blog tech)
-          ("https://www.tumfatig.net/index.xml" blog bsd tech)
-          ("https://www.kuketz-blog.de/category/artikel/feed/" blog security)
-          ("https://thevaluable.dev/index.xml" blog tech)
-          ("https://andreafortuna.org/feed.xml" blog tech)
-          ("https://codemadness.org/atom_content.xml" blog tech)
-          ("https://begriffs.com/atom.xml" blog tech)
-          ("https://sive.rs/en.atom" blog literature misc tech)
-          ("https://news.nononsenseapps.com/index.atom" blog tech)
-          ("https://www.geeklan.co.uk/?feed=rss2" blog tech)
-          ("https://herrbischoff.com/index.xml" blog tech)
-          ("https://it-notes.dragas.net/index.xml" blog tech)
-          ("https://michael.stapelberg.ch/feed.xml" blog tech)
-          ("https://ratfactor.com/atom.xml" blog tech)
-          ("https://rubenerd.com/feed/" blog tech)
-          ("https://adol.pw/index.xml" blog tech)
-          ("https://electro.pizza/feed.xml" blog tech)
-          ("https://jcs.org/rss" blog tech)
-          ("https://kzimmermann.0x.no/articles/atom.xml" blog tech)
-          ("https://blog.meain.io/feed.xml" blog tech)
-          ("https://unixsheikh.com/feed.rss" blog tech)
-          ("https://vermaden.wordpress.com/feed/" blog tech)
-          ("https://crys.site/blog/index.xml" blog bsd tech)
-          ("https://www.boucek.me/index.xml" blog tech)
-          ("https://karthinks.com/software/index.xml" blog emacs tech)
-          ("https://batsov.com/atom.xml" blog emacs tech)
-          ("https://michaelneuper.com/index.xml" blog emacs tech)))
   :commands (elfeed))
 
 (provide 'init-elfeed)
@@ -1860,14 +1822,12 @@ find everything related to my Emacs setup.
 (add-hook 'org-after-todo-statistics-hook #'org-summary-todo)
 
 ;; Save all `org-agenda-files' buffers automatically after refiling.
-;; For this to work it is necessary to save the full path to the org
-;; agenda files in the variable 'org-agenda-files'
 (defun ms-org--save-org-agenda-file-buffers (&rest _)
   "Save `org-agenda-files' buffers without user confirmation.
 See also `org-save-all-org-buffers'"
   (interactive)
   (message "Saving org-agenda-files buffers...")
-  (let ((agenda-files (mapcar #'file-truename org-agenda-files)))
+  (let ((agenda-files (mapcar #'file-truename (org-agenda-files t))))
     (save-some-buffers
      t
      (lambda ()

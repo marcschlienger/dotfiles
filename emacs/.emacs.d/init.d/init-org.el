@@ -38,8 +38,7 @@
 (use-package org
   :ensure nil
   :init
-  ;(setq org-directory (expand-file-name "~/Nextcloud/cloud.schlienger.xyz/org"))
-  (setq org-directory (expand-file-name "~/Documents/org"))
+  (setq org-directory (expand-file-name "~/org"))
   (setq org-imenu-depth 7)
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
   (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
@@ -73,7 +72,7 @@
           ("x" . "example")
           ("X" . "export")
           ("q" . "quote")))
-  (setq org-catch-invisible-edits 'show)
+  (setq org-fold-catch-invisible-edits 'show)
   (setq org-return-follows-link nil)
   (setq org-loop-over-headlines-in-active-region 'start-level)
   (setq org-modules '(ol-info ol-eww))
@@ -236,11 +235,9 @@
     ("C-c a" . org-agenda))
   :config
   (setq org-default-notes-file (make-temp-file "org-default-notes-")) ;send it to oblivion
-  (setq org-agenda-files 
-      (mapcar 'file-truename 
-	      (file-expand-wildcards "~/Documents/org/*.org")))
-  ;(setq org-agenda-files (list "inbox.org" "agenda.org" "notes.org" "projects.org"))
-  ;(setq org-agenda-files `(,org-directory))
+  ;; Directory entries are expanded whenever Org builds an agenda, so newly
+  ;; created Org files are picked up without restarting Emacs.
+  (setq org-agenda-files (list org-directory))
   (setq org-agenda-span 'week)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
@@ -394,13 +391,13 @@
   ;; For the time being I leave everything to its default value.
   (setq org-agenda-log-mode-items '(closed clock))
   (setq org-agenda-clock-consistency-checks
-        '((:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
-                         ("4:00")
-                         :default-face
-                         ((:background "DarkRed")
-                          (:foreground "white"))
-                         :overlap-face nil :gap-face nil :no-end-time-face nil
-                         :long-face nil :short-face nil)))
+        '(:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
+                       ("4:00")
+                       :default-face
+                       ((:background "DarkRed")
+                        (:foreground "white"))
+                       :overlap-face nil :gap-face nil :no-end-time-face nil
+                       :long-face nil :short-face nil))
   (setq org-agenda-log-mode-add-notes t)
   (setq org-agenda-start-with-log-mode nil)
   (setq org-agenda-start-with-clockreport-mode nil)

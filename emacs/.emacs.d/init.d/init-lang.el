@@ -59,7 +59,6 @@
   (setq flymake-no-changes-timeout nil)
   (setq flymake-start-on-flymake-mode t)
   (setq flymake-start-on-save-buffer t)
-  (setq flymake-proc-compilation-prevents-syntax-check t)
   (setq flymake-wrap-around nil)
   (setq flymake-mode-line-format
         '("" flymake-mode-line-exception flymake-mode-line-counters))
@@ -75,39 +74,84 @@
   :config
   (add-hook 'flymake-diagnostic-functions #'package-lint-flymake))
 
+;;; Tree-sitter
+(use-package treesit
+  :ensure nil
+  :if (treesit-available-p)
+  :init
+  (setq treesit-language-source-alist
+        '((c "https://github.com/tree-sitter/tree-sitter-c")
+          (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          (go "https://github.com/tree-sitter/tree-sitter-go")
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (rust "https://github.com/tree-sitter/tree-sitter-rust")
+          (swift "https://github.com/alex-pinkus/tree-sitter-swift")))
+  (defconst ms/treesit-major-mode-remappings
+    '((c c-mode c-ts-mode)
+      (cpp c++-mode c++-ts-mode)
+      (go go-mode go-ts-mode)
+      (python python-mode python-ts-mode)
+      (swift swift-mode swift-ts-mode))
+    "Tree-sitter remappings enabled when their grammar is available.")
+  :config
+  (defun ms/treesit-activate-remappings ()
+    "Use tree-sitter modes whose grammar is available locally."
+    (dolist (entry ms/treesit-major-mode-remappings)
+      (pcase-let ((`(,language ,source-mode ,target-mode) entry))
+        (when (treesit-language-available-p language)
+          (setf (alist-get source-mode major-mode-remap-alist) target-mode)))))
+
+  (defun ms/treesit-install-missing-grammars ()
+    "Build missing configured grammars for the current platform."
+    (interactive)
+    (dolist (entry treesit-language-source-alist)
+      (let ((language (car entry)))
+        (unless (treesit-language-available-p language)
+          (condition-case error-data
+              (treesit-install-language-grammar language)
+            (error
+             (display-warning
+              'treesit
+              (format "Could not install %s grammar: %s"
+                      language (error-message-string error-data))
+              :warning))))))
+    (ms/treesit-activate-remappings))
+
+  (ms/treesit-activate-remappings))
+
 ;;; Clojure(Script)
 (use-package paredit
   :ensure t
-  :hook
-  ((clojure-mode . paredit-mode)))
+  :hook (clojure-mode . paredit-mode))
+
+(use-package clojure-mode
+  :ensure t
+  :mode (("\\.clj[csx]?\\'" . clojure-mode)
+         ("\\.edn\\'" . clojure-mode)))
 
 (use-package cider
-  :ensure t)
+  :ensure t
+  :commands (cider-jack-in cider-jack-in-cljs
+             cider-connect-clj cider-connect-cljs))
+
+(use-package flycheck
+  :ensure t
+  :hook (clojure-mode . flycheck-mode))
 
 ;; This brings the hints from clj-kondo to the screen.
 (use-package flycheck-clj-kondo
-  :ensure t)
+  :ensure t
+  :after (flycheck clojure-mode))
 
 ;; Provides all necessary refactoring tools.
 (use-package clj-refactor
   :ensure t
   :after clojure-mode
+  :hook (clojure-mode . clj-refactor-mode)
   :config
-  (defun my-clojure-mode-hook ()
-    (clj-refactor-mode 1)
-    (yas-minor-mode 1) ; for adding require/use/import statements
-    ;; This choice of keybinding leaves cider-macroexpand-1 unbound
-    (cljr-add-keybindings-with-prefix "C-c C-m"))
-  (add-hook 'clojure-mode-hook #'my-clojure-mode-hook))
-
-;; This provides the basic features like highlighting, indentation,
-;; navigation and basic refactoring.
-(use-package clojure-mode
-  :ensure t
-  :after flycheck-clj-kondo
-  :config
-  (require 'flycheck-clj-kondo)
-  (flycheck-mode 1))
+  ;; This choice of keybinding leaves cider-macroexpand-1 unbound.
+  (cljr-add-keybindings-with-prefix "C-c C-m"))
 
 ;;; C, C++, Java, ...
 (defun ms/c-mode-setup ()
@@ -161,20 +205,24 @@
   (setq rustic-lsp-client 'eglot))
 
 ;;; Shell mode
+(defun ms/sh-mode-setup ()
+  "Apply personal indentation settings to shell buffers."
+  (setq-local indent-tabs-mode nil
+              tab-width 2
+              sh-basic-offset 2))
+
 (use-package sh-script
-  :config
-  (setq indent-tabs-mode nil)
-  (setq tab-width 2)
-  (setq sh-basic-offset 2)
-  (setq sh-indentation 2)
-  :hook (sh-mode . flymake-mode))
+  :ensure nil
+  :hook ((sh-mode . ms/sh-mode-setup)
+         (sh-mode . flymake-mode)))
 
 ;;; Swift development
 ;; Swift mode
 (use-package swift-mode
-    :ensure t
-    :mode (("\\.swift\\'" . swift-ts-mode))
-    :interpreter "swift")
+  :ensure t
+  :commands (swift-mode swift-ts-mode)
+  :mode (("\\.swift\\'" . swift-mode))
+  :interpreter "swift")
 
 ;; .editorconfig file support
 (use-package editorconfig

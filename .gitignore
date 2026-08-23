@@ -12,9 +12,11 @@ emacs/.emacs.d/auto-save-list/
 emacs/.emacs.d/backup/
 emacs/.emacs.d/eln-cache/
 emacs/.emacs.d/elpa/
+emacs/.emacs.d/elfeed/
 emacs/.emacs.d/org-persist/
 emacs/.emacs.d/savehist
 emacs/.emacs.d/transient/
+emacs/.emacs.d/tree-sitter/
 
 # Vendored Zsh plugins and local history
 zsh/.zsh/plugins

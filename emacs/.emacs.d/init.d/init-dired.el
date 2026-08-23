@@ -45,8 +45,7 @@
   (setq dired-isearch-filenames 'dwim)
   (setq dired-create-destination-dirs 'ask)
   (setq dired-vc-rename-file t)
-  (setq dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir))))
-  (setq dired-create-destination-dirs-on-trailing-dirsep t))
+  (setq dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir)))))
 
 ;(use-package emacs
  ; :ensure nil
@@ -58,12 +57,10 @@
   :ensure nil
   :after dired
   :bind (:map dired-mode-map
-	      ("I" . dired-info))
+	      ("I" . dired-do-info))
   :config
   (setq dired-clean-up-buffers-too t)
-  (setq dired-clean-confirm-killing-deleted-buffers t)
-  (setq dired-bind-man nil)
-  (setq dired-bind-info nil))
+  (setq dired-clean-confirm-killing-deleted-buffers t))
 
 (use-package dired-subtree
   :ensure t

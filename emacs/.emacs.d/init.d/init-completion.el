@@ -5,7 +5,6 @@
   :ensure nil
   :config
   (setq completion-category-defaults nil)
-  (add-to-list 'eglot-stay-out-of 'flymake)
   (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
@@ -294,10 +293,6 @@
   :ensure t
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
-
-(use-package all-the-icons
-  :ensure t
-  :if (or (daemonp) (display-graphic-p)))
 
 (use-package orderless
   :ensure t
