@@ -1,3 +1,13 @@
+# macOS metadata
+.DS_Store
+
+# Editor-generated files
+*.swp
+*.swo
+*~
+nvim.log
+
+# Emacs runtime data and installed packages
 emacs/.emacs.d/auto-save-list/
 emacs/.emacs.d/backup/
 emacs/.emacs.d/eln-cache/
@@ -5,5 +15,7 @@ emacs/.emacs.d/elpa/
 emacs/.emacs.d/org-persist/
 emacs/.emacs.d/savehist
 emacs/.emacs.d/transient/
+
+# Vendored Zsh plugins and local history
 zsh/.zsh/plugins
 zsh/.zsh/histfile
