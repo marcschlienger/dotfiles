@@ -39,8 +39,8 @@
   (python-ts-mode . eglot-ensure)
   (swift-mode . eglot-ensure)
   (swift-ts-mode . eglot-ensure)
-  (rust-mode-hook . eglot-ensure)
-  (rust-ts-mode-hook . eglot-ensure))
+  (rust-mode . eglot-ensure)
+  (rust-ts-mode . eglot-ensure))
 
 ;;
 (use-package rfn-eshadow

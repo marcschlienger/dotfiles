@@ -187,9 +187,7 @@
   (setq rainbow-ansi-colors nil)
   (setq rainbow-x-colors nil)
   :hook
-  (prog-mode-hook . rainbow-mode)
-  :config
-  (rainbow-mode t))
+  (prog-mode . rainbow-mode))
 
 ;;; Rainbow delimiters makes nested delimiters easier to understand.
 (use-package rainbow-delimiters
@@ -218,7 +216,7 @@
   (conf-mode . display-line-numbers-mode)
   (markdown-mode . display-line-numbers-mode)
   (prog-mode . display-line-numbers-mode)
-  (Shell-script-mode . display-line-numbers-mode)
+  (sh-mode . display-line-numbers-mode)
   (TeX-mode . display-line-numbers-mode))
 
 ;;; Highlight the current line only in the active window and not in the shell.
@@ -227,9 +225,9 @@
   (hl-line-sticky-flag nil)
   (global-hl-line-mode t)
   :hook
-  (eshell-mode . (lambda () (setq-local global-hl-line-mode nil)))
+  (eshell-mode . (lambda () (hl-line-mode -1)))
   (shell-mode . (lambda () (hl-line-mode -1)))
-  (term-mode . (lambda () (setq-local global-hl-line-mode nil))))
+  (term-mode . (lambda () (hl-line-mode -1))))
 
 ;;; Icons
 (use-package nerd-icons
@@ -237,7 +235,7 @@
 
 (use-package nerd-icons-dired
   :ensure t
-  :if (display-graphic-p)
+  :if (or (daemonp) (display-graphic-p))
   :hook
   (dired-mode . nerd-icons-dired-mode))
 

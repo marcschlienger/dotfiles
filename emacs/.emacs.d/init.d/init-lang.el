@@ -109,17 +109,23 @@
   (require 'flycheck-clj-kondo)
   (flycheck-mode 1))
 
-;;; C , C++, Java, ...
+;;; C, C++, Java, ...
+(defun ms/c-mode-setup ()
+  "Apply personal indentation settings to C-family buffers."
+  (setq-local indent-tabs-mode nil
+              tab-width 4
+              c-basic-offset 2
+              c-ts-mode-indent-offset 2))
+
 (use-package cc-mode
-  :config
-  (setq indent-tabs-mode nil)
-  (setq tab-width 4)
-  (setq c-basic-offset 2)
+  :ensure nil
   :bind
   (:map c-mode-base-map
         ("\C-m" . c-context-line-break))
   :hook
-  (c-initialization-hook . my-make-CR-do-indent))
+  ((c-mode-common . ms/c-mode-setup)
+   (c-ts-mode . ms/c-mode-setup)
+   (c++-ts-mode . ms/c-mode-setup)))
 
 (use-package markdown-mode
   :ensure t
@@ -145,8 +151,8 @@
   :init
   (setq rust-mode-treesitter-derive t)
   :hook
-  (rust-mode-hook . (lambda () (prettify-symbols-mode)))
-  (rust-mode-hook . (lambda () (setq indent-tabs-mode nil))))
+  (rust-mode . (lambda () (prettify-symbols-mode 1)))
+  (rust-mode . (lambda () (setq-local indent-tabs-mode nil))))
 
 (use-package rustic
   :ensure t

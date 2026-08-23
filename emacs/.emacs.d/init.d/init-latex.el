@@ -3,7 +3,7 @@
 ;; AUCTeX
 (use-package tex-site
   :ensure auctex
-  :mode ("\\.tex\\'" . latex-mode)
+  :mode ("\\.tex\\'" . LaTeX-mode)
   :bind
   ("<f7>" . (lambda ()
 		     "Save the buffer and run `TeX-command-run-all`."
@@ -21,8 +21,9 @@
   (LaTeX-mode . turn-on-reftex)
   (LaTeX-mode . turn-on-auto-fill)
   (LaTeX-mode . outline-minor-mode)
-  (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)
   :config
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
   (setq LaTeX-item-indent 0)
   (setq TeX-newline-function 'reindent-then-newline-and-indent)
   (setq TeX-auto-save t)
@@ -30,11 +31,22 @@
   (setq-default TeX-master nil)
   (setq TeX-PDF-mode t)
   (setq reftex-plug-into-AUCTeX t)
-  ;;(setq TeX-view-program-selection '((output-pdf "PDF Tools")))
-  (setq TeX-view-program-selection '((output-pdf "Skim")))
-  (setq TeX-view-program-list
-        '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
-setq TeX-source-correlate-start-server t))
+  (let ((skim "/Applications/Skim.app/Contents/SharedSupport/displayline"))
+    (cond
+     ((and (eq system-type 'darwin) (file-executable-p skim))
+      (setq TeX-view-program-selection '((output-pdf "Skim"))
+            TeX-view-program-list
+            `(("Skim" ,(concat skim " -b -g %n %o %b")))))
+     ((eq system-type 'darwin)
+      (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
+            TeX-view-program-list '(("System PDF viewer" "open %o"))))
+     ((executable-find "zathura")
+      (setq TeX-view-program-selection '((output-pdf "Zathura"))
+            TeX-view-program-list '(("Zathura" "zathura %o"))))
+     (t
+      (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
+            TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))
+  (setq TeX-source-correlate-start-server t))
 
 (use-package cdlatex
   :ensure t

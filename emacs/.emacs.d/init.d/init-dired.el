@@ -7,13 +7,28 @@
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
-  (setq dired-listing-switches
-        "-AGFhlv --group-directories-first --time-style=long-iso")
+  (let ((gnu-ls (and (eq system-type 'darwin)
+                     (executable-find "gls"))))
+    (if gnu-ls
+        (setq insert-directory-program gnu-ls)
+      (when (eq system-type 'darwin)
+        (setq dired-use-ls-dired nil)))
+    (setq dired-listing-switches
+          (if (or gnu-ls (eq system-type 'gnu/linux))
+              "-AGFhlv --group-directories-first --time-style=long-iso"
+            "-AGFhlv")))
   (setq dired-dwim-target t)
-  (setq dired-guess-shell-alist-user ; those are the suggestions for ! and &
-	'(("\\.\\(png\\|jpe?g\\|tiff\\)" "sxiv" "xdg-open")
-	  ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)" "mpv" "xdg-open")
-	  (".*" "xdg-open")))
+  (let ((opener (if (eq system-type 'darwin)
+                    (or (executable-find "open") "open")
+                  (or (executable-find "xdg-open") "xdg-open"))))
+    (setq dired-guess-shell-alist-user ; suggestions for ! and &
+          `(("\\.\\(png\\|jpe?g\\|tiff\\)"
+             ,@(delete-dups
+                (delq nil (list (executable-find "sxiv") opener))))
+            ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)"
+             ,@(delete-dups
+                (delq nil (list (executable-find "mpv") opener))))
+            (".*" ,opener))))
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
   (setq dired-make-directory-clickable t) ; Emacs 29.1
   (setq dired-free-space nil) ; Emacs 29.1
@@ -70,7 +85,10 @@
   :bind (:map image-dired-thumbnail-mode-map
 	      ("<return>" . image-dired-thumbnail-display-external))
   :config
-  (setq image-dired-external-viewer "xdg-open")
+  (setq image-dired-external-viewer
+        (if (eq system-type 'darwin)
+            (or (executable-find "open") "open")
+          (or (executable-find "xdg-open") "xdg-open")))
   (setq image-dired-thumb-size 80)
   (setq image-dired-thumb-margin 2)
   (setq image-dired-thumb-relief 0)

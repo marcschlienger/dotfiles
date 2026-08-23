@@ -184,13 +184,28 @@ find everything related to my Emacs setup.
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
-  (setq dired-listing-switches
-        "-AGFhlv --group-directories-first --time-style=long-iso")
+  (let ((gnu-ls (and (eq system-type 'darwin)
+                     (executable-find "gls"))))
+    (if gnu-ls
+        (setq insert-directory-program gnu-ls)
+      (when (eq system-type 'darwin)
+        (setq dired-use-ls-dired nil)))
+    (setq dired-listing-switches
+          (if (or gnu-ls (eq system-type 'gnu/linux))
+              "-AGFhlv --group-directories-first --time-style=long-iso"
+            "-AGFhlv")))
   (setq dired-dwim-target t)
-  (setq dired-guess-shell-alist-user ; those are the suggestions for ! and &
-	'(("\\.\\(png\\|jpe?g\\|tiff\\)" "sxiv" "xdg-open")
-	  ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)" "mpv" "xdg-open")
-	  (".*" "xdg-open")))
+  (let ((opener (if (eq system-type 'darwin)
+                    (or (executable-find "open") "open")
+                  (or (executable-find "xdg-open") "xdg-open"))))
+    (setq dired-guess-shell-alist-user ; suggestions for ! and &
+          `(("\\.\\(png\\|jpe?g\\|tiff\\)"
+             ,@(delete-dups
+                (delq nil (list (executable-find "sxiv") opener))))
+            ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)"
+             ,@(delete-dups
+                (delq nil (list (executable-find "mpv") opener))))
+            (".*" ,opener))))
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
   (setq dired-make-directory-clickable t) ; Emacs 29.1
   (setq dired-free-space nil) ; Emacs 29.1
@@ -247,7 +262,10 @@ find everything related to my Emacs setup.
   :bind (:map image-dired-thumbnail-mode-map
 	      ("<return>" . image-dired-thumbnail-display-external))
   :config
-  (setq image-dired-external-viewer "xdg-open")
+  (setq image-dired-external-viewer
+        (if (eq system-type 'darwin)
+            (or (executable-find "open") "open")
+          (or (executable-find "xdg-open") "xdg-open")))
   (setq image-dired-thumb-size 80)
   (setq image-dired-thumb-margin 2)
   (setq image-dired-thumb-relief 0)
@@ -499,9 +517,7 @@ find everything related to my Emacs setup.
   (setq rainbow-ansi-colors nil)
   (setq rainbow-x-colors nil)
   :hook
-  (prog-mode-hook . rainbow-mode)
-  :config
-  (rainbow-mode t))
+  (prog-mode . rainbow-mode))
 
 ;;; Rainbow delimiters makes nested delimiters easier to understand.
 (use-package rainbow-delimiters
@@ -530,7 +546,7 @@ find everything related to my Emacs setup.
   (conf-mode . display-line-numbers-mode)
   (markdown-mode . display-line-numbers-mode)
   (prog-mode . display-line-numbers-mode)
-  (Shell-script-mode . display-line-numbers-mode)
+  (sh-mode . display-line-numbers-mode)
   (TeX-mode . display-line-numbers-mode))
 
 ;;; Highlight the current line only in the active window and not in the shell.
@@ -539,9 +555,9 @@ find everything related to my Emacs setup.
   (hl-line-sticky-flag nil)
   (global-hl-line-mode t)
   :hook
-  (eshell-mode . (lambda () (setq-local global-hl-line-mode nil)))
+  (eshell-mode . (lambda () (hl-line-mode -1)))
   (shell-mode . (lambda () (hl-line-mode -1)))
-  (term-mode . (lambda () (setq-local global-hl-line-mode nil))))
+  (term-mode . (lambda () (hl-line-mode -1))))
 
 ;;; Icons
 (use-package nerd-icons
@@ -549,7 +565,7 @@ find everything related to my Emacs setup.
 
 (use-package nerd-icons-dired
   :ensure t
-  :if (display-graphic-p)
+  :if (or (daemonp) (display-graphic-p))
   :hook
   (dired-mode . nerd-icons-dired-mode))
 
@@ -774,17 +790,23 @@ find everything related to my Emacs setup.
   (require 'flycheck-clj-kondo)
   (flycheck-mode 1))
 
-;;; C , C++, Java, ...
+;;; C, C++, Java, ...
+(defun ms/c-mode-setup ()
+  "Apply personal indentation settings to C-family buffers."
+  (setq-local indent-tabs-mode nil
+              tab-width 4
+              c-basic-offset 2
+              c-ts-mode-indent-offset 2))
+
 (use-package cc-mode
-  :config
-  (setq indent-tabs-mode nil)
-  (setq tab-width 4)
-  (setq c-basic-offset 2)
+  :ensure nil
   :bind
   (:map c-mode-base-map
         ("\C-m" . c-context-line-break))
   :hook
-  (c-initialization-hook . my-make-CR-do-indent))
+  ((c-mode-common . ms/c-mode-setup)
+   (c-ts-mode . ms/c-mode-setup)
+   (c++-ts-mode . ms/c-mode-setup)))
 
 (use-package markdown-mode
   :ensure t
@@ -810,8 +832,8 @@ find everything related to my Emacs setup.
   :init
   (setq rust-mode-treesitter-derive t)
   :hook
-  (rust-mode-hook . (lambda () (prettify-symbols-mode)))
-  (rust-mode-hook . (lambda () (setq indent-tabs-mode nil))))
+  (rust-mode . (lambda () (prettify-symbols-mode 1)))
+  (rust-mode . (lambda () (setq-local indent-tabs-mode nil))))
 
 (use-package rustic
   :ensure t
@@ -901,8 +923,8 @@ find everything related to my Emacs setup.
   (python-ts-mode . eglot-ensure)
   (swift-mode . eglot-ensure)
   (swift-ts-mode . eglot-ensure)
-  (rust-mode-hook . eglot-ensure)
-  (rust-ts-mode-hook . eglot-ensure))
+  (rust-mode . eglot-ensure)
+  (rust-ts-mode . eglot-ensure))
 
 ;;
 (use-package rfn-eshadow
@@ -1309,7 +1331,9 @@ find everything related to my Emacs setup.
   :ensure nil
   :config
   (setq org-tag-alist
-        '((sequence "@home(h)" "@work(w)" "@comp(c)")))
+        '(("@home" . ?h)
+          ("@work" . ?w)
+          ("@comp" . ?c)))
   (setq org-auto-align-tags nil)
   (setq org-tags-column 0))
 
@@ -1342,7 +1366,7 @@ find everything related to my Emacs setup.
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
   (setq org-edit-src-content-indentation 0)
-  (setq org-babel-python-command 'python3)
+  (setq org-babel-python-command "python3")
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)
@@ -1415,7 +1439,7 @@ find everything related to my Emacs setup.
                     ":END:\n")))
         )
   :hook
-  (org-capture-mode-hook . delete-other-windows) ;; use full window for org-capture
+  (org-capture-mode . delete-other-windows) ;; use full window for org-capture
   )
 
 ;;; agenda
@@ -1487,10 +1511,10 @@ find everything related to my Emacs setup.
           (tags . " %i %-12:c")
           (search . " %i %-12:c")))
   (setq org-agenda-sorting-strategy
-        '(((agenda habit-down time-up priority-down category-keep)
-           (todo priority-down category-keep)
-           (tags priority-down category-keep)
-           (search category-keep))))
+        '((agenda habit-down time-up priority-down category-keep)
+          (todo priority-down category-keep)
+          (tags priority-down category-keep)
+          (search category-keep)))
   (setq org-agenda-breadcrumbs-separator "->")
   (setq org-agenda-todo-keyword-format "%-1s")
   (setq org-agenda-fontify-priorities 'cookies)
@@ -1615,7 +1639,7 @@ find everything related to my Emacs setup.
 ;; AUCTeX
 (use-package tex-site
   :ensure auctex
-  :mode ("\\.tex\\'" . latex-mode)
+  :mode ("\\.tex\\'" . LaTeX-mode)
   :bind
   ("<f7>" . (lambda ()
 		     "Save the buffer and run `TeX-command-run-all`."
@@ -1633,8 +1657,9 @@ find everything related to my Emacs setup.
   (LaTeX-mode . turn-on-reftex)
   (LaTeX-mode . turn-on-auto-fill)
   (LaTeX-mode . outline-minor-mode)
-  (TeX-after-compilation-finished-functions . TeX-revert-document-buffer)
   :config
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
   (setq LaTeX-item-indent 0)
   (setq TeX-newline-function 'reindent-then-newline-and-indent)
   (setq TeX-auto-save t)
@@ -1642,11 +1667,22 @@ find everything related to my Emacs setup.
   (setq-default TeX-master nil)
   (setq TeX-PDF-mode t)
   (setq reftex-plug-into-AUCTeX t)
-  ;;(setq TeX-view-program-selection '((output-pdf "PDF Tools")))
-  (setq TeX-view-program-selection '((output-pdf "Skim")))
-  (setq TeX-view-program-list
-        '(("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
-setq TeX-source-correlate-start-server t))
+  (let ((skim "/Applications/Skim.app/Contents/SharedSupport/displayline"))
+    (cond
+     ((and (eq system-type 'darwin) (file-executable-p skim))
+      (setq TeX-view-program-selection '((output-pdf "Skim"))
+            TeX-view-program-list
+            `(("Skim" ,(concat skim " -b -g %n %o %b")))))
+     ((eq system-type 'darwin)
+      (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
+            TeX-view-program-list '(("System PDF viewer" "open %o"))))
+     ((executable-find "zathura")
+      (setq TeX-view-program-selection '((output-pdf "Zathura"))
+            TeX-view-program-list '(("Zathura" "zathura %o"))))
+     (t
+      (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
+            TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))
+  (setq TeX-source-correlate-start-server t))
 
 (use-package cdlatex
   :ensure t
@@ -1826,19 +1862,20 @@ setq TeX-source-correlate-start-server t))
 ;; Save all `org-agenda-files' buffers automatically after refiling.
 ;; For this to work it is necessary to save the full path to the org
 ;; agenda files in the variable 'org-agenda-files'
-(defun ms-org--save-org-agenda-file-buffers ()
+(defun ms-org--save-org-agenda-file-buffers (&rest _)
   "Save `org-agenda-files' buffers without user confirmation.
 See also `org-save-all-org-buffers'"
   (interactive)
   (message "Saving org-agenda-files buffers...")
-  (save-some-buffers t (lambda () 
-			 (when (member (buffer-file-name) org-agenda-files) 
-			   t)))
+  (let ((agenda-files (mapcar #'file-truename org-agenda-files)))
+    (save-some-buffers
+     t
+     (lambda ()
+       (when-let ((file (buffer-file-name)))
+         (member (file-truename file) agenda-files)))))
   (message "Saving org-agenda-files buffers... done"))
 
-(advice-add 'org-refile :after
-            (lambda (&rest _)
-              (gtd-save-org-buffers)))
+(advice-add 'org-refile :after #'ms-org--save-org-agenda-file-buffers)
 
 (provide 'lib-org)
 #+end_src

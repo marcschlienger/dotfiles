@@ -117,7 +117,9 @@
   :ensure nil
   :config
   (setq org-tag-alist
-        '((sequence "@home(h)" "@work(w)" "@comp(c)")))
+        '(("@home" . ?h)
+          ("@work" . ?w)
+          ("@comp" . ?c)))
   (setq org-auto-align-tags nil)
   (setq org-tags-column 0))
 
@@ -150,7 +152,7 @@
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
   (setq org-edit-src-content-indentation 0)
-  (setq org-babel-python-command 'python3)
+  (setq org-babel-python-command "python3")
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)
@@ -223,7 +225,7 @@
                     ":END:\n")))
         )
   :hook
-  (org-capture-mode-hook . delete-other-windows) ;; use full window for org-capture
+  (org-capture-mode . delete-other-windows) ;; use full window for org-capture
   )
 
 ;;; agenda
@@ -295,10 +297,10 @@
           (tags . " %i %-12:c")
           (search . " %i %-12:c")))
   (setq org-agenda-sorting-strategy
-        '(((agenda habit-down time-up priority-down category-keep)
-           (todo priority-down category-keep)
-           (tags priority-down category-keep)
-           (search category-keep))))
+        '((agenda habit-down time-up priority-down category-keep)
+          (todo priority-down category-keep)
+          (tags priority-down category-keep)
+          (search category-keep)))
   (setq org-agenda-breadcrumbs-separator "->")
   (setq org-agenda-todo-keyword-format "%-1s")
   (setq org-agenda-fontify-priorities 'cookies)
