@@ -18,7 +18,7 @@ export ALTERNATE_EDITOR=""
 #export EDITOR='emacsclient -t'
 export EDITOR='nvim'
 #export VISUAL='emacsclient -c -n'
-export VISUAL='open -a Open\ in\ Neovim.app'
+export VISUAL="$EDITOR"
 
 # pager
 export PAGER='less -R'

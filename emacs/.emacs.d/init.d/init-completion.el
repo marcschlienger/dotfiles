@@ -13,15 +13,11 @@
   (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("ty" "server")))
   (add-to-list 'eglot-server-programs '(python-mode . ("ty" "server")))
-  
-  (add-to-list 'eglot-server-programs '(swift-mode . ("sourcekit-lsp")))
-  (add-to-list 'eglot-server-programs '(swift-ts-mode . ("sourcekit-lsp")))
   (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom
   (eglot-ignored-server-capabilities
-   '(:hoverProvider
-     :documentHighlightProvider
+   '(:documentHighlightProvider
      :documentFormattingProvider
      :documentRangeFormattingProvider
      :documentOnTypeFormattingProvider
@@ -36,10 +32,19 @@
   (LaTeX-ts-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)
-  (swift-mode . eglot-ensure)
-  (swift-ts-mode . eglot-ensure)
   (rust-mode . eglot-ensure)
   (rust-ts-mode . eglot-ensure))
+
+;; Keep ty as Python's semantic server.  Ruff adds lint diagnostics through
+;; Flymake and formats Python buffers on save without competing for Eglot.
+(use-package flymake-ruff
+  :ensure t
+  :after eglot
+  :hook (eglot-managed-mode . flymake-ruff-load))
+
+(use-package ruff-format
+  :ensure t
+  :hook ((python-mode python-ts-mode) . ruff-format-on-save-mode))
 
 ;;
 (use-package rfn-eshadow
@@ -190,8 +195,8 @@
    consult-theme :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-file-register
-   consult--source-recent-file consult--source-project-recent-file
+   consult-source-bookmark consult-source-file-register
+   consult-source-recent-file consult-source-project-recent-file
    ;; :preview-key "M-."
    :preview-key '(:debounce 0.4 any))
 

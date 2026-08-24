@@ -42,11 +42,9 @@ cmp.setup({
   }),
   sources = cmp.config.sources({
     { name = 'nvim_lsp' },
-    { name = 'nvim_lua' },
     { name = 'luasnip' },
     { name = 'buffer', keyword_length = 3 },
     { name = 'path' },
-    { name = 'treesitter' },
   })
 })
 
@@ -69,83 +67,99 @@ cmp.setup.cmdline(':', {
   matching = { disallow_symbol_nonprefix_matching = false }
 })
 
---[[ 
+--[[
 lsp config
 --]]
-local lspconfig = require('lspconfig')
+-- Install these buffer-local mappings after a language server attaches.
+-- See `:help vim.lsp.*` for documentation on the functions below.
+local lsp_attach_group = vim.api.nvim_create_augroup('dotfiles-lsp-attach', { clear = true })
 
-local lsp_flags = {
-  -- This is the default in Nvim 0.7+
-  debounce_text_changes = 150,
-}
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = lsp_attach_group,
+  callback = function(args)
+    local bufnr = args.buf
+    local client_id = args.data and args.data.client_id
+    local client = client_id and vim.lsp.get_client_by_id(client_id)
 
--- Use an on_attach function to only map the following keys after the language 
--- server attaches to the current buffer. See `:help vim.lsp.*` for 
--- documentation on any of the below functions.
-local on_attach = function(client, bufnr)
-  -- Enable completion triggered by <c-x><c-o>
-  -- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    -- ty owns Python's semantic features; Ruff supplies linting, fixes, import
+    -- organization, and formatting without competing for hover responses.
+    if client and client.name == 'ruff' then
+      client.server_capabilities.hoverProvider = false
+    end
 
-  local bufopts = { noremap=true, silent=true, buffer=bufnr }
-  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
-  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
-  vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
-  vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
-  vim.keymap.set('n', '<space>wl', function()
-    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end, bufopts)
-  vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
-  vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
-  vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-  vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
-end
+    -- Enable completion triggered by <c-x><c-o>
+    -- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+    local bufopts = { noremap=true, silent=true, buffer=bufnr }
+    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
+    vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
+    vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, bufopts)
+    vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, bufopts)
+    vim.keymap.set('n', '<space>wl', function()
+      print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+    end, bufopts)
+    vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
+    vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
+    vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
+    vim.keymap.set('n', '<space>f', function() vim.lsp.buf.format { async = true } end, bufopts)
+  end,
+})
 
 -- Add additional capabilities supported by nvim-cmp
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
--- Enable some language servers with the additional completion capabilities offered by nvim-cmp
-require('lspconfig')['clangd'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
+-- Extend every server supplied by nvim-lspconfig with nvim-cmp's completion
+-- capabilities, then let Neovim activate each server by file type.
+vim.lsp.config('*', {
   capabilities = capabilities,
-}
+})
 
-require('lspconfig')['lua_ls'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilities = capabilities,
-  single_file_support = true,
-}
+-- Keep the previous single-file Lua behavior explicit in the modern API.
+vim.lsp.config('lua_ls', {
+  workspace_required = false,
+})
 
-require('lspconfig')['pylsp'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilities = capabilities,
-}
+-- ty already reports Python syntax errors, so keep Ruff focused on linting,
+-- code actions, import organization, and formatting.
+vim.lsp.config('ruff', {
+  init_options = {
+    settings = {
+      showSyntaxErrors = false,
+    },
+  },
+})
 
-require('lspconfig')['rust_analyzer'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilities = capabilities,
-}
-
-require('lspconfig')['texlab'].setup{
-  on_attach = on_attach,
-  flags = lsp_flags,
-  capabilities = capabilities,
-}
+vim.lsp.enable({
+  'clangd',
+  'lua_ls',
+  'ty',
+  'ruff',
+  'rust_analyzer',
+  'texlab',
+})
 
 --[[
-Mappings for using the diagnostic framework. See `:help vim.diagnostic.*` for 
+Mappings for using the diagnostic framework. See `:help vim.diagnostic.*` for
 documentation on any of the below functions.
 --]]
 local opts = { noremap=true, silent=true }
 vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
+local function diagnostic_jump(count)
+  vim.diagnostic.jump({
+    count = count,
+    on_jump = function(_, bufnr)
+      vim.diagnostic.open_float({
+        bufnr = bufnr,
+        scope = 'cursor',
+        focus = false,
+      })
+    end,
+  })
+end
+vim.keymap.set('n', '[d', function() diagnostic_jump(-vim.v.count1) end, opts)
+vim.keymap.set('n', ']d', function() diagnostic_jump(vim.v.count1) end, opts)
 vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist, opts)
-

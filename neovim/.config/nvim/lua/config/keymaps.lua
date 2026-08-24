@@ -2,9 +2,6 @@ local function map(m, k, v)
 	vim.keymap.set(m, k, v, { silent = true })
 end
 
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
-
 -- Move line up and down in NORMAL and VISUAL modes
 -- Reference: https://vim.fandom.com/wiki/Moving_lines_up_or_down
 map('n', '<C-j>', '<CMD>move .+1<CR>')
@@ -22,7 +19,7 @@ map('n', '<leader>l', ':set list!<CR>')
 map('n', '<leader>n', ':set relativenumber!<CR>')
 
 -- Make the current file executable
-map('n', '<leader>x', ':w<CR>:!chmod 755 %<CR>:e<CR')
+map('n', '<leader>x', ':w<CR>:!chmod 755 %<CR>:e<CR>')
 
 -- Move to the next/previous buffer
 map('n', '<leader>]', '<CMD>bn<CR>')
@@ -59,4 +56,3 @@ map('n', '<C-h>', '<CMD>noh<CR>')
 
 -- Remap jk to escape in insert mode
 map('i', 'jk', '<ESC>')
-

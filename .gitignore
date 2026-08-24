@@ -21,3 +21,4 @@ emacs/.emacs.d/tree-sitter/
 # Vendored Zsh plugins and local history
 zsh/.zsh/plugins
 zsh/.zsh/histfile
+zsh/.zcompdump*

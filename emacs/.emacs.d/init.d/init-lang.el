@@ -71,10 +71,11 @@
 (use-package package-lint-flymake
   :ensure t
   :after flymake
-  :config
-  (add-hook 'flymake-diagnostic-functions #'package-lint-flymake))
+  :hook (emacs-lisp-mode . package-lint-flymake-setup))
 
 ;;; Tree-sitter
+(defvar rust-mode-treesitter-derive)
+
 (use-package treesit
   :ensure nil
   :if (treesit-available-p)
@@ -85,14 +86,12 @@
           (elisp "https://github.com/Wilfred/tree-sitter-elisp")
           (go "https://github.com/tree-sitter/tree-sitter-go")
           (python "https://github.com/tree-sitter/tree-sitter-python")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          (swift "https://github.com/alex-pinkus/tree-sitter-swift")))
+          (rust "https://github.com/tree-sitter/tree-sitter-rust")))
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
       (go go-mode go-ts-mode)
-      (python python-mode python-ts-mode)
-      (swift swift-mode swift-ts-mode))
+      (python python-mode python-ts-mode))
     "Tree-sitter remappings enabled when their grammar is available.")
   :config
   (defun ms/treesit-activate-remappings ()
@@ -100,7 +99,10 @@
     (dolist (entry ms/treesit-major-mode-remappings)
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
         (when (treesit-language-available-p language)
-          (setf (alist-get source-mode major-mode-remap-alist) target-mode)))))
+          (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
+    ;; `rust-mode' chooses its parent mode when its package is loaded.
+    (setq rust-mode-treesitter-derive
+          (treesit-language-available-p 'rust)))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -193,7 +195,10 @@
   :config
   (setq rust-format-on-save t)
   :init
-  (setq rust-mode-treesitter-derive t)
+  (setq rust-mode-treesitter-derive
+        (and (fboundp 'treesit-available-p)
+             (treesit-available-p)
+             (treesit-language-available-p 'rust)))
   :hook
   (rust-mode . (lambda () (prettify-symbols-mode 1)))
   (rust-mode . (lambda () (setq-local indent-tabs-mode nil))))
@@ -216,11 +221,10 @@
   :hook ((sh-mode . ms/sh-mode-setup)
          (sh-mode . flymake-mode)))
 
-;;; Swift development
-;; Swift mode
+;;; Swift syntax highlighting; Xcode owns semantic Swift development.
 (use-package swift-mode
   :ensure t
-  :commands (swift-mode swift-ts-mode)
+  :commands swift-mode
   :mode (("\\.swift\\'" . swift-mode))
   :interpreter "swift")
 

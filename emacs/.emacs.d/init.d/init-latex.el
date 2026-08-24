@@ -54,14 +54,4 @@
          (org-mode    . turn-on-org-cdlatex)
          (cdlatex-tab . LaTeX-indent-line)))
 
-(use-package pdf-tools
-  :defer t
-  :hook
-  (pdf-view-mode . (lambda () (auto-revert-mode 1)))
-  :config
-  (pdf-tools-install)
-  (setq-default pdf-view-display-size 'fit-page)
-  (setq pdf-view-use-scaling t)
-  (setq pdf-view-use-imagemagick nil))
-
 (provide 'init-latex)

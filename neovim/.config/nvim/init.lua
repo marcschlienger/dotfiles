@@ -15,6 +15,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+-- Leaders must be defined before plugins create their mappings.
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
+
 require('config.lazy')
 require('config.autocommands')
 require('config.colors')

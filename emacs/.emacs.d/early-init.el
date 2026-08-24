@@ -8,8 +8,7 @@
   (progn
     ;;(add-to-list 'default-frame-alist '(undecorated-round . t))
     (setq ns-use-proxy-icon nil)
-    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-    (add-to-list 'default-frame-alist '(ns-appearance . dark))))
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))))
 
 (setq frame-inhibit-implied-resize t
       frame-resize-pixelwise t

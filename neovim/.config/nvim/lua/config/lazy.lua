@@ -15,12 +15,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Make sure to setup `mapleader` and `maplocalleader` before
--- loading lazy.nvim so that mappings are correct.
--- This is also a good place to setup other settings (vim.opt)
-vim.g.mapleader = " "
-vim.g.maplocalleader = "\\"
-
 require('lazy').setup({
   -- UI enhancements and colors
   {
@@ -39,11 +33,39 @@ require('lazy').setup({
     end,
   },
   {
+    'szymonwilczek/arete.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {
+      transparent = false,
+      cache = true,
+      styles = {
+        comments = { italic = true },
+        keywords = { bold = true },
+        types = { bold = true },
+        functions = {},
+        variables = {},
+      },
+    },
+  },
+  {
+    'maxmx03/solarized.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {
+      transparent = { enabled = false },
+      styles = {
+        enabled = true,
+        comments = { italic = true },
+      },
+    },
+  },
+  {
     'sainnhe/everforest',
     priority = 1000,
   },
-  { 
-    'ellisonleao/gruvbox.nvim', 
+  {
+    'ellisonleao/gruvbox.nvim',
     priority = 1000,
   },
   {

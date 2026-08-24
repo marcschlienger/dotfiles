@@ -57,10 +57,9 @@ fi
 
 # Load plugins
 [ -f ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && . ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-[ -d ~/.zsh/plugins/zsh-completions/zsh-completions.plugin.zsh ] && fpath=(~/.zsh/plugins/zsh-completions/src $fpath)
+[ -d ~/.zsh/plugins/zsh-completions/src ] && fpath=(~/.zsh/plugins/zsh-completions/src $fpath)
 [ -f ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && . ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Load prompt
 fpath=(~/.zsh $fpath)
 autoload -Uz myprompt.zsh; myprompt.zsh
-

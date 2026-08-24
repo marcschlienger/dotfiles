@@ -1,26 +1,59 @@
 ;;; init-theme.el -*- lexical-binding: t -*-
 
-;;; Set the font.
-(if (eq system-type 'darwin)
-  (setq height1 160
-        height2 180)
-  (setq height1 140
-        height2 160))
+;;; Choose installed fonts separately for each graphical frame.  This also
+;;; handles frames created later by an Emacs daemon.
+(defconst ms/fixed-pitch-font-height
+  (if (eq system-type 'darwin) 160 140)
+  "Default and fixed-pitch font height in tenths of a point.")
 
-(set-face-attribute 'default nil
-                    :family "FiraCode Nerd Font"
-                    :height height1
-                    :weight 'regular)
+(defconst ms/variable-pitch-font-height
+  (if (eq system-type 'darwin) 180 160)
+  "Variable-pitch font height in tenths of a point.")
 
-(set-face-attribute 'fixed-pitch nil
-                    :family "FiraCode Nerd Font"
-                    :height height1
-                    :weight 'regular)
+(defconst ms/fixed-pitch-font-candidates
+  (if (eq system-type 'darwin)
+      '("FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
+    '("FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
+  "Preferred fixed-pitch font families for the current platform.")
 
-(set-face-attribute 'variable-pitch nil
-                    :family "Linux Libertine O"
-                    :height height2
-                    :weight 'regular)
+(defconst ms/variable-pitch-font-candidates
+  (if (eq system-type 'darwin)
+      '("Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
+    '("Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
+  "Preferred variable-pitch font families for the current platform.")
+
+(defun ms/first-available-font-family (families frame)
+  "Return the first installed member of FAMILIES for FRAME."
+  (seq-find (lambda (family)
+              (find-font (font-spec :family family) frame))
+            families))
+
+(defun ms/configure-frame-fonts (frame)
+  "Apply preferred installed fonts to graphical FRAME."
+  (when (display-graphic-p frame)
+    (let ((fixed-family
+           (ms/first-available-font-family
+            ms/fixed-pitch-font-candidates frame))
+          (variable-family
+           (ms/first-available-font-family
+            ms/variable-pitch-font-candidates frame)))
+      (set-face-attribute 'default frame
+                          :height ms/fixed-pitch-font-height
+                          :weight 'regular)
+      (set-face-attribute 'fixed-pitch frame
+                          :height ms/fixed-pitch-font-height
+                          :weight 'regular)
+      (set-face-attribute 'variable-pitch frame
+                          :height ms/variable-pitch-font-height
+                          :weight 'regular)
+      (when fixed-family
+        (set-face-attribute 'default frame :family fixed-family)
+        (set-face-attribute 'fixed-pitch frame :family fixed-family))
+      (when variable-family
+        (set-face-attribute 'variable-pitch frame :family variable-family)))))
+
+(add-hook 'after-make-frame-functions #'ms/configure-frame-fonts)
+(ms/configure-frame-fonts (selected-frame))
 
 ;;; Fontaine (font configurations)
 ;(use-package fontaine
@@ -94,31 +127,17 @@
     (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
       (variable-pitch-mode 1))))
 
-;; Set the theme - I use the Modus themes created by Prot.
+;; Theme packages.  Ef inherits the comprehensive Modus theme machinery.
 (use-package modus-themes
   :ensure t
   :demand t
-  :bind (("<f5>" . modus-themes-toggle)
-         ("C-<f5>" . modus-themes-select)
-         ("M-<f5>" . modus-themes-rotate))
   :init
   (setq modus-themes-to-toggle '(modus-operandi-tinted modus-vivendi-tinted)
         ;modus-themes-mode-line '(accented borderless)
         ;modus-themes-mode-line '(accented)
         modus-themes-bold-constructs t
         modus-themes-italic-constructs t
-        modus-themes-mixed-fonts t
-        modus-themes-fringes 'subtle
-        modus-themes-tabs-accented t
-        modus-themes-paren-match '(bold intense)
-        modus-themes-prompts '(bold intense)
-        modus-themes-completions
-              '((matches . (extrabold background intense))
-                (selection . (semibold accented intense))
-                (popup . (accented)))
-        modus-themes-org-blocks 'tinted-background
-        modus-themes-scale-headings t
-        modus-themes-region '(bg-only no-extend))
+        modus-themes-mixed-fonts t)
   (setq modus-themes-headings
         '((0 . (variable-pitch light 1.4))
           (1 . (variable-pitch light 1.3))
@@ -148,10 +167,161 @@
           ;(border-mode-line-active blue-intense)
           (bg-mode-line-active bg-lavender)
           (fg-mode-line-active fg-main)
-          (border-mode-line-active bg-magenta-intense)))
-  (setq modus-themes-scale-headings t))
+          (border-mode-line-active bg-magenta-intense))))
+
+(use-package ef-themes
+  :ensure t
+  :demand t)
+
+;; Bozhidar Batsov's Catppuccin port provides one real Emacs theme per flavour,
+;; which means it works correctly with Circadian and standard theme commands.
+(use-package batppuccin
+  :ensure t
+  :demand t
+  :init
+  (setq batppuccin-flat-mode-line t
+        batppuccin-use-variable-pitch t))
+
+(use-package solarized-theme
+  :ensure t
+  :demand t)
+
+(require 'subr-x)
+
+(defconst ms/theme-families
+  '((ef-maris
+     :label "Ef Maris"
+     :light ef-maris-light
+     :dark ef-maris-dark)
+    (modus-tinted
+     :label "Modus Tinted"
+     :light modus-operandi-tinted
+     :dark modus-vivendi-tinted)
+    (catppuccin
+     :label "Catppuccin"
+     :light batppuccin-latte
+     :dark batppuccin-macchiato)
+    (solarized
+     :label "Solarized"
+     :light solarized-light
+     :dark solarized-dark))
+  "Theme families available to Emacs.")
+
+(defconst ms/theme-family-state-file
+  (expand-file-name
+   "dotfiles/emacs-theme-family"
+   (or (getenv "XDG_STATE_HOME")
+       (expand-file-name ".local/state" "~")))
+  "File containing the Emacs theme family selected on this machine.")
+
+(defun ms/theme-family--entry (family)
+  "Return the configuration entry for FAMILY."
+  (or (assq family ms/theme-families)
+      (error "Unknown theme family: %s" family)))
+
+(defun ms/theme-family--property (family property)
+  "Return PROPERTY from the configuration for FAMILY."
+  (plist-get (cdr (ms/theme-family--entry family)) property))
+
+(defun ms/theme-family--read-state ()
+  "Read and validate the locally selected theme family."
+  (when (file-readable-p ms/theme-family-state-file)
+    (let ((family
+           (with-temp-buffer
+             (insert-file-contents ms/theme-family-state-file)
+             (intern (string-trim (buffer-string))))))
+      (when (assq family ms/theme-families)
+        family))))
+
+(defvar ms/theme-family
+  (or (ms/theme-family--read-state) 'ef-maris)
+  "The theme family used for automatic light and dark switching.")
+
+(defun ms/theme-family--pair (&optional family)
+  "Return the light and dark themes for FAMILY.
+Use `ms/theme-family' when FAMILY is nil."
+  (let ((family (or family ms/theme-family)))
+    (list (ms/theme-family--property family :light)
+          (ms/theme-family--property family :dark))))
+
+(defun ms/theme-family--appearance (theme)
+  "Return the light or dark appearance associated with THEME."
+  (cond
+   ((memq theme
+          (mapcar (lambda (entry) (plist-get (cdr entry) :light))
+                  ms/theme-families))
+    'light)
+   ((memq theme
+          (mapcar (lambda (entry) (plist-get (cdr entry) :dark))
+                  ms/theme-families))
+    'dark)))
+
+(defun ms/theme-family--write-state ()
+  "Persist `ms/theme-family' outside the dotfiles repository."
+  (make-directory (file-name-directory ms/theme-family-state-file) t)
+  (with-temp-file ms/theme-family-state-file
+    (insert (symbol-name ms/theme-family) "\n")))
+
+(defun ms/theme-family--configure-circadian ()
+  "Configure Circadian for the selected theme family."
+  (pcase-let ((`(,light ,dark) (ms/theme-family--pair)))
+    (setq circadian-themes `((:sunrise . ,light)
+                             (:sunset  . ,dark)))))
+
+(defun ms/theme-update-macos-appearance (theme)
+  "Keep native macOS frame chrome consistent with THEME."
+  (when (eq system-type 'darwin)
+    (when-let ((appearance (ms/theme-family--appearance theme)))
+      (setf (alist-get 'ns-appearance default-frame-alist) appearance)
+      (dolist (frame (frame-list))
+        (when (with-selected-frame frame (eq window-system 'ns))
+          (set-frame-parameter frame 'ns-appearance appearance))))))
+
+(add-hook 'enable-theme-functions #'ms/theme-update-macos-appearance)
+
+(defun ms/theme-circadian-reset-timer (_theme)
+  "Ensure Circadian can schedule a successor after loading a theme."
+  (when (timerp circadian-next-timer)
+    (cancel-timer circadian-next-timer))
+  (setq circadian-next-timer nil))
+
+(defun ms/theme-pair-toggle ()
+  "Toggle between the light and dark themes in the selected family.
+The next sunrise or sunset event restores automatic switching."
+  (interactive)
+  (pcase-let ((`(,light ,dark) (ms/theme-family--pair)))
+    (circadian-enable-theme
+     (if (custom-theme-enabled-p light) dark light))))
+
+(defun ms/theme-family-select (family)
+  "Select FAMILY for automatic Emacs theme switching."
+  (interactive
+   (let* ((choices
+           (mapcar
+            (lambda (entry)
+              (cons (plist-get (cdr entry) :label) (car entry)))
+            ms/theme-families))
+          (default
+           (car (rassoc ms/theme-family choices))))
+     (list
+      (cdr
+       (assoc
+        (completing-read "Automatic theme family: "
+                         choices nil t nil nil default)
+        choices)))))
+  (setq ms/theme-family family)
+  (ms/theme-family--configure-circadian)
+  (ms/theme-family--write-state)
+  (circadian-setup)
+  (message "Automatic theme family: %s"
+           (ms/theme-family--property family :label)))
+
+(global-set-key (kbd "<f5>") #'ms/theme-pair-toggle)
+(global-set-key (kbd "C-<f5>") #'ms/theme-family-select)
+(global-set-key (kbd "M-<f5>") #'consult-theme)
 
 (use-package solar
+  :ensure nil
   :config
   (setq calendar-latitude 48.96
         calendar-longitude 8.58))
@@ -160,8 +330,9 @@
   :ensure t
   :after solar
   :config
-  (setq circadian-themes '((:sunrise . modus-operandi-tinted)
-                           (:sunset  . modus-vivendi-tinted)))
+  (add-hook 'circadian-before-load-theme-hook
+            #'ms/theme-circadian-reset-timer)
+  (ms/theme-family--configure-circadian)
   (circadian-setup))
 
 ;; Increase padding of windows and frames.

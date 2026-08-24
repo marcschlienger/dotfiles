@@ -8,14 +8,6 @@ cmd [[
 	augroup end
 ]]
 
--- Automatically cd into the directory that the current file is in
-cmd([[
-    augroup System
-        autocmd!
-        autocmd BufEnter * silent! lcd %:p:h
-    augroup END
-]])
-
 -- Don't show the cursorline in insert mode
 cmd([[
     augroup cline
@@ -24,4 +16,3 @@ cmd([[
         autocmd InsertLeave * set cursorline
     augroup END
 ]])
-

@@ -60,7 +60,7 @@ Clone the repository and use GNU Stow to symlink the parts you want to enable:
 ```bash
 git clone https://github.com/marcschlienger/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-stow nvim emacs
+stow neovim emacs
 ```
 
 ## Notes

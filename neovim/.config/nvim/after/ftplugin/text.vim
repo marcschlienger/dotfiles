@@ -7,11 +7,10 @@ setlocal smarttab
 
 setlocal autoindent
 
-set textwidth=72
+setlocal textwidth=72
 
-set formatlistpat=^\\s*[0-9*]\\+[\\]:.)}\\t\ ]\\s*
+setlocal formatlistpat=^\\s*[0-9*]\\+[\\]:.)}\\t\ ]\\s*
 
 setlocal thesaurus+=~/.config/nvim/thesaurus/mthesaur.txt
 setlocal spell
 setlocal spellsuggest=15
-

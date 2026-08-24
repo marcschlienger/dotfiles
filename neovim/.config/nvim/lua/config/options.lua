@@ -12,12 +12,6 @@ opt.shortmess:append('c')
 opt.completeopt = {'menu', 'menuone', 'noselect'}
 
 -- ----------------------------------------------------------------------  
--- Configure Python and Node providers
--- ----------------------------------------------------------------------  
-vim.g.python3_host_prog = '/usr/bin/python3'
---vim.g.node_host_prog = '/usr/bin/node'
-
--- ----------------------------------------------------------------------  
 -- UI settings
 -- ----------------------------------------------------------------------  
 opt.number = true          		-- Show line numbers
@@ -56,7 +50,7 @@ opt.splitbelow = true
 opt.splitright = true
 
 -- Use the system clipboard
-opt.clipboard = unnamedplus
+opt.clipboard = 'unnamedplus'
 
 -- ----------------------------------------------------------------------  
 -- Tabs and spaces
@@ -80,7 +74,7 @@ opt.foldlevelstart = 99			-- open most folds by default
 -- Line wrapping
 -- ----------------------------------------------------------------------  
 opt.wrap = true
-vim.g.showbreak = '… '
+opt.showbreak = '… '
 opt.linebreak = true
 opt.breakindent = true
 
@@ -114,4 +108,3 @@ opt.undoreload = 10000
 -- ----------------------------------------------------------------------  
 opt.backup = false
 opt.writebackup = false
-
