@@ -57,8 +57,10 @@ the hooks unconditional makes an incomplete development environment visible.
 
 AUCTeX uses Skim on macOS when its `displayline` helper is installed, otherwise
 it uses the system `open` command. On Linux it prefers Zathura and falls back to
-`xdg-open`. Skim and `pdf-tools` are optional and are not installed or required
-by this configuration; a TeX distribution is still required to compile PDFs.
+`xdg-open`. Skim and `pdf-tools` are optional and are not installed or required.
+The deferred PDF Tools configuration is retained and activates after the
+package is installed explicitly and Emacs is restarted. A TeX distribution is
+still required to compile PDFs.
 
 ## Theme families and automatic switching
 

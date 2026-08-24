@@ -54,4 +54,18 @@
          (org-mode    . turn-on-org-cdlatex)
          (cdlatex-tab . LaTeX-indent-line)))
 
+;; Optional PDF Tools integration.  Keep it dormant until the package is
+;; installed explicitly, then activate it on the next Emacs startup.
+(use-package pdf-tools
+  :ensure nil
+  :if (locate-library "pdf-tools")
+  :defer t
+  :hook
+  (pdf-view-mode . (lambda () (auto-revert-mode 1)))
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-view-use-scaling t)
+  (setq pdf-view-use-imagemagick nil))
+
 (provide 'init-latex)
