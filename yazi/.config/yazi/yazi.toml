@@ -21,9 +21,8 @@ image_delay   = 30
 image_quality = 80
 
 [opener]
-# `ec` is a Zsh alias and is not available to Yazi's non-interactive shell, so
-# spell out the same command here. Emacs is the default; Neovim remains
-# available from the interactive "Open with" menu (`O`).
+# Emacs is the default; Neovim remains available from the interactive
+# "Open with" menu (`O`).
 edit = [
 	{ run = 'emacsclient -c -n -a "" %s', desc = "Emacs client", for = "unix", orphan = true },
 	{ run = 'nvim %s',                     desc = "Neovim",      for = "unix", block = true },
