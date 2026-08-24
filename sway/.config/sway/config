@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-include catppuccin-frappe
+include themes/current
 
 ### Variables
 #
@@ -42,9 +42,9 @@ Output eDP-1 resolution 1920x1080 position 0,0
 ### Idle configuration
 #
 exec swayidle -w \
-     timeout 300 'swaylock -f -c 000000' \
+     timeout 300 'swaylock -f -c $theme_lock_bg' \
      timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-     before-sleep 'swaylock -f -c 000000'
+     before-sleep 'swaylock -f -c $theme_lock_bg'
 
 ### Input configuration
 #
@@ -278,7 +278,7 @@ bindsym $mod+r mode "resize"
 #
 set $system_mode (l)ock, (e)xit, (r)estart, (s)uspend, re(b)oot, (p)oweroff
 mode "$system_mode" {
-    bindsym l mode "default", exec swaylock -f -c 000000
+    bindsym l mode "default", exec swaylock -f -c $theme_lock_bg
     bindsym e mode "default", exec swaymsg exit
     bindsym r mode "default", exec swaymsg reload
     bindsym s mode "default", exec systemctl suspend
@@ -310,13 +310,13 @@ bindsym $mod+shift+e mode "$system_mode"
 
 ### Color Theme:
 #
-# target                 title     bg        text   indicator  border
-client.focused           $lavender $surface1 $text  $rosewater $lavender
-client.focused_inactive  $overlay0 $base     $text  $rosewater $overlay0
-client.unfocused         $overlay0 $base     $text  $rosewater $overlay0
-client.urgent            $peach    $base     $peach $overlay0  $peach
-client.placeholder       $overlay0 $base     $text  $overlay0  $overlay0
-client.background        $base
+# target                 border              background          text           indicator          child_border
+client.focused           $theme_accent       $theme_bg_active     $theme_fg_main $theme_indicator   $theme_accent
+client.focused_inactive  $theme_border       $theme_bg_inactive   $theme_fg_dim  $theme_border      $theme_border
+client.unfocused         $theme_bg_inactive  $theme_bg_main       $theme_fg_dim  $theme_bg_inactive $theme_bg_inactive
+client.urgent            $theme_urgent       $theme_bg_urgent     $theme_fg_main $theme_urgent      $theme_urgent
+client.placeholder       $theme_bg_alt       $theme_bg_dim        $theme_fg_dim  $theme_bg_alt      $theme_bg_alt
+client.background        $theme_bg_main
 
 ### Status Bar:
 #

@@ -1,0 +1,17 @@
+# Modus Vivendi Tinted by Protesilaos Stavrou, mapped to semantic Sway roles.
+
+set $theme_bg_main       #0d0e1c
+set $theme_bg_dim        #1d2235
+set $theme_bg_alt        #2b3045
+set $theme_bg_inactive   #2b3045
+set $theme_bg_active     #4a4f69
+set $theme_bg_urgent     #3a0c14
+set $theme_fg_main       #ffffff
+set $theme_fg_dim        #989898
+set $theme_border        #61647a
+set $theme_accent        #c6daff
+set $theme_indicator     #00d3d0
+set $theme_urgent        #ff5f59
+
+# swaylock --color accepts RRGGBB without a leading hash.
+set $theme_lock_bg       0d0e1c

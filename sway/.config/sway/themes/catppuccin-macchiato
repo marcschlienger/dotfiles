@@ -1,0 +1,17 @@
+# Catppuccin Macchiato, mapped to semantic Sway roles.
+
+set $theme_bg_main       #24273a
+set $theme_bg_dim        #1e2030
+set $theme_bg_alt        #363a4f
+set $theme_bg_inactive   #363a4f
+set $theme_bg_active     #494d64
+set $theme_bg_urgent     #24273a
+set $theme_fg_main       #cad3f5
+set $theme_fg_dim        #b8c0e0
+set $theme_border        #6e738d
+set $theme_accent        #b7bdf8
+set $theme_indicator     #f4dbd6
+set $theme_urgent        #ed8796
+
+# swaylock --color accepts RRGGBB without a leading hash.
+set $theme_lock_bg       24273a

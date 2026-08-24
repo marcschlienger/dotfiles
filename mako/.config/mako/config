@@ -5,4 +5,4 @@ outer-margin=15
 layer=overlay
 default-timeout=20000
 
-include=~/.config/mako/catppuccin-frappe/catppuccin-frappe-blue
+include=~/.config/mako/ef-maris-dark

@@ -1,0 +1,4 @@
+# Available: ef-maris-dark, modus-vivendi-tinted,
+# catppuccin-macchiato, solarized-dark.
+# Change this include to select another Sway color theme, then reload Sway.
+include ./ef-maris-dark

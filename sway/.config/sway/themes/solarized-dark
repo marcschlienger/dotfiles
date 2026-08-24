@@ -1,0 +1,17 @@
+# Solarized Dark by Ethan Schoonover, mapped to semantic Sway roles.
+
+set $theme_bg_main       #002b36
+set $theme_bg_dim        #002b36
+set $theme_bg_alt        #073642
+set $theme_bg_inactive   #002b36
+set $theme_bg_active     #073642
+set $theme_bg_urgent     #002b36
+set $theme_fg_main       #93a1a1
+set $theme_fg_dim        #839496
+set $theme_border        #586e75
+set $theme_accent        #268bd2
+set $theme_indicator     #2aa198
+set $theme_urgent        #dc322f
+
+# swaylock --color accepts RRGGBB without a leading hash.
+set $theme_lock_bg       002b36

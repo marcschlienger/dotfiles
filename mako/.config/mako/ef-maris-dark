@@ -1,0 +1,8 @@
+# Ef Maris Dark
+background-color=#131c2b
+text-color=#eaedef
+border-color=#57b0ff
+progress-color=over #2f527b
+
+[urgency=high]
+border-color=#ff7a5f
