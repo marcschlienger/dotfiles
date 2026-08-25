@@ -1,246 +1,156 @@
 @import "themes/ef-maris-dark.css";
 
-
 * {
-    /* `otf-font-awesome` is required to be installed for icons */
-    font-family: FontAwesome, Ubuntu, sans-serif;
-    font-size: 16px;
+    min-height: 0;
+    font-family: Ubuntu, FontAwesome, sans-serif;
+    font-size: 15px;
 }
 
 window#waybar {
     background-color: @bg_main;
     color: @fg_main;
-    transition-property: background-color;
-    transition-duration: .5s;
+    border-bottom: 1px solid @bg_alt;
 }
 
-window#waybar.hidden {
-    opacity: 0.2;
+tooltip {
+    background-color: @bg_dim;
+    border: 1px solid @border;
+    border-radius: 4px;
 }
 
-/*
-window#waybar.empty {
-    background-color: transparent;
-}
-window#waybar.solo {
-    background-color: @fg_main;
-}
-window#waybar.termite {
-    background-color: @bg_alt;
+tooltip label {
+    padding: 4px 6px;
+    color: @fg_main;
 }
 
-window#waybar.chromium {
-    background-color: @bg_main;
-    border: none;
-}
-*/
-
-button {
-    /* Use box-shadow instead of border so the text isn't offset */
-    box-shadow: inset 0 -3px transparent;
-    /* Avoid rounded borders under each button name */
-    border: none;
-    border-radius: 0;
+menu {
+    padding: 4px;
+    background-color: @bg_dim;
+    border: 1px solid @border;
+    color: @fg_main;
 }
 
-/* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
-button:hover {
-    background: inherit;
-    box-shadow: inset 0 -3px @accent;
+menuitem {
+    padding: 6px 12px;
+}
+
+menuitem:hover {
+    background-color: @bg_active;
+    color: @fg_main;
+}
+
+menu separator {
+    min-height: 1px;
+    margin: 4px 2px;
+    background-color: @border;
+}
+
+#workspaces {
+    margin-left: 4px;
 }
 
 #workspaces button {
-    padding: 0 5px;
+    min-width: 28px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 0;
     background-color: transparent;
-    color: @fg_main;
+    background-image: none;
+    box-shadow: inset 0 -2px transparent;
+    color: @fg_dim;
+    text-shadow: none;
+    -gtk-icon-shadow: none;
 }
 
 #workspaces button:hover {
-    background: alpha(@bg_inactive, 0.7);
-    box-shadow: inset 0 -3px @border;
+    background-color: @bg_active;
+    box-shadow: inset 0 -2px @border;
+    color: @fg_main;
 }
 
-#workspaces button.active {
-    background-color: alpha(@bg_selection, 0.3);
+#workspaces button.visible {
+    background-color: @bg_inactive;
     color: @fg_main;
-    box-shadow: inset 0 -3px @accent;
 }
 
 #workspaces button.focused {
-    background-color: @bg_inactive;
-    box-shadow: inset 0 -3px @warning;
+    background-color: @bg_focus;
+    box-shadow: inset 0 -2px @accent;
+    color: @fg_focus;
+    font-weight: 600;
 }
 
 #workspaces button.urgent {
-    background-color: @error_warm;
-    color: @bg_main;
+    background-color: @bg_urgent;
+    box-shadow: inset 0 -2px @error_warm;
+    color: @fg_main;
+    font-weight: 600;
+}
+
+#window {
+    padding: 0 10px;
+    color: @fg_dim;
 }
 
 #mode {
-    background-color: @bg_inactive;
-}
-
-#clock,
-#battery,
-#cpu,
-#memory,
-#disk,
-#temperature,
-#backlight,
-#network,
-#pulseaudio,
-#wireplumber,
-#custom-media,
-#tray,
-#mode,
-#idle_inhibitor,
-#scratchpad,
-#power-profiles-daemon,
-#mpd {
     padding: 0 10px;
-    color: @fg_main;
-}
-
-#window,
-#workspaces {
-    margin: 0 4px;
-}
-
-/* If workspaces is the leftmost module, omit left margin */
-.modules-left > widget:first-child > #workspaces {
-    margin-left: 0;
-}
-
-/* If workspaces is the rightmost module, omit right margin */
-.modules-right > widget:last-child > #workspaces {
-    margin-right: 0;
-}
-
-#clock {
-    background-color: @bg_main;
-}
-
-#battery {
-    background-color: @bg_main;
-    color: @fg_main;
-}
-
-#battery.charging, #battery.plugged {
-    background-color: @bg_main;
-    color: @success;
-}
-
-@keyframes blink {
-    to {
-        background-color: @fg_main;
-        color: @bg_main;
-    }
-}
-
-/* Using steps() instead of linear as a timing function to limit cpu usage */
-#battery.critical:not(.charging) {
-    background-color: @bg_main;
-    color: @error;
-    animation-name: blink;
-    animation-duration: 0.5s;
-    animation-timing-function: steps(12);
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-}
-
-#power-profiles-daemon {
-    padding-right: 15px;
-}
-
-#power-profiles-daemon.performance {
-    background-color: @bg_main;
-    color: @error;
-}
-
-#power-profiles-daemon.balanced {
-    background-color: @bg_main;
-    color: @warning;
-}
-
-#power-profiles-daemon.power-saver {
-    background-color: @bg_main;
-    color: @success;
-}
-
-label:focus {
-    background-color: @bg_inactive;
-}
-
-#cpu {
-    background-color: @bg_main;
-    color: @fg_main;
-}
-
-#memory {
-    background-color: @bg_main;
-}
-
-#disk {
-    background-color: @bg_main;
-}
-
-#backlight {
-    background-color: @bg_main;
-}
-
-#network {
-    background-color: @bg_main;
-}
-
-#network.disconnected {
-    background-color: @bg_main;
-    color: @error;
-}
-
-#pulseaudio {
-    background-color: @bg_main;
-    color: @fg_main;
-}
-
-#pulseaudio.muted {
-    background-color: @bg_main;
-    color: @error;
-}
-
-#wireplumber {
-    background-color: @bg_main;
-    color: @fg_main;
-}
-
-#wireplumber.muted {
-    background-color: @bg_main;
-}
-
-#custom-media {
-    background-color: @bg_main;
-    color: @success;
-    min-width: 100px;
-}
-
-#custom-media.custom-spotify {
-    background-color: @bg_success;
-}
-
-#custom-media.custom-vlc {
     background-color: @bg_warning;
+    box-shadow: inset 0 -2px @warning;
     color: @warning_warm;
 }
 
-#temperature {
-    background-color: @bg_main;
+#scratchpad {
+    padding: 0 8px;
+    color: @attention;
 }
 
-#temperature.critical {
-    background-color: @bg_error;
+#network,
+#pulseaudio,
+#backlight,
+#battery,
+#clock,
+#idle_inhibitor,
+#tray,
+#custom-power {
+    padding: 0 8px;
+    color: @fg_dim;
 }
 
-#tray {
-    background-color: @bg_main;
+#network.disconnected,
+#network.disabled {
+    color: @error;
+}
+
+#pulseaudio.muted {
+    color: @warning_warm;
+}
+
+#battery,
+#clock {
+    color: @fg_main;
+}
+
+#clock {
+    font-weight: 600;
+}
+
+#battery.charging,
+#battery.plugged {
+    color: @success;
+}
+
+#battery.warning:not(.charging):not(.plugged) {
+    color: @warning_warm;
+}
+
+#battery.critical:not(.charging):not(.plugged) {
+    color: @error;
+    font-weight: 600;
+}
+
+#idle_inhibitor.activated {
+    background-color: @bg_inactive;
+    color: @attention;
 }
 
 #tray > .passive {
@@ -248,88 +158,16 @@ label:focus {
 }
 
 #tray > .needs-attention {
-    -gtk-icon-effect: highlight;
-    background-color: @bg_main;
-}
-
-#idle_inhibitor {
-    background-color: @bg_main;
-}
-
-#idle_inhibitor.activated {
-    background-color: @attention;
-    color: @bg_main;
-}
-
-#mpd {
-    background-color: @bg_success;
-    color: @fg_main;
-}
-
-#mpd.disconnected {
     background-color: @bg_error;
+    box-shadow: inset 0 -2px @error;
+    -gtk-icon-effect: highlight;
 }
 
-#mpd.stopped {
-    background-color: @bg_active;
+#custom-power {
+    margin-right: 4px;
+    border-left: 1px solid @bg_alt;
 }
 
-#mpd.paused {
-    background-color: @success_alt;
-    color: @bg_main;
-}
-
-#language {
-    background: @accent;
-    color: @bg_main;
-    padding: 0 5px;
-    margin: 0 5px;
-    min-width: 16px;
-}
-
-#keyboard-state {
-    background: @success;
-    color: @bg_main;
-    padding: 0 0px;
-    margin: 0 5px;
-    min-width: 16px;
-}
-
-#keyboard-state > label {
-    padding: 0 5px;
-}
-
-#keyboard-state > label.locked {
-    background: alpha(@bg_main, 0.2);
-}
-
-#scratchpad {
-    background: alpha(@bg_main, 0.2);
-}
-
-#scratchpad.empty {
-	background-color: transparent;
-}
-
-#privacy {
-    padding: 0;
-}
-
-#privacy-item {
-    padding: 0 5px;
-    color: @fg_main;
-}
-
-#privacy-item.screenshare {
-    background-color: @error_warm;
-}
-
-#privacy-item.audio-in {
-    background-color: @success;
-    color: @bg_main;
-}
-
-#privacy-item.audio-out {
-    background-color: @accent;
-    color: @bg_main;
+#custom-power:hover {
+    color: @error_warm;
 }

@@ -331,7 +331,7 @@ exec wl-paste --type text --watch cliphist store
 exec wl-paste --type image --watch cliphist store
 exec nm-applet --indicator
 exec udiskie -ans
-exec wlsunset -T 5700 -t 3500 -l 48.96-L 8.58
+exec wlsunset -T 5700 -t 3500 -l 48.96 -L 8.58
 exec nextcloud
 
 include /etc/sway/config.d/*
