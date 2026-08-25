@@ -26,6 +26,11 @@ export LSCOLORS=ExFxCxDxBxegedabagacad
 bindkey -v
 export KEYTIMEOUT=1
 
+# zsh-completions must be on fpath BEFORE compinit runs, and compinit runs
+# from completion.zsh just below. compinit scans fpath once and never
+# revisits it, so setting this afterwards registers nothing at all.
+[ -d ~/.zsh/plugins/zsh-completions/src ] && fpath=(~/.zsh/plugins/zsh-completions/src $fpath)
+
 # Source configuration files
 [ -f ~/.zsh/aliases.zsh ] && . ~/.zsh/aliases.zsh
 [ -f ~/.zsh/completion.zsh ] && . ~/.zsh/completion.zsh
@@ -56,10 +61,15 @@ fi
 [ -f ~/.zsh/zoxide.zsh ] && . ~/.zsh/zoxide.zsh
 
 # Load plugins
+# zsh-completions is not here: its fpath line has to run before compinit,
+# so it lives at the top of this file.
 [ -f ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && . ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-[ -d ~/.zsh/plugins/zsh-completions/src ] && fpath=(~/.zsh/plugins/zsh-completions/src $fpath)
-[ -f ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && . ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Load prompt
 fpath=(~/.zsh $fpath)
 autoload -Uz myprompt.zsh; myprompt.zsh
+
+# zsh-syntax-highlighting wraps the ZLE widgets that exist when it is
+# sourced, so it has to come after everything that defines one. Keep it
+# last in this file.
+[ -f ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && . ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
