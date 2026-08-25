@@ -1,0 +1,40 @@
+# Catppuccin Macchiato, mapped to Zathura roles.
+
+set default-bg                  "#24273a"
+set default-fg                  "#cad3f5"
+set statusbar-bg                "#181926"
+set statusbar-fg                "#cad3f5"
+set inputbar-bg                 "#24273a"
+set inputbar-fg                 "#c6a0f6"
+
+set completion-bg               "#363a4f"
+set completion-fg               "#cad3f5"
+set completion-group-bg         "#1e2030"
+set completion-group-fg         "#a5adcb"
+set completion-highlight-bg     "#c6a0f6"
+set completion-highlight-fg     "#24273a"
+
+set notification-bg             "#1e2030"
+set notification-fg             "#cad3f5"
+set notification-error-bg       "#3a2738"
+set notification-error-fg       "#ed8796"
+set notification-warning-bg     "#3a342f"
+set notification-warning-fg     "#eed49f"
+
+set index-bg                    "#24273a"
+set index-fg                    "#cad3f5"
+set index-active-bg             "#363a4f"
+set index-active-fg             "#cad3f5"
+
+set highlight-color             "rgba(147,154,183,0.30)"
+set highlight-active-color      "rgba(198,160,246,0.35)"
+set highlight-fg                "#24273a"
+
+set render-loading-bg           "#24273a"
+set render-loading-fg           "#cad3f5"
+set recolor-lightcolor          "#24273a"
+set recolor-darkcolor           "#cad3f5"
+
+set signature-error-color       "#3a2738"
+set signature-success-color     "#26362e"
+set signature-warning-color     "#3a342f"

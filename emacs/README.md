@@ -65,9 +65,9 @@ still required to compile PDFs.
 ## Theme families and automatic switching
 
 Ef Maris is the default. Ef Maris, Modus Tinted, Catppuccin Latte/Macchiato,
-and Solarized light/dark pairs are installed for Emacs, Kitty, and Neovim.
-Each application owns its theme selection: none of them writes another
-application's configuration or shares theme-selection state.
+and Solarized light/dark pairs are installed for Emacs, Kitty, Neovim, and
+Zathura. Each application owns its theme selection: none of them writes
+another application's configuration or shares theme-selection state.
 
 ### Emacs
 
@@ -142,6 +142,14 @@ light or dark member of Neovim's selected family. Change `default_family` in
 The terminal palettes intentionally share the same base colors but cannot
 match the full granularity of the Emacs themes: Kitty exposes a small terminal
 UI plus an ANSI palette, while Emacs themes style hundreds of semantic faces.
+
+### Zathura
+
+Zathura's palette is selected independently in `.config/zathura/themes/current`.
+Leave exactly one include active and restart Zathura after changing it. The
+default is Ef Maris Dark. Document recoloring remains disabled at startup;
+`Ctrl-r` toggles recoloring with the selected palette while preserving hues
+and image colors where Zathura supports them.
 
 ## Tree-sitter
 

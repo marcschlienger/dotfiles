@@ -1,0 +1,40 @@
+# Ef Maris Dark by Protesilaos Stavrou, mapped to Zathura roles.
+
+set default-bg                  "#131c2b"
+set default-fg                  "#eaedef"
+set statusbar-bg                "#1d2c39"
+set statusbar-fg                "#eaedef"
+set inputbar-bg                 "#131c2b"
+set inputbar-fg                 "#57b0ff"
+
+set completion-bg               "#19263a"
+set completion-fg               "#eaedef"
+set completion-group-bg         "#1d2c39"
+set completion-group-fg         "#90a0dc"
+set completion-highlight-bg     "#204358"
+set completion-highlight-fg     "#eaedef"
+
+set notification-bg             "#19263a"
+set notification-fg             "#eaedef"
+set notification-error-bg       "#551327"
+set notification-error-fg       "#ff7a5f"
+set notification-warning-bg     "#403f22"
+set notification-warning-fg     "#f0c060"
+
+set index-bg                    "#131c2b"
+set index-fg                    "#eaedef"
+set index-active-bg             "#204358"
+set index-active-fg             "#eaedef"
+
+set highlight-color             "rgba(87,176,255,0.35)"
+set highlight-active-color      "rgba(245,154,207,0.45)"
+set highlight-fg                "#131c2b"
+
+set render-loading-bg           "#131c2b"
+set render-loading-fg           "#eaedef"
+set recolor-lightcolor          "#131c2b"
+set recolor-darkcolor           "#eaedef"
+
+set signature-error-color       "#551327"
+set signature-success-color     "#104324"
+set signature-warning-color     "#403f22"

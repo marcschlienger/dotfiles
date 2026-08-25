@@ -1,0 +1,40 @@
+# Modus Operandi Tinted by Protesilaos Stavrou, mapped to Zathura roles.
+
+set default-bg                  "#fbf7f0"
+set default-fg                  "#000000"
+set statusbar-bg                "#efe9dd"
+set statusbar-fg                "#000000"
+set inputbar-bg                 "#fbf7f0"
+set inputbar-fg                 "#0031a9"
+
+set completion-bg               "#efe9dd"
+set completion-fg               "#000000"
+set completion-group-bg         "#dfd5cf"
+set completion-group-fg         "#193668"
+set completion-highlight-bg     "#ccdfff"
+set completion-highlight-fg     "#000000"
+
+set notification-bg             "#efe9dd"
+set notification-fg             "#000000"
+set notification-error-bg       "#ffe8e8"
+set notification-error-fg       "#a60000"
+set notification-warning-bg     "#f8f0d0"
+set notification-warning-fg     "#6d5000"
+
+set index-bg                    "#fbf7f0"
+set index-fg                    "#000000"
+set index-active-bg             "#ccdfff"
+set index-active-fg             "#000000"
+
+set highlight-color             "rgba(0,49,169,0.25)"
+set highlight-active-color      "rgba(114,16,69,0.35)"
+set highlight-fg                "#000000"
+
+set render-loading-bg           "#fbf7f0"
+set render-loading-fg           "#000000"
+set recolor-lightcolor          "#fbf7f0"
+set recolor-darkcolor           "#000000"
+
+set signature-error-color       "#ffe8e8"
+set signature-success-color     "#e0f6e0"
+set signature-warning-color     "#f8f0d0"

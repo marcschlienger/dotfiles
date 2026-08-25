@@ -1,0 +1,40 @@
+# Ef Maris Light by Protesilaos Stavrou, mapped to Zathura roles.
+
+set default-bg                  "#edf4f8"
+set default-fg                  "#151a27"
+set statusbar-bg                "#e0e7ef"
+set statusbar-fg                "#151a27"
+set inputbar-bg                 "#edf4f8"
+set inputbar-fg                 "#375cc6"
+
+set completion-bg               "#e4eaf0"
+set completion-fg               "#151a27"
+set completion-group-bg         "#e0e7ef"
+set completion-group-fg         "#3f4f99"
+set completion-highlight-bg     "#cdd5f7"
+set completion-highlight-fg     "#151a27"
+
+set notification-bg             "#e4eaf0"
+set notification-fg             "#151a27"
+set notification-error-bg       "#f2c2b5"
+set notification-error-fg       "#8f1313"
+set notification-warning-bg     "#e8df9a"
+set notification-warning-fg     "#553d00"
+
+set index-bg                    "#edf4f8"
+set index-fg                    "#151a27"
+set index-active-bg             "#cdd5f7"
+set index-active-fg             "#151a27"
+
+set highlight-color             "rgba(55,92,198,0.28)"
+set highlight-active-color      "rgba(128,48,143,0.38)"
+set highlight-fg                "#151a27"
+
+set render-loading-bg           "#edf4f8"
+set render-loading-fg           "#151a27"
+set recolor-lightcolor          "#edf4f8"
+set recolor-darkcolor           "#151a27"
+
+set signature-error-color       "#f2c2b5"
+set signature-success-color     "#a4e2cf"
+set signature-warning-color     "#e8df9a"

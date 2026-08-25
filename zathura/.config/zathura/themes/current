@@ -1,0 +1,7 @@
+# Light: ef-maris-light, modus-operandi-tinted, catppuccin-latte,
+# solarized-light.
+# Dark: ef-maris-dark, modus-vivendi-tinted, catppuccin-macchiato,
+# solarized-dark.
+# Change this include to select another Zathura color theme, then restart
+# Zathura.
+include ./ef-maris-dark

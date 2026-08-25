@@ -35,12 +35,14 @@ map <C-d> set "first-page-column 1:2"
 
 # Layout
 # ----------------
+set adjust-open             width
 set font                    "FiraCode Nerd Font 13"
 set statusbar-h-padding     5
 set statusbar-v-padding     5
 
 # Theme
 # ----------------
-include theme-dracula
-#include theme-nord
-
+set recolor                 false
+set recolor-keephue         true
+set recolor-reverse-video   true
+include themes/current
