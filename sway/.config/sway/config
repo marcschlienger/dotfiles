@@ -52,7 +52,15 @@ exec swayidle -w \
 input "*" {
       xkb_layout us
       xkb_variant altgr-intl
-      xkb_options caps:ctrl_modifier
+      # swap_LALT_LWIN, not swap_alt_win: right Alt is AltGr, which the
+      # altgr-intl variant above exists for. Swapping both sides would turn
+      # it into a second Super and take every accented character with it.
+      #
+      # Swapping the left pair makes this keyboard's bottom row match the
+      # Mac's: Ctrl, Alt, Super — where the Mac has Ctrl, Option, Command.
+      # $mod then falls under the thumb that presses Cmd, and Alt lands
+      # where Option is, which is what Emacs uses as Meta on both machines.
+      xkb_options caps:ctrl_modifier,altwin:swap_lalt_lwin
 }
 
 input type:touchpad {
