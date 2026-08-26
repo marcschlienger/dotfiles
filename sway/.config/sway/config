@@ -1,6 +1,6 @@
 # $XDG_CONFIG_DIR/sway/config --- Personal configuration file for i3.
 #
-# Copyright (C) 2025 Marc Schlienger <marc.schlienger@psoteo.de>
+# Copyright (C) 2025-2026 Marc Schlienger <marc.schlienger@psoteo.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,16 +35,10 @@ set $term kitty
 set $menu fuzzel
 
 ### Output configuration
-#
-#output * bg /home/marc/.local/share/'Noir Dark.jpg' fill
-#output * bg /home/marc/.local/share/'Crystal Dark.jpg' fill
+# You can get the names of your outputs by running: swaymsg -t get_outputs
 output * bg /home/marc/.local/share/wall.jpg fill
-# No explicit resolution: sway uses the panel's preferred mode, which is
-# always right. Pin one only to override it — swaymsg -t get_outputs
-# lists the modes this panel actually supports.
 output eDP-1 position 0,0
 #
-# You can get the names of your outputs by running: swaymsg -t get_outputs
 
 ### Idle configuration
 #
@@ -54,7 +48,7 @@ exec swayidle -w \
      before-sleep 'swaylock -f -c $theme_lock_bg'
 
 ### Input configuration
-#
+# You can get the names of your inputs by running: swaymsg -t get_inputs
 input "*" {
       xkb_layout us
       xkb_variant altgr-intl
@@ -74,8 +68,6 @@ input type:touchpad {
       scroll_method two_finger
       natural_scroll enabled
 }
-# You can get the names of your inputs by running: swaymsg -t get_inputs
-# Read `man 5 sway-input` for more information about this section.
 
 ### Settings
 #
@@ -85,7 +77,6 @@ font pango:Inter 11, DejaVu Sans 11
 #
 # Borders:
 #
-#default_border normal 3
 default_border pixel 3
 default_floating_border pixel 3
 hide_edge_borders smart
@@ -104,7 +95,6 @@ mouse_warping output
 workspace_auto_back_and_forth yes
 #
 # Workspaces:
-#
 # Find the app_id or class of a window by inspecting the result of swaymsg -t get_tree.
 #
 assign [app_id="firefox"] 3
@@ -119,7 +109,6 @@ assign [class="VeraCrypt"] 9
 for_window [class="VeraCrypt"] focus
 #
 # Windows:
-#
 # Find the app_id or class of a window by inspecting the result of swaymsg -t get_tree.
 #
 # Set floating for certain apps
@@ -172,9 +161,6 @@ for_window [window_role="About"] floating enable
     # Change normal to inverse to use left mouse button for resizing and right
     # mouse button for dragging.
     floating_modifier $mod normal
-
-    # Exit sway (logs you out of your Wayland session)
-    #bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
 
 #
 # Moving around:
