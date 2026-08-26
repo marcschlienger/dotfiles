@@ -1,0 +1,27 @@
+/* Solarized Dark by Ethan Schoonover, mapped to semantic Waybar roles. */
+
+/* Surfaces and text */
+@define-color bg_main       #002b36;
+@define-color bg_dim        #073642;
+@define-color bg_alt        #073642;
+@define-color bg_active     #073642;
+@define-color bg_inactive   #073642;
+@define-color bg_focus      #586e75;
+@define-color bg_urgent     #42242a;
+@define-color fg_main       #93a1a1;
+@define-color fg_dim        #839496;
+@define-color fg_focus      #fdf6e3;
+@define-color border        #586e75;
+
+/* Semantic accents */
+@define-color accent        #268bd2;
+@define-color attention     #d33682;
+@define-color success       #859900;
+@define-color warning       #b58900;
+@define-color warning_warm  #cb4b16;
+@define-color error         #dc322f;
+@define-color error_warm    #f45a55;
+
+/* State backgrounds */
+@define-color bg_warning    #3b341c;
+@define-color bg_error      #42242a;

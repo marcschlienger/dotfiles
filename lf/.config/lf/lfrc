@@ -40,9 +40,14 @@ cmd extract ${{
 	set -f
 	clear
 	printf '%s\n' $fx
-    echo '\nExtract file(s)? [y/N]'
+    printf '\nExtract file(s)? [y/N] '
 	read ans
-    [ $ans = 'y' ] && (echo 'Extracting files...' && IFS=':'; atool -x $fx) || (echo 'Cancelled...')
+	if [ "$ans" = y ]; then
+		printf 'Extracting files...\n'
+		atool -x $fx
+	else
+		printf 'Cancelled...\n'
+	fi
 	clear
 }}
 map x extract

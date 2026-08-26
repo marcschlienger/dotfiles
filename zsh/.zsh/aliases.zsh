@@ -1,10 +1,17 @@
 # ls
-alias l='lsd -lAh'
-alias ls='ls -Fq --color'
+if command -v lsd >/dev/null 2>&1; then
+    alias l='lsd -lAh'
+else
+    alias l='ls -lAh'
+fi
+case "$OSTYPE" in
+    darwin*) alias ls='ls -FGq' ;;
+    *)       alias ls='ls -Fq --color=auto' ;;
+esac
 alias la='ls -Ah'
 alias ll='ls -l'
 alias lll='ll -Ah'
-alias lc='ls -ltr $(pwd)'
+alias lc='ls -ltr .'
 
 # cp, mv, rm
 alias cp='nocorrect cp -iv'
@@ -27,7 +34,9 @@ alias d='dirs -v'
 for index ({1..9}) alias "$index"="cd +${index}"; unset index
 
 # diff
-alias diff='diff --color=always'
+if diff --color=auto /dev/null /dev/null >/dev/null 2>&1; then
+    alias diff='diff --color=always'
+fi
 
 # more or less
 alias more='more -R'
@@ -38,23 +47,38 @@ alias s="kitten ssh"
 
 # make a directory and cd into it
 take () {
-    mkdir -p "$1" && cd "$1"
+    if (( $# == 0 )); then
+        print -u2 "usage: take DIRECTORY"
+        return 2
+    fi
+    mkdir -p -- "$1" && cd -- "$1"
 }
 
 # jump to the root of a the current project
 r () {
-    cd "$(git rev-parse --show-toplevel 2>/dev/null)"
+    local project_root
+    project_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+        print -u2 "not inside a Git worktree"
+        return 1
+    }
+    cd -- "$project_root"
 }
 
 # jump to a projects root directory
 jj () {
-    cd "${1:-.}/$(find . -maxdepth 5 -type d -name .git | sed 's|/.git$||' | fzf --preview 'tree -L 2 ./{}')"
+    local search_root="${1:-.}" selected
+    selected=$(find "$search_root" -maxdepth 5 -type d -name .git -prune -print |
+        sed 's|/\.git$||' |
+        fzf --preview 'tree -L 2 -- {}')
+    [[ -n "$selected" ]] && cd -- "$selected"
 }
 
 # create a temporary directory and jump to it
 tmp () {
-    r="/tmp/workspaces/$(xxd -l3 -ps /dev/urandom)"
-    mkdir -p "$r" && pushd "$r"
+    local workspace_root="${TMPDIR:-/tmp}/workspaces" temp_dir
+    mkdir -p -- "$workspace_root" || return
+    temp_dir=$(mktemp -d "$workspace_root/XXXXXX") || return
+    pushd -- "$temp_dir"
 }
 
 # emacsclient
@@ -69,26 +93,22 @@ alias vim=nvim
 # extract
 x()
 {
-    if [[ -f $1 ]] ; then
-        case $1 in
-            *.7z)       7z x $1 ;;
-            *.bz2)      bunzip2 $1 ;;
-            *.deb)      ar x $1 ;;
-            *.gz)       gunzip $1 ;;
-            *.rar)      unrar xjf $1 ;;
-            *.tar)      tar xf $1 ;;
-            *.tar.bz2)  tar xjf $1 ;;
-            *.tar.gz)   tar xzf $1 ;;
-            *.tar.xz)   tar xf $1 ;;
-            *.tar.zst)  unzstd $1 ;;
-            *.tbz2)     tar xjf $1 ;;
-            *.tgz)      tar xzf $1 ;;
-            *.zip)      unzip $1 ;;
-            *.Z)        uncompress $1 ;;
-            *)          echo "'$1' cannot be extracted ..."
+    local archive="$1"
+    if [[ -f "$archive" ]] ; then
+        case "$archive" in
+            *.tar|*.tar.bz2|*.tbz2|*.tar.gz|*.tgz|*.tar.xz|*.tar.zst)
+                        tar xf "$archive" ;;
+            *.7z)       7z x -- "$archive" ;;
+            *.bz2)      bunzip2 -- "$archive" ;;
+            *.deb)      ar x "$archive" ;;
+            *.gz)       gunzip -- "$archive" ;;
+            *.rar)      unrar x "$archive" ;;
+            *.zip)      unzip "$archive" ;;
+            *.Z)        uncompress -- "$archive" ;;
+            *)          echo "'$archive' cannot be extracted ..."
         esac
     else
-        echo "'$1' is not a valid file ..."
+        echo "'$archive' is not a valid file ..."
     fi
 }
 

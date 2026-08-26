@@ -1,0 +1,8 @@
+# Modus Vivendi Tinted
+background-color=#0d0e1c
+text-color=#ffffff
+border-color=#c6daff
+progress-color=over #4a4f69
+
+[urgency=critical]
+border-color=#ff5f59

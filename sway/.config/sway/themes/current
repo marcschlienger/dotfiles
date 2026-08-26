@@ -1,4 +1,14 @@
-# Available: ef-maris-dark, modus-vivendi-tinted,
-# catppuccin-macchiato, solarized-dark.
-# Change this include to select another Sway color theme, then reload Sway.
-include ./ef-maris-dark
+# Ef Maris Dark by Protesilaos Stavrou, mapped to semantic Sway roles.
+
+set $theme_bg_main       #131c2b
+set $theme_bg_dim        #1d2c39
+set $theme_bg_alt        #2a3644
+set $theme_bg_inactive   #2a3341
+set $theme_bg_active     #2f527b
+set $theme_bg_urgent     #551327
+set $theme_fg_main       #eaedef
+set $theme_fg_dim        #969faf
+set $theme_border        #595a63
+set $theme_accent        #57b0ff
+set $theme_indicator     #2fd0db
+set $theme_urgent        #ff7a5f

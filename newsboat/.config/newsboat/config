@@ -27,9 +27,9 @@ color listfocus_unread magenta default bold
 color info blue default bold
 color article default default
 
-browser "/usr/local/bin/w3m %u"
-macro m set browser "/usr/bin/mpv %u"; open-in-browser ; set browser "/usr/local/bin/w3m %u"
-macro f set browser "/usr/bin/firefox %u"; open-in-browser ; set browser "/usr/local/bin/w3m %u"
+browser "w3m %u"
+macro m set browser "mpv %u"; open-in-browser ; set browser "w3m %u"
+macro f set browser "firefox %u"; open-in-browser ; set browser "w3m %u"
 
 urls-source "ocnews"
 ocnews-url "https://cloud.schlienger.xyz"

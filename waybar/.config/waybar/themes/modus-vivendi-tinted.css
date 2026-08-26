@@ -1,0 +1,27 @@
+/* Modus Vivendi Tinted by Protesilaos Stavrou, mapped to semantic Waybar roles. */
+
+/* Surfaces and text */
+@define-color bg_main       #0d0e1c;
+@define-color bg_dim        #1d2235;
+@define-color bg_alt        #2b3045;
+@define-color bg_active     #4a4f69;
+@define-color bg_inactive   #2b3045;
+@define-color bg_focus      #242679;
+@define-color bg_urgent     #3a0c14;
+@define-color fg_main       #ffffff;
+@define-color fg_dim        #989898;
+@define-color fg_focus      #ffffff;
+@define-color border        #61647a;
+
+/* Semantic accents */
+@define-color accent        #c6daff;
+@define-color attention     #b6a0ff;
+@define-color success       #44bc44;
+@define-color warning       #d0bc00;
+@define-color warning_warm  #fec43f;
+@define-color error         #ff5f59;
+@define-color error_warm    #ff6b55;
+
+/* State backgrounds */
+@define-color bg_warning    #381d0f;
+@define-color bg_error      #3a0c14;

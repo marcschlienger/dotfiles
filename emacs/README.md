@@ -25,10 +25,11 @@ together and also exposes Ruff fixes and import organization. Emacs uses ty
 through Eglot, `flymake-ruff` for diagnostics on save (or manual `C-c ! s`),
 and `ruff-format` for formatting on save.
 
-Neovim 0.11 or newer is required for the native `vim.lsp.config` and
-`vim.lsp.enable` APIs used by this configuration. Version 0.12 or newer is
-recommended for automatic terminal appearance detection; the current Mac has
-Neovim `0.12.4`.
+Neovim 0.11.3 or newer is required by the current `nvim-lspconfig` and for the
+native `vim.lsp.config` and `vim.lsp.enable` APIs used by this configuration.
+Debian 13's standard package is Neovim 0.10.4, so it needs a newer Neovim build
+from another trusted package source. Version 0.12 or newer is recommended for
+automatic terminal appearance detection; the current Mac has Neovim `0.12.5`.
 
 Other configured features need these executables:
 
@@ -66,8 +67,9 @@ still required to compile PDFs.
 
 Ef Maris is the default. Ef Maris, Modus Tinted, Catppuccin Latte/Macchiato,
 and Solarized light/dark pairs are installed for Emacs, Kitty, Neovim, and
-Zathura. Each application owns its theme selection: none of them writes
-another application's configuration or shares theme-selection state.
+Zathura. Each application owns its theme selection. The optional
+`wayland-theme` command synchronizes Kitty with Sway, Waybar, Mako, Fuzzel,
+and Swaylock without coupling any of those applications to Emacs or Neovim.
 
 ### Emacs
 
@@ -87,11 +89,13 @@ repository and is not read by Kitty or Neovim.
 
 ### Kitty
 
-Kitty's pair is selected only in `light-theme.auto.conf`,
-`dark-theme.auto.conf`, and `no-preference-theme.auto.conf`. Each file contains
-the four alternatives. Leave exactly one `include` active in each file, pair
-the corresponding light and dark variants, and keep the no-preference include
-the same as the light include. The current default is Ef Maris.
+Kitty's automatic files load `themes/current-light.conf` and
+`themes/current-dark.conf`; the no-preference fallback uses the light palette.
+The current default is Ef Maris. To change Kitty independently, copy any named
+light/dark pair from `themes/` over those two current files. To select the same
+family for Kitty and the Wayland desktop at once, use `wayland-theme ef`,
+`wayland-theme modus`, `wayland-theme catppuccin`, or
+`wayland-theme solarized`.
 
 Kitty has recognized `light-theme.auto.conf`, `dark-theme.auto.conf`, and
 `no-preference-theme.auto.conf` since version 0.38. Use 0.42 or newer for the

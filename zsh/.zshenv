@@ -1,39 +1,45 @@
-# Determine the operating system type
-OS="$(uname)"
+# Keep PATH entries unique when nested shells source this file repeatedly.
+typeset -U path PATH
 
 # Set PATH so it includes user's private bin if it exists.
-[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+[ -d "$HOME/.local/bin" ] && path=("$HOME/.local/bin" $path)
 
-# Set PATH so it includes the texlive installation
-case "${OS}" in
-  Darwin)
-    [ -d /usr/local/texlive/2025/bin/universal-darwin ] && \
-      export PATH="/usr/local/texlive/2025/bin/universal-darwin:$PATH"
-    [ -d /Library/TeX/texbin ] && export PATH="/Library/TeX/texbin:$PATH"
+# Add the newest manually installed TeX Live, while preferring the stable
+# macOS shim when MacTeX supplies it.
+case "$OSTYPE" in
+  darwin*)
+    if [ -d /Library/TeX/texbin ]; then
+      path=(/Library/TeX/texbin $path)
+    else
+      texlive_bins=(/usr/local/texlive/[0-9]*/bin/*-darwin(N))
+      (( ${#texlive_bins} )) && path=("${texlive_bins[-1]}" $path)
+      unset texlive_bins
+    fi
     ;;
-  Linux)
-    [ -d /usr/local/texlive/2025/bin/x86_64-linux ] && \
-      export PATH="/usr/local/texlive/2025/bin/x86_64-linux:$PATH"
+  linux*)
+    texlive_bins=(/usr/local/texlive/[0-9]*/bin/*-linux(N))
+    (( ${#texlive_bins} )) && path=("${texlive_bins[-1]}" $path)
+    unset texlive_bins
     ;;
 esac
 
 # fzf
 if command -v fd >/dev/null 2>&1; then
-  export FZF_DEFAULT_COMMAND='fd --hidden --type f'
+  export FZF_DEFAULT_COMMAND='fd --hidden --type f --exclude .git'
 elif command -v fdfind >/dev/null 2>&1; then
-  export FZF_DEFAULT_COMMAND='fdfind --hidden --type f'
+  export FZF_DEFAULT_COMMAND='fdfind --hidden --type f --exclude .git'
 fi
 [ -n "${FZF_DEFAULT_COMMAND:-}" ] && \
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_DEFAULT_OPTS="--layout=reverse --inline-info"
 
 # lf
-case "${OS}" in
-  Darwin)
+case "$OSTYPE" in
+  darwin*)
     export OPENER=open
     ;;
-  Linux)
-    export OPENER=mimeopen
+  linux*)
+    export OPENER=xdg-open
     ;;
 esac
 

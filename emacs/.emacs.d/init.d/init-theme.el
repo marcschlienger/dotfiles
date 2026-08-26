@@ -225,13 +225,29 @@
 
 (defun ms/theme-family--read-state ()
   "Read and validate the locally selected theme family."
-  (when (file-readable-p ms/theme-family-state-file)
-    (let ((family
-           (with-temp-buffer
-             (insert-file-contents ms/theme-family-state-file)
-             (intern (string-trim (buffer-string))))))
-      (when (assq family ms/theme-families)
-        family))))
+  (condition-case error-data
+      (when (file-readable-p ms/theme-family-state-file)
+        (let* ((name
+                (with-temp-buffer
+                  (insert-file-contents ms/theme-family-state-file)
+                  (string-trim (buffer-string))))
+               (family (and (not (string-empty-p name)) (intern name))))
+          (if (assq family ms/theme-families)
+              family
+            (display-warning
+             'theme
+             (format "Ignoring invalid theme family in %s: %S"
+                     ms/theme-family-state-file name)
+             :warning)
+            nil)))
+    (file-error
+     (display-warning
+      'theme
+      (format "Could not read theme family state %s: %s"
+              ms/theme-family-state-file
+              (error-message-string error-data))
+      :warning)
+     nil)))
 
 (defvar ms/theme-family
   (or (ms/theme-family--read-state) 'ef-maris)
@@ -258,9 +274,27 @@ Use `ms/theme-family' when FAMILY is nil."
 
 (defun ms/theme-family--write-state ()
   "Persist `ms/theme-family' outside the dotfiles repository."
-  (make-directory (file-name-directory ms/theme-family-state-file) t)
-  (with-temp-file ms/theme-family-state-file
-    (insert (symbol-name ms/theme-family) "\n")))
+  (condition-case error-data
+      (progn
+        (make-directory (file-name-directory ms/theme-family-state-file) t)
+        (with-temp-file ms/theme-family-state-file
+          (insert (symbol-name ms/theme-family) "\n"))
+        t)
+    (file-error
+     (display-warning
+      'theme
+      (format "Could not persist theme family to %s: %s"
+              ms/theme-family-state-file
+              (error-message-string error-data))
+      :warning)
+     nil)))
+
+(defun ms/theme-family--ensure-available (family)
+  "Signal a user error unless both themes for FAMILY are installed."
+  (dolist (theme (ms/theme-family--pair family))
+    (unless (memq theme (custom-available-themes))
+      (user-error "Theme %s is unavailable; install or update its package"
+                  theme))))
 
 (defun ms/theme-family--configure-circadian ()
   "Configure Circadian for the selected theme family."
@@ -279,19 +313,16 @@ Use `ms/theme-family' when FAMILY is nil."
 
 (add-hook 'enable-theme-functions #'ms/theme-update-macos-appearance)
 
-(defun ms/theme-circadian-reset-timer (_theme)
-  "Ensure Circadian can schedule a successor after loading a theme."
-  (when (timerp circadian-next-timer)
-    (cancel-timer circadian-next-timer))
-  (setq circadian-next-timer nil))
-
 (defun ms/theme-pair-toggle ()
   "Toggle between the light and dark themes in the selected family.
 The next sunrise or sunset event restores automatic switching."
   (interactive)
   (pcase-let ((`(,light ,dark) (ms/theme-family--pair)))
-    (circadian-enable-theme
-     (if (custom-theme-enabled-p light) dark light))))
+    (let ((theme (if (custom-theme-enabled-p light) dark light)))
+      (unless (memq theme (custom-available-themes))
+        (user-error "Theme %s is unavailable; install or update its package"
+                    theme))
+      (circadian-enable-theme theme))))
 
 (defun ms/theme-family-select (family)
   "Select FAMILY for automatic Emacs theme switching."
@@ -309,12 +340,25 @@ The next sunrise or sunset event restores automatic switching."
         (completing-read "Automatic theme family: "
                          choices nil t nil nil default)
         choices)))))
-  (setq ms/theme-family family)
-  (ms/theme-family--configure-circadian)
-  (ms/theme-family--write-state)
-  (circadian-setup)
-  (message "Automatic theme family: %s"
-           (ms/theme-family--property family :label)))
+  (ms/theme-family--ensure-available family)
+  (let ((previous-family ms/theme-family))
+    (setq ms/theme-family family)
+    (ms/theme-family--configure-circadian)
+    (condition-case error-data
+        (progn
+          (circadian-setup)
+          ;; A read-only state directory must not prevent the visible switch.
+          (ms/theme-family--write-state)
+          (message "Automatic theme family: %s"
+                   (ms/theme-family--property family :label)))
+      (error
+       ;; Restore the previous working schedule if the new theme cannot load.
+       (setq ms/theme-family previous-family)
+       (ms/theme-family--configure-circadian)
+       (condition-case nil
+           (circadian-setup)
+         (error nil))
+       (signal (car error-data) (cdr error-data))))))
 
 (global-set-key (kbd "<f5>") #'ms/theme-pair-toggle)
 (global-set-key (kbd "C-<f5>") #'ms/theme-family-select)
@@ -330,8 +374,6 @@ The next sunrise or sunset event restores automatic switching."
   :ensure t
   :after solar
   :config
-  (add-hook 'circadian-before-load-theme-hook
-            #'ms/theme-circadian-reset-timer)
   (ms/theme-family--configure-circadian)
   (circadian-setup))
 

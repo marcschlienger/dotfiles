@@ -1,0 +1,27 @@
+/* EF Maris Dark by Protesilaos Stavrou, mapped to semantic Waybar roles. */
+
+/* Surfaces and text */
+@define-color bg_main       #131c2b;
+@define-color bg_dim        #1d2c39;
+@define-color bg_alt        #2a3644;
+@define-color bg_active     #4a5664;
+@define-color bg_inactive   #2a3341;
+@define-color bg_focus      #2f527b;
+@define-color bg_urgent     #551327;
+@define-color fg_main       #eaedef;
+@define-color fg_dim        #969faf;
+@define-color fg_focus      #ecf0ff;
+@define-color border        #595a63;
+
+/* Semantic accents */
+@define-color accent        #57b0ff;
+@define-color attention     #cf90ff;
+@define-color success       #41bf4f;
+@define-color warning       #d0d24f;
+@define-color warning_warm  #f0c060;
+@define-color error         #ff6f6f;
+@define-color error_warm    #ff7a5f;
+
+/* State backgrounds */
+@define-color bg_warning    #604233;
+@define-color bg_error      #6f293a;

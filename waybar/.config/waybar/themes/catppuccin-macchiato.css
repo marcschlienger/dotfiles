@@ -1,0 +1,27 @@
+/* Catppuccin Macchiato, mapped to semantic Waybar roles. */
+
+/* Surfaces and text */
+@define-color bg_main       #24273a;
+@define-color bg_dim        #1e2030;
+@define-color bg_alt        #363a4f;
+@define-color bg_active     #494d64;
+@define-color bg_inactive   #363a4f;
+@define-color bg_focus      #5b6078;
+@define-color bg_urgent     #3a2738;
+@define-color fg_main       #cad3f5;
+@define-color fg_dim        #a5adcb;
+@define-color fg_focus      #cad3f5;
+@define-color border        #6e738d;
+
+/* Semantic accents */
+@define-color accent        #b7bdf8;
+@define-color attention     #c6a0f6;
+@define-color success       #a6da95;
+@define-color warning       #eed49f;
+@define-color warning_warm  #f5a97f;
+@define-color error         #ed8796;
+@define-color error_warm    #ee99a0;
+
+/* State backgrounds */
+@define-color bg_warning    #3a342f;
+@define-color bg_error      #3a2738;

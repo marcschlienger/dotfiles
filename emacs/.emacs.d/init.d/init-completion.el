@@ -40,7 +40,7 @@
 (use-package flymake-ruff
   :ensure t
   :after eglot
-  :hook (eglot-managed-mode . flymake-ruff-load))
+  :hook ((python-mode python-ts-mode) . flymake-ruff-load))
 
 (use-package ruff-format
   :ensure t

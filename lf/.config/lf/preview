@@ -4,7 +4,11 @@ batorcat() {
     file="$1"
     shift
     if command -v bat >/dev/null 2>&1; then
-        bat --color=always --theme="$BAT_THEME" --style=numbers --pager=never "$file" "$@"
+        if [ -n "${BAT_THEME:-}" ]; then
+            bat --color=always --theme="$BAT_THEME" --style=numbers --pager=never "$file" "$@"
+        else
+            bat --color=always --style=numbers --pager=never "$file" "$@"
+        fi
     else
         cat "$file"
     fi
@@ -19,15 +23,27 @@ image() {
     fi
 }
 
-CACHE="$HOME/.cache/lf/thumbnail.$(sha256sum "$1" | awk '{print $1}')"
+hash_file() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | awk '{print $1}'
+    else
+        cksum "$1" | awk '{print $1}'
+    fi
+}
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/lf"
+mkdir -p "$cache_dir" || exit 1
+cache="$cache_dir/thumbnail.$(hash_file "$1")"
 
 case "$(file -Lb --mime-type -- "$1")" in
   image/*)
-    chafa -f sixel -s "$2x$3" --animate off --polite on -t 1 --bg black "$1"
+    image "$1" "$2" "$3"
     ;;
   application/pdf)
-    [ ! -f "${CACHE}.jpg" ] && pdftoppm -jpeg -f 1 -singlefile "$1" "$CACHE"
-    image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
+    [ ! -f "${cache}.jpg" ] && pdftoppm -jpeg -f 1 -singlefile "$1" "$cache"
+    image "${cache}.jpg" "$2" "$3"
     ;;
   text/*|application/json)
     batorcat "$1"
@@ -35,6 +51,12 @@ case "$(file -Lb --mime-type -- "$1")" in
   *)
     # lesspipe can list many archives, and even do docx files
     # if it does not work (e.g. message/rfc822) then batorcat can try
-    lesspipe.sh "$1" || batorcat "$1" || echo "lesspipe not installed or could not open file"
+    if command -v lesspipe.sh >/dev/null 2>&1; then
+      lesspipe.sh "$1" || batorcat "$1"
+    elif command -v lesspipe >/dev/null 2>&1; then
+      lesspipe "$1" || batorcat "$1"
+    else
+      batorcat "$1"
+    fi
     ;;
 esac

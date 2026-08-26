@@ -1,7 +1,9 @@
 #!/bin/bash
 
 winname=$(swaymsg --raw -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.focused) | .name')
-output=$(xdg-user-dir PICTURES)/$(date +'screenshot_%Y%m%d_%H%M%S.png')
+picture_dir=$(xdg-user-dir PICTURES)
+mkdir -p -- "$picture_dir"
+output="$picture_dir/$(date +'screenshot_%Y%m%d_%H%M%S.png')"
 
 case $1 in
     "window-clipboard")
@@ -13,7 +15,7 @@ case $1 in
     "window")
         grim -g \
             "$(swaymsg --raw -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')" \
-            -o "$output" \
+            "$output" \
             && notify-send -t 3000 "Screenshot taken" "Screenshot of the $winname window saved to $output"
         ;;
     "area-clipboard")
@@ -21,12 +23,13 @@ case $1 in
         && notify-send -t 3000 "Screenshot taken" "Screenshot of the area copied to the clipboard"
         ;;
     "area")
-        (slurp | grim -g - -o "$output") \
+        (slurp | grim -g - "$output") \
         && notify-send -t 3000 "Screenshot taken" "Screenshot of the area saved to $output"
         ;;
     "screen"|*)
+        focused_output=$(swaymsg --raw -t get_outputs | jq -r '.[] | select(.focused) | .name')
         grim -o \
-            $(swaymsg --raw -t get_outputs | jq -r '.[] | select(.focused) | .name') \
+            "$focused_output" \
             "$output" \
             && notify-send -t 3000 "Screenshot taken" "Screenshot of the current screen saved to $output"
 esac

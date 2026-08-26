@@ -1,13 +1,17 @@
 #!/bin/sh
 
-while read file; do
+while IFS= read -r file; do
 	case "$1" in
 	"C-d")
-		rm "$file"
+		rm -- "$file"
 		;;
 	"w")
-		feh --bg-fill "$file"
-		notify-send -i "$(readlink -f $file)" "Wallpaper changed ..."
+		if [ -n "${SWAYSOCK:-}" ] && command -v swaymsg >/dev/null 2>&1; then
+			swaymsg output "*" bg "$file" fill >/dev/null
+		else
+			feh --bg-fill "$file"
+		fi
+		notify-send -i "$file" "Wallpaper changed ..."
 		;;
 	"g")
 		gimp "$file" &

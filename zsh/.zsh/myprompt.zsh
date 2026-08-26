@@ -30,8 +30,9 @@ zstyle ':vcs_info:git*+set-message:*' hooks git-untracked
   fi
 }
 
-# necessary to use vcs_info in the prompt
-precmd () { vcs_info }
+# Run vcs_info without replacing precmd hooks installed by other tools.
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd vcs_info
 
 ##############################################################################
 # prompt
@@ -42,4 +43,3 @@ PROMPT+='%B%F{4}%2~%f%b'
 PROMPT+='${vcs_info_msg_0_}%f%b'
 PROMPT+='
 %(?.%B%F{3}>> %f%b.%B%F{1}>> %f%b)'
-

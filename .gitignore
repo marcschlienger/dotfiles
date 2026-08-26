@@ -8,6 +8,7 @@
 nvim.log
 
 # Emacs runtime data and installed packages
+emacs/.emacs.d/**/*.elc
 emacs/.emacs.d/auto-save-list/
 emacs/.emacs.d/backup/
 emacs/.emacs.d/eln-cache/

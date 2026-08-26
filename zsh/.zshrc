@@ -40,8 +40,8 @@ export KEYTIMEOUT=1
 
 # Source fzf configuration
 if [ -f ~/.fzf.zsh ]; then
-   source ~/.fzf.zsh
-else
+  source ~/.fzf.zsh
+elif command -v fzf >/dev/null 2>&1; then
   source <(fzf --zsh)
 fi
 

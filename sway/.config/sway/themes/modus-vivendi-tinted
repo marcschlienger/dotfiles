@@ -12,6 +12,3 @@ set $theme_border        #61647a
 set $theme_accent        #c6daff
 set $theme_indicator     #00d3d0
 set $theme_urgent        #ff5f59
-
-# swaylock --color accepts RRGGBB without a leading hash.
-set $theme_lock_bg       0d0e1c

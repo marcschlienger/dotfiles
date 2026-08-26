@@ -282,7 +282,6 @@
           ("p" "List all active project-related tasks"
            tags "+LEVEL=3+TODO=\"NEXT\"")))
   (setq org-agenda-max-entries nil)
-  (setq org-agenda-max-entries nil)
   (setq org-agenda-max-todos nil)
   (setq org-agenda-max-tags nil)
   (setq org-agenda-max-effort nil)

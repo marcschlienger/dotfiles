@@ -1,0 +1,179 @@
+#!/bin/sh
+
+set -eu
+
+program=${0##*/}
+config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+
+usage() {
+    cat <<EOF
+Usage: $program THEME
+       $program --list
+
+Switches Sway, Waybar, Kitty, Mako, Fuzzel, and Swaylock.
+
+Themes:
+  ef-maris-dark
+  modus-vivendi-tinted
+  catppuccin-macchiato
+  solarized-dark
+
+Short names: ef, modus, catppuccin, solarized
+EOF
+}
+
+die() {
+    printf '%s: %s\n' "$program" "$*" >&2
+    exit 1
+}
+
+warn() {
+    printf '%s: warning: %s\n' "$program" "$*" >&2
+}
+
+if [ "$#" -ne 1 ]; then
+    usage >&2
+    exit 2
+fi
+
+case $1 in
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    -l|--list|list)
+        printf '%s\n' \
+            ef-maris-dark \
+            modus-vivendi-tinted \
+            catppuccin-macchiato \
+            solarized-dark
+        exit 0
+        ;;
+    ef|ef-maris|ef-maris-dark)
+        theme=ef-maris-dark
+        ;;
+    modus|modus-tinted|modus-vivendi-tinted)
+        theme=modus-vivendi-tinted
+        ;;
+    catppuccin|macchiato|catppuccin-macchiato)
+        theme=catppuccin-macchiato
+        ;;
+    solarized|solarized-dark)
+        theme=solarized-dark
+        ;;
+    *)
+        usage >&2
+        die "unknown theme: $1"
+        ;;
+esac
+
+sway_source=$config_home/sway/themes/$theme
+waybar_source=$config_home/waybar/themes/$theme.css
+kitty_dark_source=$config_home/kitty/themes/$theme.conf
+
+case $theme in
+    ef-maris-dark)
+        kitty_light_theme=ef-maris-light
+        ;;
+    modus-vivendi-tinted)
+        kitty_light_theme=modus-operandi-tinted
+        ;;
+    catppuccin-macchiato)
+        kitty_light_theme=catppuccin-latte
+        ;;
+    solarized-dark)
+        kitty_light_theme=solarized-light
+        ;;
+esac
+
+kitty_light_source=$config_home/kitty/themes/$kitty_light_theme.conf
+
+case $theme in
+    catppuccin-macchiato)
+        mako_source=$config_home/mako/catppuccin-macchiato/catppuccin-macchiato-lavender
+        fuzzel_source=$config_home/fuzzel/catppuccin-macchiato/lavender.ini
+        swaylock_source=$config_home/swaylock/macchiato.conf
+        ;;
+    *)
+        mako_source=$config_home/mako/$theme
+        fuzzel_source=$config_home/fuzzel/$theme.ini
+        swaylock_source=$config_home/swaylock/$theme.conf
+        ;;
+esac
+
+sway_destination=$config_home/sway/themes/current
+waybar_destination=$config_home/waybar/themes/current.css
+kitty_dark_destination=$config_home/kitty/themes/current-dark.conf
+kitty_light_destination=$config_home/kitty/themes/current-light.conf
+mako_destination=$config_home/mako/themes/current
+fuzzel_destination=$config_home/fuzzel/themes/current.ini
+swaylock_destination=$config_home/swaylock/config
+
+preflight() {
+    source_file=$1
+    destination_file=$2
+    application=$3
+    destination_directory=${destination_file%/*}
+
+    [ -r "$source_file" ] || die "$application theme is missing or unreadable: $source_file"
+    [ -d "$destination_directory" ] || die "$application config directory is missing: $destination_directory"
+
+    if [ -e "$destination_file" ]; then
+        [ -w "$destination_file" ] || die "$application current theme is not writable: $destination_file"
+    elif [ -L "$destination_file" ]; then
+        die "$application current theme is a broken symlink: $destination_file"
+    else
+        [ -w "$destination_directory" ] || die "$application config directory is not writable: $destination_directory"
+    fi
+}
+
+copy_theme() {
+    source_file=$1
+    destination_file=$2
+
+    if ! cmp -s "$source_file" "$destination_file"; then
+        # Plain cp follows GNU Stow's destination symlink instead of replacing it.
+        cp "$source_file" "$destination_file"
+    fi
+}
+
+# Check every path before changing any of them, avoiding predictable partial switches.
+preflight "$sway_source" "$sway_destination" Sway
+preflight "$waybar_source" "$waybar_destination" Waybar
+preflight "$kitty_dark_source" "$kitty_dark_destination" "Kitty dark"
+preflight "$kitty_light_source" "$kitty_light_destination" "Kitty light"
+preflight "$mako_source" "$mako_destination" Mako
+preflight "$fuzzel_source" "$fuzzel_destination" Fuzzel
+preflight "$swaylock_source" "$swaylock_destination" Swaylock
+
+copy_theme "$sway_source" "$sway_destination"
+copy_theme "$waybar_source" "$waybar_destination"
+copy_theme "$kitty_dark_source" "$kitty_dark_destination"
+copy_theme "$kitty_light_source" "$kitty_light_destination"
+copy_theme "$mako_source" "$mako_destination"
+copy_theme "$fuzzel_source" "$fuzzel_destination"
+copy_theme "$swaylock_source" "$swaylock_destination"
+
+# Reload only applications with a safe, documented live-reload mechanism.
+if [ -n "${SWAYSOCK:-}" ] && command -v swaymsg >/dev/null 2>&1; then
+    swaymsg reload >/dev/null 2>&1 || warn "Sway could not be reloaded"
+fi
+
+user_id=$(id -u)
+
+if command -v pgrep >/dev/null 2>&1 && command -v pkill >/dev/null 2>&1 && \
+        pgrep -u "$user_id" -x waybar >/dev/null 2>&1; then
+    pkill -USR2 -u "$user_id" -x waybar >/dev/null 2>&1 || warn "Waybar could not be reloaded"
+fi
+
+if command -v pgrep >/dev/null 2>&1 && command -v pkill >/dev/null 2>&1 && \
+        pgrep -u "$user_id" -x kitty >/dev/null 2>&1; then
+    pkill -USR1 -u "$user_id" -x kitty >/dev/null 2>&1 || warn "Kitty could not be reloaded"
+fi
+
+if command -v pgrep >/dev/null 2>&1 && command -v makoctl >/dev/null 2>&1 && \
+        pgrep -u "$user_id" -x mako >/dev/null 2>&1; then
+    makoctl reload >/dev/null 2>&1 || warn "Mako could not be reloaded"
+fi
+
+printf 'Selected %s. Fuzzel and Swaylock will use it on their next invocation.\n' "$theme"

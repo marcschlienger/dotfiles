@@ -5,4 +5,4 @@ outer-margin=15
 layer=overlay
 default-timeout=20000
 
-include=~/.config/mako/ef-maris-dark
+include=~/.config/mako/themes/current

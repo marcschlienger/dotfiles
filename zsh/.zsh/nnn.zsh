@@ -11,7 +11,7 @@ export USE_PISTOL=0
 n ()
 {
     # Block nesting of nnn in subshells
-    if [ -n $NNNLVL ] && [ "${NNNLVL:-0}" -ge 1 ]; then
+    if (( ${NNNLVL:-0} >= 1 )); then
         echo "nnn is already running"
         return
     fi

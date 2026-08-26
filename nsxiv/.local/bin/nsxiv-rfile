@@ -1,7 +1,11 @@
 #!/bin/sh
 
-TMPDIR="${TMPDIR:-/tmp}"
-tmp="$TMPDIR/nsxiv_rifle_$$"
+temp_root="${TMPDIR:-/tmp}"
+temp_list="$temp_root/nsxiv_rifle_$$"
+
+cleanup() {
+    rm -f -- "$temp_list"
+}
 
 is_img_extension() {
     grep -iE '\.(jpe?g|png|gif|svg|webp|tiff|heif|avif|ico|bmp)$'
@@ -9,20 +13,21 @@ is_img_extension() {
 
 listfiles() {
     find -L "$1" -maxdepth 1 -type f -print |
-        is_img_extension | sort | tee "$tmp"
+        is_img_extension | sort | tee "$temp_list"
 }
 
 open_img() {
     file="$1"; shift;
     # only go through listfiles() if the file has a valid img extension
     if echo "$file" | is_img_extension >/dev/null 2>&1; then
-        trap 'rm -f $tmp' EXIT
-        count="$(listfiles "///${file%/*}" | grep -nF "$file")"
+        trap cleanup EXIT
+        trap 'exit 1' HUP INT TERM
+        count="$(listfiles "///${file%/*}" | grep -nxF -- "$file")"
     fi
     if [ -n "$count" ]; then
-        nsxiv -i -n "${count%%:*}" "$@" -- < "$tmp"
+        nsxiv -i -n "${count%%:*}" "$@" -- < "$temp_list"
     else
-        # fallback incase file didn't have a valid extension, or we couldn't
+        # Fallback in case the file lacks a valid extension or was not found
         # find it inside the list
         nsxiv "$@" -- "$file"
     fi
@@ -49,4 +54,3 @@ case "$1" in
         ;;
     *) open_img "$PWD/$1" ;;
 esac
-
