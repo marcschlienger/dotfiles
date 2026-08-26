@@ -310,11 +310,14 @@ bindsym $mod+shift+e mode "$system_mode"
     # Special keys to adjust brightness via brightnessctl
     bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
     bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
-    # Night light on demand. One-shot: sets the temperature and exits, so
-    # it does not fight the gammastep daemon, which reasserts its own value
-    # at the next transition.
-    bindsym $mod+Shift+n exec gammastep -O 3500
-    bindsym $mod+Shift+m exec gammastep -x
+    # Night light on demand. Gamma is held by a LIVE process: wlr-gamma-control
+    # gives one client exclusive access per output, and restores the original
+    # ramps the moment that client exits. So `gammastep -O` cannot work here —
+    # it is refused while the daemon holds the output, and snaps back if it
+    # does not. Restart the daemon with fixed temperatures instead.
+    # The command is quoted because sway parses `;` as its own separator.
+    bindsym $mod+Shift+n exec "pkill -x gammastep; gammastep -t 3500:3500"
+    bindsym $mod+Shift+m exec "pkill -x gammastep; gammastep"
     # Network, since there is no tray applet
     bindsym $mod+n exec $term -e nmtui
     # Special keys to take screenshots with grimshot
