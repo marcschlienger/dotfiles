@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+include /etc/sway/config.d/*
+include config.d/*
 include themes/current
+
+exec gammastep
 
 ### Variables
 #
@@ -26,7 +30,7 @@ set $down j
 set $up k
 set $right l
 # Your preferred terminal emulator
-set $term foot
+set $term kitty
 # Your preferred application launcher
 set $menu fuzzel
 
@@ -34,8 +38,11 @@ set $menu fuzzel
 #
 #output * bg /home/marc/.local/share/'Noir Dark.jpg' fill
 #output * bg /home/marc/.local/share/'Crystal Dark.jpg' fill
-output * bg /home/marc/.local/share/'Aqua Dark.jpg' fill
-Output eDP-1 resolution 1920x1080 position 0,0
+output * bg /home/marc/.local/share/wall.jpg fill
+# No explicit resolution: sway uses the panel's preferred mode, which is
+# always right. Pin one only to override it — swaymsg -t get_outputs
+# lists the modes this panel actually supports.
+output eDP-1 position 0,0
 #
 # You can get the names of your outputs by running: swaymsg -t get_outputs
 
@@ -74,7 +81,7 @@ input type:touchpad {
 #
 # Font:
 #
-font pango:Ubuntu 11, Noto Sans 11
+font pango:Inter 11, DejaVu Sans 11
 #
 # Borders:
 #
@@ -106,15 +113,21 @@ assign [app_id="org.keepassxc.KeePassXC"] 9
 for_window [app_id="org.keepassxc.KeePassXC"] focus
 assign [app_id="thunderbird"] 4
 for_window [app_id="thunderbird"] focus
-assign [app_id="veracrypt"] 9
-for_window [app_id="veracrypt"] focus
+# VeraCrypt is not in Debian; the upstream build is Qt5 on X11, so it sets
+# WM_CLASS and never an app_id. XWayland windows match on `class`.
+assign [class="VeraCrypt"] 9
+for_window [class="VeraCrypt"] focus
 #
 # Windows:
 #
 # Find the app_id or class of a window by inspecting the result of swaymsg -t get_tree.
 #
 # Set floating for certain apps
+# GIMP 3 in trixie is GTK3 and runs natively, so app_id applies. The class
+# rule is the fallback for a GIMP 2.x or XWayland session; a rule that
+# matches nothing costs nothing.
 for_window [app_id="gimp"] floating enable
+for_window [class="Gimp"] floating enable
 for_window [app_id="net.sourceforge.gscan2pdf"] floating enable
 for_window [app_id="nwg-displays"] floating enable
 for_window [app_id="nwg-look"] floating enable
@@ -122,9 +135,13 @@ for_window [app_id="org.inkscape.Inkscape"] floating enable
 for_window [app_id="org.keepassxc.KeePassXC"] floating enable
 for_window [app_id="com.nextcloud.desktopclient.nextcloud"] floating enable
 for_window [app_id="org.pulseaudio.pavucontrol"] floating enable
+# Signal is Electron. It is Wayland-native only because bootstrap-sway sets
+# ELECTRON_OZONE_PLATFORM_HINT=auto; without that it falls back to XWayland,
+# hence both rules.
 for_window [app_id="signal"] floating enable
+for_window [class="Signal"] floating enable
 for_window [app_id="virt-manager"] floating enable
-for_window [app_id="veracrypt"] floating enable
+for_window [class="VeraCrypt"] floating enable
 
 # Set floating for certain window roles
 for_window [window_role="pop-up"] floating enable
@@ -299,14 +316,21 @@ bindsym $mod+shift+e mode "$system_mode"
 #
 # Utilities:
 #
-    # Special keys to adjust volume via PulseAudio
-    bindsym --locked XF86AudioMute exec pactl set-sink-mute \@DEFAULT_SINK@ toggle
-    bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume \@DEFAULT_SINK@ -5%
-    bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume \@DEFAULT_SINK@ +5%
-    bindsym --locked XF86AudioMicMute exec pactl set-source-mute \@DEFAULT_SOURCE@ toggle
+    # Special keys to adjust volume via wireplumber (-l 1.0 caps at 100%)
+    bindsym --locked XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+    bindsym --locked XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+    bindsym --locked XF86AudioRaiseVolume exec wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+
+    bindsym --locked XF86AudioMicMute exec wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
     # Special keys to adjust brightness via brightnessctl
     bindsym --locked XF86MonBrightnessDown exec brightnessctl set 5%-
     bindsym --locked XF86MonBrightnessUp exec brightnessctl set 5%+
+    # Night light on demand. One-shot: sets the temperature and exits, so
+    # it does not fight the gammastep daemon, which reasserts its own value
+    # at the next transition.
+    bindsym $mod+Shift+n exec gammastep -O 3500
+    bindsym $mod+Shift+m exec gammastep -x
+    # Network, since there is no tray applet
+    bindsym $mod+n exec $term -e nmtui
     # Special keys to take screenshots with grimshot
     bindsym Print exec grimshot --notify savecopy output
     bindsym $mod+Print exec grimshot --notify savecopy window
@@ -333,11 +357,7 @@ bar {
 ### Autostart:
 #
 exec mako
+exec nextcloud
+exec udiskie -ans
 exec wl-paste --type text --watch cliphist store
 exec wl-paste --type image --watch cliphist store
-exec nm-applet --indicator
-exec udiskie -ans
-exec wlsunset -T 5700 -t 3500 -l 48.96 -L 8.58
-exec nextcloud
-
-include /etc/sway/config.d/*
