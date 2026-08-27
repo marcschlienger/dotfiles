@@ -41,6 +41,18 @@ Linux is a primary environment for development, terminal work, and general day-t
 
 macOS is supported with the same overall workflow in mind, while keeping the necessary platform-specific differences explicit.
 
+#### tmux prefix
+
+The tmux prefix is `Control-Space`. On macOS 27, both system shortcuts in
+**System Settings → Keyboard → Keyboard Shortcuts → Input Sources** must be
+disabled so the key reaches the terminal:
+
+- **Select the previous input source**
+- **Select next source in Input menu**
+
+Leaving either shortcut enabled can prevent tmux from receiving
+`Control-Space`. No terminal-specific key mapping is required.
+
 ## Philosophy
 
 These dotfiles are meant to be:
