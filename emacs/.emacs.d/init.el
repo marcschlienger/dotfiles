@@ -51,4 +51,3 @@
 (require 'init-latex)
 (require 'init-vc)
 (require 'init-elfeed)
-(require 'init-denote)

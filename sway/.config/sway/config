@@ -156,16 +156,10 @@ for_window [window_role="About"] floating enable
     # Start a terminal
     bindsym $mod+Return exec $term
 
-    # Start the launcher. Super+space is the point of the xkb swap: it is
-    # the same thumb that presses Cmd+space on the Mac. $mod+d stays as the
-    # muscle memory that predates it.
-    bindsym $mod+space exec $menu
+    # Start the launcher
     bindsym $mod+d exec $menu
 
-    # Kill focused window. $mod+q is Cmd+Q under the swap; the two Shift
-    # variants are the sway defaults, kept so nothing you already press
-    # stops working.
-    bindsym $mod+q kill
+    # Kill focused window
     bindsym $mod+Shift+q kill
     bindsym $mod+Shift+c kill
 
@@ -249,9 +243,8 @@ for_window [window_role="About"] floating enable
     # Toggle the current focus between tiling and floating mode
     bindsym $mod+Shift+space floating toggle
 
-    # Swap focus between the tiling area and the floating area.
-    # Moved off $mod+space, which is now the launcher.
-    bindsym $mod+t focus mode_toggle
+    # Swap focus between the tiling area and the floating area
+    bindsym $mod+space focus mode_toggle
 
     # Move focus to the parent container
     bindsym $mod+a focus parent
