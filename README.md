@@ -39,15 +39,22 @@ configuration names families in order of preference and applies the first one
 actually installed, so a machine without them still starts correctly and
 simply looks different.
 
-- **Aporetic Sans Mono** — the `default` and `fixed-pitch` faces
+- **Aporetic Sans Mono** — the `default` and `fixed-pitch` faces in Emacs
 - **Aporetic Serif** — the `variable-pitch` face, used in Org and Denote
   buffers
-- **FiraCode Nerd Font** — the fallback for both, and the terminal font
+- **IosevkaTerm Nerd Font Mono** — the terminal font in kitty
+- **FiraCode Nerd Font** — the fallback named in the Emacs candidates
 
 Aporetic ships matched sans, serif, and mono faces, which is the reason for
 choosing it: prose and code read as one typeface rather than a monospaced
-font beside an unrelated serif. It carries no Nerd Font glyphs, so kitty
-stays on FiraCode Nerd Font rather than depending on a fallback chain.
+font beside an unrelated serif.
+
+Aporetic is an Iosevka build, so the terminal runs Iosevka as well and code
+shares one skeleton in both places. The Term cut is the terminal-fitted one,
+with ligatures dropped and glyph widths sized to the cell. Unlike Aporetic it
+carries Nerd Font glyphs, so the terminal needs no fallback chain. Aporetic
+uses wider metrics than stock Iosevka, so the terminal reads slightly tighter
+than Emacs.
 
 Install them with `./install-fonts aporetic` on Debian, or
 `./bootstrap install-fonts` on macOS.
