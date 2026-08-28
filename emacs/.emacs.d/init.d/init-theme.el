@@ -10,16 +10,22 @@
   (if (eq system-type 'darwin) 180 160)
   "Variable-pitch font height in tenths of a point.")
 
+;;; Aporetic first: it is an Iosevka build with matched sans, serif and mono
+;;; faces, which is what makes `variable-pitch-mode' in Org and Denote
+;;; buffers look like one typeface rather than two.  Installed by
+;;; `install-fonts aporetic' on Debian and the font-aporetic cask on macOS;
+;;; the candidate lists fall through to FiraCode wherever it is absent, so
+;;; this is safe on a machine that has not been set up yet.
 (defconst ms/fixed-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
-    '("FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
+      '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
+    '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
   "Preferred fixed-pitch font families for the current platform.")
 
 (defconst ms/variable-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
-    '("Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
+      '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
+    '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
   "Preferred variable-pitch font families for the current platform.")
 
 (defun ms/first-available-font-family (families frame)
