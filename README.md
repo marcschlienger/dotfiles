@@ -31,6 +31,27 @@ Neovim is part of the main editing setup and is configured for fast modal editin
 
 Emacs is included as a complementary environment for writing, editing, and workflows that benefit from its extensibility.
 
+## Fonts
+
+Fonts are not tracked in this repository; they are installed by the
+`debian-bootstrap` and `macos-bootstrap` repositories. The Emacs
+configuration names families in order of preference and applies the first one
+actually installed, so a machine without them still starts correctly and
+simply looks different.
+
+- **Aporetic Sans Mono** — the `default` and `fixed-pitch` faces
+- **Aporetic Serif** — the `variable-pitch` face, used in Org and Denote
+  buffers
+- **FiraCode Nerd Font** — the fallback for both, and the terminal font
+
+Aporetic ships matched sans, serif, and mono faces, which is the reason for
+choosing it: prose and code read as one typeface rather than a monospaced
+font beside an unrelated serif. It carries no Nerd Font glyphs, so kitty
+stays on FiraCode Nerd Font rather than depending on a fallback chain.
+
+Install them with `./install-fonts aporetic` on Debian, or
+`./bootstrap install-fonts` on macOS.
+
 ## Platforms
 
 ### Linux
