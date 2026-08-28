@@ -107,14 +107,15 @@ workspace_auto_back_and_forth yes
 #
 assign [app_id="firefox"] 3
 for_window [app_id="firefox"] focus
-assign [app_id="org.keepassxc.KeePassXC"] 9
-for_window [app_id="org.keepassxc.KeePassXC"] focus
+# KeePassXC lives in the scratchpad now, not on workspace 9 — see the
+# window rules below. An `assign` would drag you to another workspace every
+# time it opened, which is the opposite of what a scratchpad is for.
 assign [app_id="thunderbird"] 4
 for_window [app_id="thunderbird"] focus
 # VeraCrypt is not in Debian; the upstream build is Qt5 on X11, so it sets
 # WM_CLASS and never an app_id. XWayland windows match on `class`.
-assign [class="VeraCrypt"] 9
-for_window [class="VeraCrypt"] focus
+# Also no longer assigned to workspace 9 — floating, and yours to send to
+# the scratchpad with $mod+Shift+minus when you want it out of the way.
 #
 # Windows:
 # Find the app_id or class of a window by inspecting the result of swaymsg -t get_tree.
@@ -129,7 +130,11 @@ for_window [app_id="net.sourceforge.gscan2pdf"] floating enable
 for_window [app_id="nwg-displays"] floating enable
 for_window [app_id="nwg-look"] floating enable
 for_window [app_id="org.inkscape.Inkscape"] floating enable
-for_window [app_id="org.keepassxc.KeePassXC"] floating enable
+# Autostarted below, so it goes straight to the scratchpad and waits there.
+# $mod+p summons and dismisses it. Safe only BECAUSE it is autostarted — as
+# a rule on a hand-launched app, `move scratchpad` makes the window vanish
+# the moment it opens.
+for_window [app_id="org.keepassxc.KeePassXC"] floating enable, resize set 900 620, move scratchpad
 for_window [app_id="com.nextcloud.desktopclient.nextcloud"] floating enable
 for_window [app_id="org.pulseaudio.pavucontrol"] floating enable
 # Signal is Electron. It is Wayland-native only because bootstrap-sway sets
@@ -138,7 +143,10 @@ for_window [app_id="org.pulseaudio.pavucontrol"] floating enable
 for_window [app_id="signal"] floating enable
 for_window [class="Signal"] floating enable
 for_window [app_id="virt-manager"] floating enable
-for_window [class="VeraCrypt"] floating enable
+# Deliberately NOT `move scratchpad`: VeraCrypt is launched by hand, and a
+# window that disappears as it opens is a puzzle every time. Send it there
+# yourself with $mod+Shift+minus; $mod+minus cycles it back.
+for_window [class="VeraCrypt"] floating enable, resize set 900 620
 
 # Set floating for certain window roles
 for_window [window_role="pop-up"] floating enable
@@ -335,6 +343,10 @@ bindsym $mod+shift+e mode "$system_mode"
     bindsym $mod+Shift+m exec "pkill -x gammastep; gammastep"
     # Network, since there is no tray applet
     bindsym $mod+n exec $term -e nmtui
+    # Summon and dismiss KeePassXC. Criteria-matched `scratchpad show`
+    # toggles that one window, unlike $mod+minus which cycles through
+    # everything in there.
+    bindsym $mod+p exec swaymsg '[app_id="org.keepassxc.KeePassXC"] scratchpad show'
     # Special keys to take screenshots with grimshot
     bindsym Print exec grimshot --notify savecopy output
     bindsym $mod+Print exec grimshot --notify savecopy window
@@ -361,6 +373,7 @@ bar {
 ### Autostart:
 #
 exec mako
+exec keepassxc
 exec nextcloud
 exec udiskie -ans
 exec wl-paste --type text --watch cliphist store
