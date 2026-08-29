@@ -10,7 +10,13 @@
   (if (eq system-type 'darwin) 180 160)
   "Variable-pitch font height in tenths of a point.")
 
-;;; Aporetic first: it is an Iosevka build with matched sans, serif and mono
+;;; IBM Plex first, on trial: measured 0.600 em advance against Aporetic's
+;;; 0.525 and Iosevka's 0.500, which is the crowding that made Iosevka hard
+;;; to read.  Plex is the only other family with matched sans, serif and mono
+;;; at that width.  Aporetic stays next in line, so removing the Plex entries
+;;; reverts cleanly.
+;;;
+;;; Aporetic: it is an Iosevka build with matched sans, serif and mono
 ;;; faces, which is what makes `variable-pitch-mode' in Org and Denote
 ;;; buffers look like one typeface rather than two.  Installed by
 ;;; `install-fonts aporetic' on Debian and the font-aporetic cask on macOS;
@@ -18,14 +24,14 @@
 ;;; this is safe on a machine that has not been set up yet.
 (defconst ms/fixed-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
-    '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
+      '("IBM Plex Mono" "Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
+    '("IBM Plex Mono" "Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
   "Preferred fixed-pitch font families for the current platform.")
 
 (defconst ms/variable-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
-    '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
+      '("IBM Plex Serif" "Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
+    '("IBM Plex Serif" "Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
   "Preferred variable-pitch font families for the current platform.")
 
 (defun ms/first-available-font-family (families frame)
