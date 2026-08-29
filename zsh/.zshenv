@@ -23,6 +23,17 @@ case "$OSTYPE" in
     ;;
 esac
 
+# Personal TeX trees. The document classes (mtex) and the mstuff bundle are
+# two separate repositories, and TEXMFHOME takes a kpathsea brace list -- the
+# braces are kpathsea's own expansion, not the shell's, so the value is
+# quoted. Trees are searched left to right and the first match wins.
+texmf_trees=()
+for texmf_tree in "$HOME/Repos/mtex" "$HOME/Repos/mstuff"; do
+  [ -d "$texmf_tree" ] && texmf_trees+=("$texmf_tree")
+done
+(( ${#texmf_trees} )) && export TEXMFHOME="{${(j:,:)texmf_trees}}"
+unset texmf_trees texmf_tree
+
 # fzf
 if command -v fd >/dev/null 2>&1; then
   export FZF_DEFAULT_COMMAND='fd --hidden --type f --exclude .git'
