@@ -42,19 +42,25 @@ simply looks different.
 - **Aporetic Sans Mono** — the `default` and `fixed-pitch` faces in Emacs
 - **Aporetic Serif** — the `variable-pitch` face, used in Org and Denote
   buffers
-- **IosevkaTerm Nerd Font Mono** — the terminal font in kitty
-- **FiraCode Nerd Font** — the fallback named in the Emacs candidates
+- **FiraCode Nerd Font Mono** — the terminal font in kitty
+- **Symbols Nerd Font Mono** — the icon font, set explicitly as
+  `nerd-icons-font-family`
 
-Aporetic ships matched sans, serif, and mono faces, which is the reason for
-choosing it: prose and code read as one typeface rather than a monospaced
-font beside an unrelated serif.
+Emacs and the terminal use different fonts on purpose. Measuring the advance
+width per em: Fira Code 0.615, IBM Plex Mono 0.600, Aporetic 0.525, stock
+Iosevka 0.500. Iosevka proved too crowded to read comfortably in a terminal,
+and IBM Plex, though wide enough, has the smallest x-height of the wide fonts
+— 0.516 against Fira Code's 0.540 — which reads as faint.
 
-Aporetic is an Iosevka build, so the terminal runs Iosevka as well and code
-shares one skeleton in both places. The Term cut is the terminal-fitted one,
-with ligatures dropped and glyph widths sized to the cell. Unlike Aporetic it
-carries Nerd Font glyphs, so the terminal needs no fallback chain. Aporetic
-uses wider metrics than stock Iosevka, so the terminal reads slightly tighter
-than Emacs.
+Fira Code is the widest measured and the easiest to scan, so it takes the
+terminal. Aporetic keeps Emacs, where its matched sans, serif, and mono
+faces make `variable-pitch-mode` in Org and Denote buffers read as one
+typeface, and where prose at a comfortable size is far more forgiving of
+narrow letterforms than dense code is.
+
+Aporetic carries no Nerd Font glyphs, so Emacs draws its icons from Symbols
+Nerd Font Mono instead. Fira Code is Nerd-patched and needs no such
+fallback.
 
 Install them with `./install-fonts aporetic` on Debian, or
 `./bootstrap install-fonts` on macOS.

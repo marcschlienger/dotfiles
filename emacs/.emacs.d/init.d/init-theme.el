@@ -10,13 +10,15 @@
   (if (eq system-type 'darwin) 180 160)
   "Variable-pitch font height in tenths of a point.")
 
-;;; IBM Plex first, on trial: measured 0.600 em advance against Aporetic's
-;;; 0.525 and Iosevka's 0.500, which is the crowding that made Iosevka hard
-;;; to read.  Plex is the only other family with matched sans, serif and mono
-;;; at that width.  Aporetic stays next in line, so removing the Plex entries
-;;; reverts cleanly.
+;;; Aporetic here, Fira Code in the terminal — deliberately different.
 ;;;
-;;; Aporetic: it is an Iosevka build with matched sans, serif and mono
+;;; Measured advance width per em: Fira Code 0.615, IBM Plex 0.600, Aporetic
+;;; 0.525, stock Iosevka 0.500.  Iosevka proved too crowded for the terminal,
+;;; and Plex, though wide enough, has the smallest x-height of the wide fonts
+;;; (0.516 against Fira's 0.540), which reads as faint.
+;;;
+;;; Aporetic keeps its place here because prose is what these faces are for:
+;;; it is an Iosevka build with matched sans, serif and mono
 ;;; faces, which is what makes `variable-pitch-mode' in Org and Denote
 ;;; buffers look like one typeface rather than two.  Installed by
 ;;; `install-fonts aporetic' on Debian and the font-aporetic cask on macOS;
@@ -24,14 +26,14 @@
 ;;; this is safe on a machine that has not been set up yet.
 (defconst ms/fixed-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("IBM Plex Mono" "Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
-    '("IBM Plex Mono" "Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
+      '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
+    '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
   "Preferred fixed-pitch font families for the current platform.")
 
 (defconst ms/variable-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("IBM Plex Serif" "Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
-    '("IBM Plex Serif" "Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
+      '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
+    '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
   "Preferred variable-pitch font families for the current platform.")
 
 (defun ms/first-available-font-family (families frame)
@@ -456,7 +458,13 @@ The next sunrise or sunset event restores automatic switching."
 
 ;;; Icons
 (use-package nerd-icons
-  :ensure t)
+  :ensure t
+  :custom
+  ;; Stated rather than left to the default, because it is a real external
+  ;; dependency: `install-fonts' on Debian and the font-symbols-only-nerd-font
+  ;; cask on macOS both install it.  Aporetic carries no Nerd glyphs, so the
+  ;; icons come from here and not from the default face.
+  (nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 (use-package nerd-icons-dired
   :ensure t
