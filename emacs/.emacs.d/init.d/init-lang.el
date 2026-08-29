@@ -16,6 +16,10 @@
   (electric-pair-mode 1))
 
 ;; Flyspell (spell checking)
+(defun ms/flyspell-disable ()
+  "Turn flyspell off in the current buffer."
+  (flyspell-mode -1))
+
 (use-package flyspell
   :ensure nil
   :config
@@ -27,7 +31,15 @@
   (ispell-hunspell-add-multi-dic "en_US,de_DE")
   :hook
   (text-mode . flyspell-mode)
-  (prog-mode . flyspell-prog-mode))
+  (prog-mode . flyspell-prog-mode)
+  ;; Off again for shell scripts.  `flyspell-prog-mode' checks comments AND
+  ;; strings, and a shell buffer is mostly those two things — comments up
+  ;; top, then strings full of paths, flags and command names.  The result
+  ;; is underlining everywhere and no signal.
+  ;;
+  ;; This runs after the prog-mode hook that switched it on: a derived mode
+  ;; runs its parent's hooks first, then its own.
+  (sh-mode . ms/flyspell-disable))
 
 (use-package emacs
   :bind
