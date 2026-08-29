@@ -18,6 +18,11 @@ emacs/.emacs.d/org-persist/
 emacs/.emacs.d/savehist
 emacs/.emacs.d/transient/
 emacs/.emacs.d/tree-sitter/
+# Records the Emacs version that last byte-compiled the packages, so
+# early-init can spot an upgrade. Per-machine by definition: sharing one
+# value across machines would silence the check on whichever machine
+# actually upgraded.
+emacs/.emacs.d/emacs-version-stamp
 
 # Vendored Zsh plugins and local history
 zsh/.zsh/plugins
