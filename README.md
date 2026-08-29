@@ -109,6 +109,13 @@ cd ~/.dotfiles
 stow neovim emacs
 ```
 
+The `teaching-agent` package installs the shared teaching skills under
+`~/.agents/skills`:
+
+```bash
+stow teaching-agent
+```
+
 ## Notes
 
 Use these files as a reference or starting point, not as a blind one-command install. Review everything before adopting it on your own machines.
