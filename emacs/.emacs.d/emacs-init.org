@@ -272,6 +272,20 @@ find everything related to my Emacs setup.
   :config
   (setq dired-subtree-use-backgrounds nil))
 
+(use-package dired-preview
+  :ensure t
+  :after dired
+  :bind (:map dired-mode-map
+              ("V" . dired-preview-mode))
+  :custom
+  (dired-preview-trigger-on-start nil)
+  (dired-preview-delay 0.5)
+  (dired-preview-max-size (* 10 1024 1024))
+  (dired-preview-ignored-extensions-regexp
+   (rx "." (or "gz" "zst" "tar" "xz" "rar" "zip"
+               "iso" "dmg" "epub")
+       string-end)))
+
 (use-package wdired
   :ensure nil
   :config

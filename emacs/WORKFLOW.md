@@ -88,8 +88,8 @@ does not list approaches that should simply be avoided.
 | 3 | Use Obsidian Mobile for Denote/Markdown capture | Very high | Low | Best Denote mobile route |
 | 4 | Use one server/client lifecycle per machine | Very high | Low | Policy documented; adopt operationally |
 | 5 | Keep Org capture, agenda, appointment refresh, and Babel behavior correct | Very high | Low | Completed 2026-08-30 |
-| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Finalize after choosing Nextcloud or Dropbox |
-| 7 | Add a dedicated terminal client command for local and remote work | High | Low | Next small configuration change |
+| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Provider choice does not solve concurrency; implement the documented policy |
+| 7 | Use `emacsclient -t` for local and remote terminal frames | High | None | Usage practice; no Emacs configuration change |
 | 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Next small configuration change |
 | 9 | Define a mobile-note inbox and desktop triage command | High | Low | After choosing the sync layout |
 | 10 | Promote the Denote trial only after testing real Obsidian notes | High | Low | After the trial |
@@ -159,7 +159,7 @@ A desktop launcher should call `emacsclient -c -a ''`, not start a second
 `emacs` process. Freedesktop-compatible installations commonly provide an
 **Emacs (Client)** entry already.
 
-### Give asynchronous and blocking calls different names
+### Choose frame and wait behavior explicitly
 
 The current GUI command is correct for interactive opening:
 
@@ -167,11 +167,18 @@ The current GUI command is correct for interactive opening:
 alias ec='emacsclient -c -n -a ""'
 ```
 
-Add a conceptually separate terminal command when implementation begins:
+For a terminal frame, use the client directly:
 
 ```sh
-alias ect='emacsclient -t -a ""'
+emacsclient -t -a ""
 ```
+
+This is a command, not an Emacs configuration change. If the daemon is known
+to be running, the command is simply `emacsclient -t`; `-a ""` only tells the
+client to start a daemon when none is available. The existing `ec` alias is
+GUI-specific because it already supplies `-c -n`, so adding `-t` to that alias
+would mix incompatible frame options. A separate `ect` alias would be optional
+shell shorthand, not a required part of the setup.
 
 `-n` means “do not wait”, which is desirable for Finder, Yazi, and shell
 commands where a frame should appear and the caller should return. It is wrong
@@ -588,6 +595,30 @@ every 30 seconds, and sends Customize output to a new temporary file on each
 startup. Each choice is defensible alone; together they favor convenience over
 recoverability.
 
+### What the synchronization method changes
+
+Choosing Nextcloud instead of Dropbox does not materially change concurrent
+editing safety. Both maintain separate local replicas, synchronize whole-file
+changes, and preserve competing edits as conflict copies rather than merging
+Org or Markdown structure. Their differences are operational: Nextcloud offers
+self-hosting and WebDAV, while Dropbox is simpler to operate and integrate with
+mobile applications.
+
+The consequential choice is the storage model:
+
+| Method | Concurrent-editing behavior | Main tradeoff |
+| --- | --- | --- |
+| Nextcloud or Dropbox | Separate local replicas can diverge; Emacs lockfiles do not cross machines | Offline access and convenient mobile sync, with conflict risk |
+| One authoritative server | Clients edit one filesystem, so Emacs lockfiles can warn cooperating Emacs processes | Lowest conflict risk, but remote access requires a connection |
+| Git | Conflicts are explicit and history is strong, but synchronization is manual | Good history and review, poor transparent mobile sync |
+
+The conflict policy therefore does not need to wait for a choice between
+Nextcloud and Dropbox: use only one provider, do not edit the same canonical
+file on two machines, re-enable Emacs lockfiles for same-filesystem protection,
+and make mobile capture create uniquely named files. Choose between the two
+providers based on hosting and client convenience, not an expectation that one
+can merge simultaneous note edits safely.
+
 ### What lockfiles and auto-save actually protect
 
 - Re-enable lockfiles for normal files. They warn when the same file is visited
@@ -604,7 +635,9 @@ recoverability.
   autosaved on another computer as a cause of
   [conflicted copies](https://help.dropbox.com/organize/conflicted-copy).
 - With one Emacs server per machine, lockfiles re-enabled, and Drafts creating
-  one new file per capture, the 30-second setting is defensible. If conflicts
+  one new file per capture, the 30-second setting is defensible. Lockfiles still
+  protect only processes that see the same filesystem; they cannot prevent a
+  second cloud-synchronized machine from editing its replica. If conflicts
   appear, increase the interval or disable visited-file auto-save for
   synchronized Org/Denote buffers while retaining normal recovery auto-save.
 - Put `custom-file` at a stable, ignored path if Customize should persist. A
@@ -1061,13 +1094,15 @@ tangle would undo it.
 ### Phase 1: reliability and safety
 
 - [x] Document the one-server policy.
-- [ ] Add the `ect` terminal command while retaining `ec` for GUI frames.
+- [x] Document `emacsclient -t` for terminal frames; no additional alias or
+  Emacs configuration is required.
 - [x] Repair Org Babel safety, file-based Inbox membership, deadline grouping,
   project containers, meeting-note capture, and appointment refreshing.
 - [x] Keep the repaired Org workflow dormant but usable while Apple Reminders
   remains authoritative.
-- [ ] Choose Nextcloud or Dropbox, then decide lockfile and 30-second
-  visited-file auto-save policy as one synchronization decision.
+- [ ] Re-enable lockfiles regardless of sync provider, choose exactly one cloud
+  provider if local replicas are needed, and decide whether synchronized notes
+  should use 30-second visited-file auto-save.
 - [ ] Replace the Mac modifier variable with the documented NS variable.
 - [ ] Remove duplicate/default option assignments without changing intended
   behavior.
@@ -1102,9 +1137,6 @@ tangle would undo it.
 ```sh
 # Existing graphical client; asynchronous
 ec file
-
-# Proposed terminal client; same local daemon
-ect file
 
 # Explicit terminal client, starting a daemon on demand
 emacsclient -t -a "" file
