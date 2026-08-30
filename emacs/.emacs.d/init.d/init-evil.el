@@ -19,8 +19,6 @@
   (evil-mode 1)
   (dolist (mode '(ag-mode
                   dired-mode
-                  elfeed-show-mode
-                  elfeed-search-mode
                   eshell-mode
                   git-rebase-mode
                   org-capture-mode

@@ -94,7 +94,7 @@ does not list approaches that should simply be avoided.
 | 9 | Define a mobile-note inbox and desktop triage command | High | Low | After choosing the sync layout |
 | 10 | Promote the Denote trial only after testing real Obsidian notes | High | Low | After the trial |
 | 11 | Use TRAMP as the default remote-editing route | High | Low | Adopt as practice |
-| 12 | Make credentials use `auth-source` backends, never dotfiles | High | Low | Do before Feedbin |
+| 12 | Make credentials use `auth-source` backends, never dotfiles | High | Low | Before adding authenticated services |
 | 13 | Add project workspaces with built-in tab bars or Activities | Medium/high | Medium | Trial one approach |
 | 14 | Add `denote-journal` only if a daily knowledge log is wanted | Medium | Low | Optional |
 | 15 | Add `envrc` for per-project development environments | Medium | Low | Useful for mixed toolchains |
@@ -105,8 +105,7 @@ does not list approaches that should simply be avoided.
 | 20 | Use Drafts only as a capture-to-Org front end | Medium | Medium | Only if it improves Org capture enough to justify another app |
 | 21 | Build a Shortcut that creates perfect Denote filenames on iOS | Medium | Medium | If Markdown-inbox triage becomes costly |
 | 22 | Use `citar-denote` or `org-noter` | Niche/high | Medium | Only for a specific workflow |
-| 23 | Decide whether Feedbin or Elfeed owns feed state | Medium | Medium | Resolve before enabling Elfeed |
-| 24 | Add exact package locking or a second package manager | Medium | High | Only if reproducibility becomes a real problem |
+| 23 | Add exact package locking or a second package manager | Medium | High | Only if reproducibility becomes a real problem |
 
 ## 1. Make the server/client lifecycle unambiguous
 
@@ -726,8 +725,8 @@ kill ring; the built-in integration is already better.
 
 ### Secrets
 
-Store Feedbin tokens and other service credentials through `auth-source`, not
-in the literate configuration. Emacs supports encrypted auth files and, on
+Store service credentials through `auth-source`, not in the literate
+configuration. Emacs supports encrypted auth files and, on
 Linux, Secret Service or `pass`; see [Keeping Persistent Authentication Information](https://www.gnu.org/software/emacs/manual/html_node/emacs/Authentication.html).
 The installed Emacs 31 source also includes macOS Keychain backends, making
 Keychain the natural Mac choice once the consuming package is confirmed to use
@@ -1010,43 +1009,7 @@ long-running shells, SSH multiplexing, and recovery when Emacs is restarting.
 - a package solely to reproduce native macOS clipboard behavior;
 - packages that duplicate the current completion stack.
 
-## 11. Feedbin and Elfeed
-
-The current Elfeed configuration deliberately has no local subscription list,
-which is better than creating a second, divergent source of truth.
-
-Elfeed itself is a mature local RSS/Atom/JSON Feed reader with a stable local
-database; see its [official repository](https://github.com/emacs-elfeed/elfeed).
-Feedbin, however, owns subscriptions, unread state, starred entries, tags, and
-saved searches through its [official API](https://github.com/feedbin/feedbin-api).
-A useful integration must synchronize at least unread and starred state in both
-directions, not merely download Feedbin's OPML once.
-
-The commonly suggested
-[`elfeed-protocol`](https://github.com/fasheng/elfeed-protocol) currently lists
-Fever, NewsBlur, Nextcloud/ownCloud News, Tiny Tiny RSS, and related protocols;
-it does not document native Feedbin support. I would therefore not enable it
-under the assumption that Feedbin is covered. Nor would I put a Feedbin password
-in `elfeed-feeds`.
-
-There are three sensible choices, in order:
-
-1. Keep Feedbin as the reader. Send an actionable article to Apple Reminders or
-   distill durable knowledge into Denote. This has the least maintenance and
-   preserves one authoritative read/starred state.
-2. Use Elfeed as an independent local reader and accept that Feedbin state is
-   not synchronized. This is reasonable only if the two readers serve different
-   feed sets.
-3. Adopt or write a maintained Feedbin API adapter that maps subscription,
-   unread, and starred state and retrieves credentials through `auth-source`.
-   This is feasible because Feedbin has a documented API, but it is package
-   development—not a small configuration snippet.
-
-I recommend the first choice. A captured article should become either an Apple
-Reminder or a distilled Denote note; RSS read-state does not need to live inside
-Emacs merely because the rest of the workflow does.
-
-## 12. Development and configuration maintenance
+## 11. Development and configuration maintenance
 
 ### Use built-in packages as built-ins
 
@@ -1093,7 +1056,7 @@ that already uses upstream package metadata effectively.
 The literate Org file is canonical. Never fix only `init.d/*.el`; the next
 tangle would undo it.
 
-## 13. A phased implementation plan
+## 12. A phased implementation plan
 
 ### Phase 1: reliability and safety
 
@@ -1134,7 +1097,7 @@ tangle would undo it.
 - [ ] Add transclusion, bibliography, or PDF-note packages only when a real
   document workflow calls for them.
 
-## 14. Practical command reference
+## 13. Practical command reference
 
 ```sh
 # Existing graphical client; asynchronous
@@ -1212,5 +1175,3 @@ Primary manuals and project documentation used for this review:
 - [`activities`](https://github.com/alphapapa/activities.el)
 - [`envrc`](https://github.com/purcell/envrc)
 - [`popper`](https://github.com/karthink/popper)
-- [Elfeed](https://github.com/emacs-elfeed/elfeed)
-- [Feedbin API](https://github.com/feedbin/feedbin-api)

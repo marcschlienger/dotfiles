@@ -129,7 +129,6 @@ find everything related to my Emacs setup.
 (require 'init-org)
 (require 'init-latex)
 (require 'init-vc)
-(require 'init-elfeed)
 (require 'init-denote)
 #+end_src
 
@@ -473,7 +472,7 @@ find everything related to my Emacs setup.
   :functions ms/enable-variable-pitch-mode
   :bind ( :map ctl-x-x-map
           ("v" . variable-pitch-mode))
-  :hook ((text-mode notmuch-show-mode elfeed-show-mode) . ms/enable-variable-pitch-mode)
+  :hook ((text-mode notmuch-show-mode) . ms/enable-variable-pitch-mode)
   :config
   (defun ms/enable-variable-pitch-mode ()
     (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
@@ -837,8 +836,6 @@ The next sunrise or sunset event restores automatic switching."
   (evil-mode 1)
   (dolist (mode '(ag-mode
                   dired-mode
-                  elfeed-show-mode
-                  elfeed-search-mode
                   eshell-mode
                   git-rebase-mode
                   org-capture-mode
@@ -2062,22 +2059,6 @@ The next sunrise or sunset event restores automatic switching."
   (vc-checkin . diff-hl-update))
 
 (provide 'init-vc)
-#+end_src
-
-* Elfeed
-
-#+begin_src emacs-lisp :tangle init.d/init-elfeed.el :mkdirp yes
-;;; init-elfeed.el -*- lexical-binding: t -*-
-
-;; Feed subscriptions will be supplied by Feedbin rather than maintained here.
-(use-package elfeed
-  :ensure t
-  :custom
-  (elfeed-show-entry-switch 'display-buffer)
-  :bind ("C-x w" . elfeed)
-  :commands (elfeed))
-
-(provide 'init-elfeed)
 #+end_src
 
 * Denote

@@ -266,6 +266,3 @@ become more important than automatically picking up parser updates.
   document highlighting, color, and folding. Ruff deliberately owns Python
   formatting; revisit `eglot-ignored-server-capabilities` if the other
   features are wanted later.
-- Elfeed has no local subscription list. If it is enabled, configure Feedbin
-  through a compatible synchronization package and keep credentials in
-  `auth-source`, never in the dotfiles repository.

@@ -121,7 +121,7 @@
   :functions ms/enable-variable-pitch-mode
   :bind ( :map ctl-x-x-map
           ("v" . variable-pitch-mode))
-  :hook ((text-mode notmuch-show-mode elfeed-show-mode) . ms/enable-variable-pitch-mode)
+  :hook ((text-mode notmuch-show-mode) . ms/enable-variable-pitch-mode)
   :config
   (defun ms/enable-variable-pitch-mode ()
     (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
