@@ -45,6 +45,31 @@ find everything related to my Emacs setup.
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
+;; Byte-compiled packages are version-specific. Rebuild them once after an
+;; Emacs upgrade, forcing stale .elc files even when they are newer than source.
+;; Write the stamp only after the pass finishes so a hard failure is retried.
+(let* ((stamp (expand-file-name "emacs-version-stamp" user-emacs-directory))
+       (previous (and (file-exists-p stamp)
+                      (with-temp-buffer
+                        (insert-file-contents stamp)
+                        (string-trim (buffer-string)))))
+       ;; Not `package-user-dir': package.el is not loaded this early.
+       (elpa (expand-file-name "elpa" user-emacs-directory))
+       (done t))
+  (unless (equal previous emacs-version)
+    (when (and previous (file-directory-p elpa))
+      (message "Emacs %s -> %s: recompiling %s, this takes a minute..."
+               previous emacs-version elpa)
+      (condition-case err
+          (byte-recompile-directory elpa 0 t)
+        (error
+         (setq done nil)
+         (message "Recompiling failed: %s\nRun it by hand: emacs --batch --eval %s"
+                  (error-message-string err)
+                  "\"(byte-recompile-directory package-user-dir 0 t)\""))))
+    (when done
+      (with-temp-file stamp (insert emacs-version)))))
+
 ;; Initialise installed packages.
 (setq package-enable-at-startup t)
 #+end_src
@@ -339,14 +364,14 @@ find everything related to my Emacs setup.
 
 (defconst ms/fixed-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
-    '("FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
+      '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
+    '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "DejaVu Sans Mono" "Liberation Mono"))
   "Preferred fixed-pitch font families for the current platform.")
 
 (defconst ms/variable-pitch-font-candidates
   (if (eq system-type 'darwin)
-      '("Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
-    '("Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
+      '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Avenir Next" "Helvetica Neue" "Arial")
+    '("Aporetic Serif" "Linux Libertine O" "Linux Libertine" "Noto Serif" "Liberation Serif" "DejaVu Serif"))
   "Preferred variable-pitch font families for the current platform.")
 
 (defun ms/first-available-font-family (families frame)
@@ -632,7 +657,7 @@ Use `ms/theme-family' when FAMILY is nil."
 (defun ms/theme-update-macos-appearance (theme)
   "Keep native macOS frame chrome consistent with THEME."
   (when (eq system-type 'darwin)
-    (when-let ((appearance (ms/theme-family--appearance theme)))
+    (when-let* ((appearance (ms/theme-family--appearance theme)))
       (setf (alist-get 'ns-appearance default-frame-alist) appearance)
       (dolist (frame (frame-list))
         (when (with-selected-frame frame (eq window-system 'ns))
@@ -771,7 +796,10 @@ The next sunrise or sunset event restores automatic switching."
 
 ;;; Icons
 (use-package nerd-icons
-  :ensure t)
+  :ensure t
+  :custom
+  ;; Installed by the repository's font setup scripts.
+  (nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 (use-package nerd-icons-dired
   :ensure t
@@ -907,6 +935,10 @@ The next sunrise or sunset event restores automatic switching."
   (electric-pair-mode 1))
 
 ;; Flyspell (spell checking)
+(defun ms/flyspell-disable ()
+  "Turn flyspell off in the current buffer."
+  (flyspell-mode -1))
+
 (use-package flyspell
   :ensure nil
   :config
@@ -918,7 +950,9 @@ The next sunrise or sunset event restores automatic switching."
   (ispell-hunspell-add-multi-dic "en_US,de_DE")
   :hook
   (text-mode . flyspell-mode)
-  (prog-mode . flyspell-prog-mode))
+  (prog-mode . flyspell-prog-mode)
+  ;; Shell paths and command strings create too many false positives.
+  (sh-mode . ms/flyspell-disable))
 
 (use-package emacs
   :bind
@@ -1499,7 +1533,7 @@ The next sunrise or sunset event restores automatic switching."
 ;; Appt
 (use-package appt
   :ensure nil
-  :commands (appt-activate)
+  :demand t
   :config
   (setq appt-display-diary nil
         appt-display-format nil
@@ -1508,7 +1542,8 @@ The next sunrise or sunset event restores automatic switching."
         appt-audible nil)
   (with-eval-after-load 'org-agenda
     (appt-activate 1)
-    (org-agenda-to-appt)))
+    (org-agenda-to-appt t)
+    (ms-org-start-appt-refresh-timer)))
 
 ;; Org mode
 (use-package org
@@ -1564,7 +1599,8 @@ The next sunrise or sunset event restores automatic switching."
   (setq org-default-priority ?A)
   (setq org-priority-faces nil)
   :hook
-  (org-mode . org-indent-mode))
+  ((org-mode . org-indent-mode)
+   (org-mode . ms-org-enable-appt-refresh-after-save)))
 
 ;;; refile, todo
 (use-package org
@@ -1620,7 +1656,7 @@ The next sunrise or sunset event restores automatic switching."
 (use-package org
   :ensure nil
   :config
-  (setq org-confirm-babel-evaluate nil)
+  (setq org-confirm-babel-evaluate t)
   (setq org-src-window-setup 'current-window)
   (setq org-edit-src-persistent-message nil)
   (setq org-src-fontify-natively t)
@@ -1667,19 +1703,20 @@ The next sunrise or sunset event restores automatic switching."
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
                     ":END:\n"))
-          ("N" "Meeting Note" entry (file "notes.org")
+          ("N" "Meeting Note (linked)" entry (file "notes.org")
            ,(concat "* Meeting Note (%a)\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
                     ":END:\n"
                     "%?"))
-          ("m" "Meeting" entry (file+headline "agenda.org" "Meetings")
-           ,(concat "* %^{Description} :meeting: %^g\n"
+          ("m" "Meeting Note" entry (file "notes.org")
+           ,(concat "* %^{Description} :meeting:\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n"))
+                    ":END:\n"
+                    "%?"))
           ("p" "Project" entry (file "projects.org")
-           ,(concat "* PROJECT %^{Project title} [/] :project: %^g\n"
+           ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
                     ":VISIBILITY: folded\n"
@@ -1700,7 +1737,8 @@ The next sunrise or sunset event restores automatic switching."
                     ":END:\n")))
         )
   :hook
-  (org-capture-mode . delete-other-windows) ;; use full window for org-capture
+  ((org-capture-mode . delete-other-windows) ;; use full window for org-capture
+   (org-capture-after-finalize . ms-org-schedule-appt-refresh))
   )
 
 ;;; agenda
@@ -1738,17 +1776,27 @@ The next sunrise or sunset event restores automatic switching."
                  (org-agenda-show-all-dates nil)
                  (org-agenda-prefix-format "  %i %-12:c [%e] ")
                  (org-agenda-overriding-header "\nTasks\n")))
-          (agenda nil
-                  ((org-agenda-entry-types '(:deadline))
-                   (org-agenda-format-date "")
-                   (org-deadline-warning-days 7)
-                   (org-agenda-show-all-dates nil)
-                   (org-agenda-skip-function
-                    '(org-agenda-skip-entry-if 'notregexp "\\* NEXT"))
-                   (org-agenda-overriding-header "\nDeadlines")))
-          (tags-todo "inbox"
-                     ((org-agenda-prefix-format "  %?-12t% s")
-                      (org-agenda-overriding-header "\nInbox\n")))
+          (tags "DEADLINE<>\"\""
+                ((org-agenda-skip-function
+                  (lambda ()
+                    (org-agenda-skip-entry-if
+                     'todo (cons "WAITING" org-done-keywords))))
+                 (org-agenda-sorting-strategy '(deadline-up))
+                 (org-agenda-overriding-header "\nDeadlines")))
+          (tags "DEADLINE<>\"\""
+                ((org-agenda-skip-function
+                  '(org-agenda-skip-entry-if 'nottodo '("WAITING")))
+                 (org-agenda-sorting-strategy '(deadline-up))
+                 (org-agenda-overriding-header "\nWaiting deadlines")))
+          (todo ""
+                ((org-agenda-files
+                  (list (expand-file-name "inbox.org" org-directory)))
+                 (org-agenda-todo-ignore-with-date nil)
+                 (org-agenda-todo-ignore-timestamp nil)
+                 (org-agenda-todo-ignore-scheduled nil)
+                 (org-agenda-todo-ignore-deadlines nil)
+                 (org-agenda-prefix-format "  %?-12t% s")
+                 (org-agenda-overriding-header "\nInbox\n")))
           (tags "CLOSED>=\"<today>\""
                 ((org-agenda-overriding-header "\nCompleted today\n")))))
           ("h" "List all active tasks that have to be done @home"
@@ -2096,13 +2144,54 @@ remains the mobile half of any eventual setup.
 #+begin_src emacs-lisp :tangle lib.d/lib-org.el :mkdirp yes
 ;;; lib-org.el -*- lexical-binding: t -*-
 
-;; Change a TODO entry automatically to DONE when all children are DONE 
-(defun org-summary-todo (n-done n-not-done)
-  "Switch entry to DONE when all subentries are done, to TODO otherwise."
-  (let (org-log-done org-todo-log-states)   ; turn off logging
-    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+;; Change a TODO entry automatically to DONE when all children are DONE.
+(defun ms-org-summary-todo (n-done n-not-done)
+  "Update a TODO parent from the state of its child entries.
+Leave ordinary headings, such as project containers, unchanged."
+  (when (and (org-get-todo-state)
+             (> (+ n-done n-not-done) 0))
+    (let (org-log-done org-todo-log-states) ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO")))))
 
-(add-hook 'org-after-todo-statistics-hook #'org-summary-todo)
+(add-hook 'org-after-todo-statistics-hook #'ms-org-summary-todo)
+
+;; Keep `appt' synchronized with Org captures, saves, and external changes.
+(defvar ms-org-appt-refresh-timer nil)
+(defvar ms-org-appt-periodic-refresh-timer nil)
+
+(defun ms-org-refresh-appt ()
+  "Rebuild appointments from the current Org agenda files."
+  (when (featurep 'org-agenda)
+    (org-agenda-to-appt t)))
+
+(defun ms-org-schedule-appt-refresh ()
+  "Debounce an appointment refresh after an Org change."
+  (when (timerp ms-org-appt-refresh-timer)
+    (cancel-timer ms-org-appt-refresh-timer))
+  (setq ms-org-appt-refresh-timer
+        (run-with-idle-timer
+         2 nil
+         (lambda ()
+           (setq ms-org-appt-refresh-timer nil)
+           (ms-org-refresh-appt)))))
+
+(defun ms-org-schedule-appt-refresh-after-save ()
+  "Schedule an appointment refresh after saving an agenda file."
+  (when (and buffer-file-name
+             (member (file-truename buffer-file-name)
+                     (mapcar #'file-truename (org-agenda-files t))))
+    (ms-org-schedule-appt-refresh)))
+
+(defun ms-org-enable-appt-refresh-after-save ()
+  "Refresh Org appointments after saving the current agenda file."
+  (add-hook 'after-save-hook
+            #'ms-org-schedule-appt-refresh-after-save nil t))
+
+(defun ms-org-start-appt-refresh-timer ()
+  "Refresh Org appointments every fifteen minutes."
+  (unless (timerp ms-org-appt-periodic-refresh-timer)
+    (setq ms-org-appt-periodic-refresh-timer
+          (run-at-time (* 15 60) (* 15 60) #'ms-org-refresh-appt))))
 
 ;; Save all `org-agenda-files' buffers automatically after refiling.
 (defun ms-org--save-org-agenda-file-buffers (&rest _)
@@ -2114,7 +2203,7 @@ See also `org-save-all-org-buffers'"
     (save-some-buffers
      t
      (lambda ()
-       (when-let ((file (buffer-file-name)))
+       (when-let* ((file (buffer-file-name)))
          (member (file-truename file) agenda-files)))))
   (message "Saving org-agenda-files buffers... done"))
 

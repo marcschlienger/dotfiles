@@ -10,20 +10,6 @@
   (if (eq system-type 'darwin) 180 160)
   "Variable-pitch font height in tenths of a point.")
 
-;;; Aporetic here, Fira Code in the terminal — deliberately different.
-;;;
-;;; Measured advance width per em: Fira Code 0.615, IBM Plex 0.600, Aporetic
-;;; 0.525, stock Iosevka 0.500.  Iosevka proved too crowded for the terminal,
-;;; and Plex, though wide enough, has the smallest x-height of the wide fonts
-;;; (0.516 against Fira's 0.540), which reads as faint.
-;;;
-;;; Aporetic keeps its place here because prose is what these faces are for:
-;;; it is an Iosevka build with matched sans, serif and mono
-;;; faces, which is what makes `variable-pitch-mode' in Org and Denote
-;;; buffers look like one typeface rather than two.  Installed by
-;;; `install-fonts aporetic' on Debian and the font-aporetic cask on macOS;
-;;; the candidate lists fall through to FiraCode wherever it is absent, so
-;;; this is safe on a machine that has not been set up yet.
 (defconst ms/fixed-pitch-font-candidates
   (if (eq system-type 'darwin)
       '("Aporetic Sans Mono" "FiraCode Nerd Font" "Fira Code" "Menlo" "Monaco")
@@ -319,7 +305,7 @@ Use `ms/theme-family' when FAMILY is nil."
 (defun ms/theme-update-macos-appearance (theme)
   "Keep native macOS frame chrome consistent with THEME."
   (when (eq system-type 'darwin)
-    (when-let ((appearance (ms/theme-family--appearance theme)))
+    (when-let* ((appearance (ms/theme-family--appearance theme)))
       (setf (alist-get 'ns-appearance default-frame-alist) appearance)
       (dolist (frame (frame-list))
         (when (with-selected-frame frame (eq window-system 'ns))
@@ -460,10 +446,7 @@ The next sunrise or sunset event restores automatic switching."
 (use-package nerd-icons
   :ensure t
   :custom
-  ;; Stated rather than left to the default, because it is a real external
-  ;; dependency: `install-fonts' on Debian and the font-symbols-only-nerd-font
-  ;; cask on macOS both install it.  Aporetic carries no Nerd glyphs, so the
-  ;; icons come from here and not from the default face.
+  ;; Installed by the repository's font setup scripts.
   (nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 (use-package nerd-icons-dired

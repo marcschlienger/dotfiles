@@ -23,7 +23,7 @@
 ;; Appt
 (use-package appt
   :ensure nil
-  :commands (appt-activate)
+  :demand t
   :config
   (setq appt-display-diary nil
         appt-display-format nil
@@ -32,7 +32,8 @@
         appt-audible nil)
   (with-eval-after-load 'org-agenda
     (appt-activate 1)
-    (org-agenda-to-appt)))
+    (org-agenda-to-appt t)
+    (ms-org-start-appt-refresh-timer)))
 
 ;; Org mode
 (use-package org
@@ -88,7 +89,8 @@
   (setq org-default-priority ?A)
   (setq org-priority-faces nil)
   :hook
-  (org-mode . org-indent-mode))
+  ((org-mode . org-indent-mode)
+   (org-mode . ms-org-enable-appt-refresh-after-save)))
 
 ;;; refile, todo
 (use-package org
@@ -144,7 +146,7 @@
 (use-package org
   :ensure nil
   :config
-  (setq org-confirm-babel-evaluate nil)
+  (setq org-confirm-babel-evaluate t)
   (setq org-src-window-setup 'current-window)
   (setq org-edit-src-persistent-message nil)
   (setq org-src-fontify-natively t)
@@ -191,19 +193,20 @@
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
                     ":END:\n"))
-          ("N" "Meeting Note" entry (file "notes.org")
+          ("N" "Meeting Note (linked)" entry (file "notes.org")
            ,(concat "* Meeting Note (%a)\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
                     ":END:\n"
                     "%?"))
-          ("m" "Meeting" entry (file+headline "agenda.org" "Meetings")
-           ,(concat "* %^{Description} :meeting: %^g\n"
+          ("m" "Meeting Note" entry (file "notes.org")
+           ,(concat "* %^{Description} :meeting:\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
-                    ":END:\n"))
+                    ":END:\n"
+                    "%?"))
           ("p" "Project" entry (file "projects.org")
-           ,(concat "* PROJECT %^{Project title} [/] :project: %^g\n"
+           ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"
                     ":CAPTURED: %U\n"
                     ":VISIBILITY: folded\n"
@@ -224,7 +227,8 @@
                     ":END:\n")))
         )
   :hook
-  (org-capture-mode . delete-other-windows) ;; use full window for org-capture
+  ((org-capture-mode . delete-other-windows) ;; use full window for org-capture
+   (org-capture-after-finalize . ms-org-schedule-appt-refresh))
   )
 
 ;;; agenda
@@ -262,17 +266,27 @@
                  (org-agenda-show-all-dates nil)
                  (org-agenda-prefix-format "  %i %-12:c [%e] ")
                  (org-agenda-overriding-header "\nTasks\n")))
-          (agenda nil
-                  ((org-agenda-entry-types '(:deadline))
-                   (org-agenda-format-date "")
-                   (org-deadline-warning-days 7)
-                   (org-agenda-show-all-dates nil)
-                   (org-agenda-skip-function
-                    '(org-agenda-skip-entry-if 'notregexp "\\* NEXT"))
-                   (org-agenda-overriding-header "\nDeadlines")))
-          (tags-todo "inbox"
-                     ((org-agenda-prefix-format "  %?-12t% s")
-                      (org-agenda-overriding-header "\nInbox\n")))
+          (tags "DEADLINE<>\"\""
+                ((org-agenda-skip-function
+                  (lambda ()
+                    (org-agenda-skip-entry-if
+                     'todo (cons "WAITING" org-done-keywords))))
+                 (org-agenda-sorting-strategy '(deadline-up))
+                 (org-agenda-overriding-header "\nDeadlines")))
+          (tags "DEADLINE<>\"\""
+                ((org-agenda-skip-function
+                  '(org-agenda-skip-entry-if 'nottodo '("WAITING")))
+                 (org-agenda-sorting-strategy '(deadline-up))
+                 (org-agenda-overriding-header "\nWaiting deadlines")))
+          (todo ""
+                ((org-agenda-files
+                  (list (expand-file-name "inbox.org" org-directory)))
+                 (org-agenda-todo-ignore-with-date nil)
+                 (org-agenda-todo-ignore-timestamp nil)
+                 (org-agenda-todo-ignore-scheduled nil)
+                 (org-agenda-todo-ignore-deadlines nil)
+                 (org-agenda-prefix-format "  %?-12t% s")
+                 (org-agenda-overriding-header "\nInbox\n")))
           (tags "CLOSED>=\"<today>\""
                 ((org-agenda-overriding-header "\nCompleted today\n")))))
           ("h" "List all active tasks that have to be done @home"

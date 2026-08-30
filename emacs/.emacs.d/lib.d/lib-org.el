@@ -1,12 +1,53 @@
 ;;; lib-org.el -*- lexical-binding: t -*-
 
-;; Change a TODO entry automatically to DONE when all children are DONE 
-(defun org-summary-todo (n-done n-not-done)
-  "Switch entry to DONE when all subentries are done, to TODO otherwise."
-  (let (org-log-done org-todo-log-states)   ; turn off logging
-    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+;; Change a TODO entry automatically to DONE when all children are DONE.
+(defun ms-org-summary-todo (n-done n-not-done)
+  "Update a TODO parent from the state of its child entries.
+Leave ordinary headings, such as project containers, unchanged."
+  (when (and (org-get-todo-state)
+             (> (+ n-done n-not-done) 0))
+    (let (org-log-done org-todo-log-states) ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO")))))
 
-(add-hook 'org-after-todo-statistics-hook #'org-summary-todo)
+(add-hook 'org-after-todo-statistics-hook #'ms-org-summary-todo)
+
+;; Keep `appt' synchronized with Org captures, saves, and external changes.
+(defvar ms-org-appt-refresh-timer nil)
+(defvar ms-org-appt-periodic-refresh-timer nil)
+
+(defun ms-org-refresh-appt ()
+  "Rebuild appointments from the current Org agenda files."
+  (when (featurep 'org-agenda)
+    (org-agenda-to-appt t)))
+
+(defun ms-org-schedule-appt-refresh ()
+  "Debounce an appointment refresh after an Org change."
+  (when (timerp ms-org-appt-refresh-timer)
+    (cancel-timer ms-org-appt-refresh-timer))
+  (setq ms-org-appt-refresh-timer
+        (run-with-idle-timer
+         2 nil
+         (lambda ()
+           (setq ms-org-appt-refresh-timer nil)
+           (ms-org-refresh-appt)))))
+
+(defun ms-org-schedule-appt-refresh-after-save ()
+  "Schedule an appointment refresh after saving an agenda file."
+  (when (and buffer-file-name
+             (member (file-truename buffer-file-name)
+                     (mapcar #'file-truename (org-agenda-files t))))
+    (ms-org-schedule-appt-refresh)))
+
+(defun ms-org-enable-appt-refresh-after-save ()
+  "Refresh Org appointments after saving the current agenda file."
+  (add-hook 'after-save-hook
+            #'ms-org-schedule-appt-refresh-after-save nil t))
+
+(defun ms-org-start-appt-refresh-timer ()
+  "Refresh Org appointments every fifteen minutes."
+  (unless (timerp ms-org-appt-periodic-refresh-timer)
+    (setq ms-org-appt-periodic-refresh-timer
+          (run-at-time (* 15 60) (* 15 60) #'ms-org-refresh-appt))))
 
 ;; Save all `org-agenda-files' buffers automatically after refiling.
 (defun ms-org--save-org-agenda-file-buffers (&rest _)
@@ -18,7 +59,7 @@ See also `org-save-all-org-buffers'"
     (save-some-buffers
      t
      (lambda ()
-       (when-let ((file (buffer-file-name)))
+       (when-let* ((file (buffer-file-name)))
          (member (file-truename file) agenda-files)))))
   (message "Saving org-agenda-files buffers... done"))
 

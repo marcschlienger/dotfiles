@@ -1,6 +1,6 @@
 # Improving Emacs on macOS, Linux, and remote servers
 
-Research date: 2026-08-29
+Research date: 2026-08-29; Org audit updated 2026-08-30
 
 ## Recommendation
 
@@ -27,15 +27,17 @@ My preferred end state is:
    remote editing.
 3. Keep Apple Reminders as the **action system**. Do not synchronize or mirror
    its tasks into Org.
-4. Keep Org for literate configuration, Babel notebooks, structured documents,
-   export, and occasional outlines—not GTD, appointments, or notifications.
+4. Keep the repaired Org task workflow available as a fallback, but do not
+   mirror current Apple Reminders tasks into it. Org also remains the format
+   for literate configuration, Babel notebooks, structured documents, and
+   export.
 5. Trial Denote as the **Emacs-side knowledge interface** using Markdown YAML.
    Keep Obsidian available over the same test collection rather than migrating
    the entire existing vault immediately.
 6. Use Obsidian Mobile as the rare iPhone/iPad companion. Capture to a mobile
    inbox, then turn worthwhile captures into proper Denote notes on the Mac.
-7. Fix the few correctness and safety problems before adding packages. Most of
-   the current Org task configuration can then be retired instead of repaired.
+7. Preserve the Org task configuration in working order so returning to it is
+   possible without a rebuild; treat it as dormant while Reminders owns tasks.
 
 This preserves one portable configuration while still taking advantage of
 macOS application integration and Linux's systemd/Wayland environment.
@@ -59,8 +61,8 @@ recommendations.
 - `exec-path-from-shell` already normalizes the graphical environment on both
   operating systems.
 - Org uses `~/org`, a directory-based agenda, capture templates, refile targets,
-  a custom GTD view, dependency enforcement, and Babel. The GTD portion is now
-  dormant because Apple Reminders owns tasks.
+  a custom GTD view, dependency enforcement, and Babel. The GTD portion is
+  repaired and retained, but dormant while Apple Reminders owns tasks.
 - Denote currently uses the trial silo `~/denote-test/`, Markdown with YAML
   front matter, `consult-denote`, and `denote-markdown`.
 - Completion is already well covered by Vertico, Orderless, Consult, Embark,
@@ -75,38 +77,36 @@ a lifecycle policy, a notes policy, and a focused round of cleanup.
 ## Ranked roadmap
 
 The rankings combine benefit, risk reduction, portability, and maintenance
-cost. “Now” means the next configuration pass; it does not mean that this report
-has applied the change.
+cost. This table contains only recommendations: unconditional improvements and
+clearly labelled options that become worthwhile under a stated condition. It
+does not list approaches that should simply be avoided.
 
-| Rank | Improvement | Value | Effort | Recommendation |
+| Rank | Improvement | Value | Effort | Status or trigger |
 | ---: | --- | --- | --- | --- |
-| 1 | Keep Apple Reminders authoritative and stop maintaining Org GTD | Very high | Low | Do now |
-| 2 | Trial Denote over Markdown without abandoning Obsidian | Very high | Medium | Do now |
-| 3 | Use Obsidian Mobile as the Denote capture companion | Very high | Low | Best mobile route |
-| 4 | Choose one server/client lifecycle per machine | Very high | Low | Do now |
-| 5 | Restore safe Org Babel confirmation | Very high | Low | Do now |
-| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Do now |
-| 7 | Add a dedicated terminal client command for local and remote work | High | Low | Do now |
-| 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Do now |
-| 9 | Define a mobile-note inbox and desktop triage command | High | Low | Do next |
-| 10 | Promote the Denote trial only after testing real Obsidian notes | High | Low | Do next |
+| 1 | Keep Apple Reminders authoritative and retain repaired Org GTD as a fallback | Very high | Low | Adopted |
+| 2 | Trial Denote over Markdown without abandoning Obsidian | Very high | Medium | Trial in progress in `~/denote-test/` |
+| 3 | Use Obsidian Mobile for Denote/Markdown capture | Very high | Low | Best Denote mobile route |
+| 4 | Use one server/client lifecycle per machine | Very high | Low | Policy documented; adopt operationally |
+| 5 | Keep Org capture, agenda, appointment refresh, and Babel behavior correct | Very high | Low | Completed 2026-08-30 |
+| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Finalize after choosing Nextcloud or Dropbox |
+| 7 | Add a dedicated terminal client command for local and remote work | High | Low | Next small configuration change |
+| 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Next small configuration change |
+| 9 | Define a mobile-note inbox and desktop triage command | High | Low | After choosing the sync layout |
+| 10 | Promote the Denote trial only after testing real Obsidian notes | High | Low | After the trial |
 | 11 | Use TRAMP as the default remote-editing route | High | Low | Adopt as practice |
 | 12 | Make credentials use `auth-source` backends, never dotfiles | High | Low | Do before Feedbin |
 | 13 | Add project workspaces with built-in tab bars or Activities | Medium/high | Medium | Trial one approach |
 | 14 | Add `denote-journal` only if a daily knowledge log is wanted | Medium | Low | Optional |
 | 15 | Add `envrc` for per-project development environments | Medium | Low | Useful for mixed toolchains |
-| 16 | Add Popper for transient help/build/process buffers | Medium | Medium | Trial after workflow fixes |
-| 17 | Add `dired-preview` to the existing Dired setup | Medium | Low | Optional convenience |
-| 18 | Add Eat or Vterm as an in-Emacs terminal | Medium | Medium | Pick one, not both initially |
+| 16 | Add Popper for transient help/build/process buffers | Medium | Medium | If transient-buffer clutter recurs |
+| 17 | Add `dired-preview` to the existing Dired setup | Medium | Low | If previews would be used regularly |
+| 18 | Add Eat or Vterm as an in-Emacs terminal | Medium | Medium | Only if project-local shells would be used |
 | 19 | Add `org-modern`, `org-appear`, or `org-transclusion` | Medium | Low/medium | Only for document work |
-| 20 | Use Drafts as a faster mobile inbox | Medium | Medium | Only if Obsidian capture feels slow |
-| 21 | Build a Shortcut that creates perfect Denote filenames on iOS | Medium | Medium | Optional optimization |
+| 20 | Use Drafts only as a capture-to-Org front end | Medium | Medium | Only if it improves Org capture enough to justify another app |
+| 21 | Build a Shortcut that creates perfect Denote filenames on iOS | Medium | Medium | If Markdown-inbox triage becomes costly |
 | 22 | Use `citar-denote` or `org-noter` | Niche/high | Medium | Only for a specific workflow |
 | 23 | Decide whether Feedbin or Elfeed owns feed state | Medium | Medium | Resolve before enabling Elfeed |
-| 24 | Add exact package locking or a second package manager | Medium | High | Only if reproducibility hurts |
-| 25 | Use Org Agenda, `org-ql`, or Org notifications for tasks | Low/negative | High duplication | Avoid |
-| 26 | Run multiple named Emacs daemons | Low | Medium | Avoid until isolation is needed |
-| 27 | Expose an Emacs TCP server over a network | Negative | High risk | Avoid |
+| 24 | Add exact package locking or a second package manager | Medium | High | Only if reproducibility becomes a real problem |
 
 ## 1. Make the server/client lifecycle unambiguous
 
@@ -400,7 +400,7 @@ can create timestamped notes from a template and works on mobile, but its normal
 timestamp-only name is not automatically a complete Denote filename. It is a
 useful near-match, not a guarantee of Denote validity.
 
-### Rank 3: Drafts as a capture front end
+### Rank 3: Drafts as a capture-only front end
 
 Drafts is excellent when instant capture, dictation, Apple Watch capture, and
 custom actions matter more than seeing the whole knowledge base. Its actions can
@@ -409,12 +409,42 @@ external iCloud Drive or file-provider folder; see the
 [Drafts file action](https://docs.getdrafts.com/docs/actions/steps/services) and
 [folder bookmarks](https://docs.getdrafts.com/docs/settings/bookmarks).
 
-A Drafts action could create a Denote-shaped Markdown file or append to the same
-mobile inbox. The drawbacks are another application, another action to maintain,
-and Drafts Pro for creating/editing custom actions. For rare mobile use,
-Obsidian's current widgets, Siri, Shortcuts, and Share Sheet make Drafts
-unnecessary. Revisit it only if Obsidian's launch/capture time causes missed
-notes.
+If Drafts is adopted here, its role should stop at capture. The important action
+is **Export as Org**, not task synchronization and not browsing the Org tree on
+iOS. Drafts can create files through a file-provider folder bookmark, a direct
+Dropbox action, or WebDAV; its documented File step supports create, replace,
+prepend, and append operations. Folder bookmarks are device-specific and must
+be granted once on every iPhone/iPad/Mac that runs the action.
+
+The safest export is one immutable file per capture, for example:
+
+```text
+mobile-captures/20260830T143200--meeting-idea.org
+```
+
+with a small, valid Org document:
+
+```org
+#+title: Meeting idea
+#+date: [2026-08-30 Sun 14:32]
+#+filetags: :mobile:
+
+Captured text...
+```
+
+This avoids two devices appending to the same file. Emacs can later refile the
+content into `notes.org`, convert it to a Denote note, or discard it. If having
+mobile captures immediately in the GTD Inbox is more important than conflict
+resistance, append an ordinary heading to `inbox.org` instead; by design that
+file alone defines Inbox membership. I would not choose the append route while
+Emacs may also save `inbox.org` on another machine.
+
+Drafts itself remains usable offline for capture. Export through WebDAV or a
+cloud file provider still needs connectivity; a failed export should leave the
+draft available to retry. That is a reasonable offline queue, but it is not
+transparent background synchronization. The drawbacks remain another
+application, an action to maintain, and Drafts Pro for creating/editing custom
+actions.
 
 ### Lower-ranked alternatives
 
@@ -424,8 +454,9 @@ notes.
   Files, but it supplies no Denote-aware creation, backlinks, or rename logic.
 - **Working Copy/Git:** excellent for versioning and emergency edits, poor as a
   quick-capture interface. Git is not background mobile sync.
-- **Org-specific mobile clients:** unnecessary because Org no longer owns tasks
-  or notes in this architecture.
+- **Org-specific mobile clients:** unnecessary while Reminders owns tasks and
+  Drafts, if used, only exports captures. They become relevant only after an
+  intentional return to Org as the task system.
 - **Running Emacs on iOS:** not a reasonable solution for occasional capture.
 
 ### The resulting system boundary
@@ -441,66 +472,53 @@ Knowledge files
 
 Structured/executable documents
   Org in Emacs
+    └── optional Drafts capture queue exported as Org files
 ```
 
 This is simpler than making any pair synchronize semantically. Reminders owns
-task state; the Markdown vault owns notes; Org files own executable documents.
+task state; the Markdown vault owns the Denote collection; Org owns structured
+documents and the retained fallback workflow.
 
-## 4. Dormant Org configuration audit
+## 4. Retained Org configuration audit
 
-Only the Babel issue remains urgent in the new workflow. The remaining findings
-explain why the unused GTD configuration should be retired instead of polished.
-If it is kept temporarily, they remain real inconsistencies, but they no longer
-justify adding agenda packages or notification plumbing.
+The Org workflow is deliberately retained even though Apple Reminders currently
+owns tasks. The correctness problems below were repaired on 2026-08-30. The
+workflow choices are recorded separately and remain open for a later decision.
 
-### 4.1 Babel currently trusts every source block
+### 4.1 Babel confirmation — fixed
 
-`org-confirm-babel-evaluate` is `nil`, while C, Clojure, Python, R, and shell
-execution are enabled. Opening a downloaded Org file and executing or exporting
-it can therefore run code without confirmation. Org's manual treats a source
-block as equivalent in risk to an executable file and warns against removing
-the safeguard in [Code Evaluation Security](https://orgmode.org/manual/Code-Evaluation-Security.html).
+`org-confirm-babel-evaluate` is now `t`, so enabled C, Clojure, Python, R, and
+shell blocks require confirmation. Org's manual treats a source block as
+equivalent in risk to an executable file and warns against removing the
+safeguard in [Code Evaluation Security](https://orgmode.org/manual/Code-Evaluation-Security.html).
 
-Set confirmation back to `t`, or use a function that skips confirmation only
-for a narrow language/body or trusted-directory policy. File location is more
-meaningful than language alone: a shell block in a personal literate config may
-be trusted, while a shell block in a cloned README is not.
+If the prompts later become too noisy, use a function that skips confirmation
+only for a narrow trusted-directory policy. File location is more meaningful
+than language alone: a shell block in a personal literate config may be trusted,
+while a shell block in a cloned README is not.
 
 Also consider `:eval never-export` or `:eval query-export` on blocks that must
 not execute silently during export. The available controls are documented in
 [Evaluating Code Blocks](https://orgmode.org/manual/Evaluating-Code-Blocks.html).
 
-### 4.2 Inbox capture and the Inbox agenda disagree
+### 4.2 Inbox membership — fixed
 
-The Inbox capture template prompts for arbitrary tags with `%^g`; it does not
-guarantee the `inbox` tag. The GTD command's Inbox block searches
-`tags-todo "inbox"`. Captured items therefore disappear from that block unless
-`inbox` is manually entered every time.
+Inbox membership is now structural: every unfinished TODO entry in
+`~/org/inbox.org` belongs to the Inbox, with no `:inbox:` tag required. Moving
+or refiling an entry out of that file removes it from the Inbox.
 
-If Org GTD were restored, either give captured entries a fixed `:inbox:` tag or
-define the agenda block by source file/category. Under the current workflow,
-remove or archive both the capture template and the view.
+### 4.3 Project containers — fixed
 
-### 4.3 `PROJECT` is not a TODO keyword
+The project template now creates an ordinary top-level heading tagged
+`:project:`. Only child actions receive TODO states. The statistics hook also
+checks that a parent already has a TODO keyword before changing its state, so a
+plain project container cannot become `TODO` or `DONE` accidentally.
 
-The project template creates a heading beginning with `PROJECT`, but the only
-configured sequence is `TODO`, `NEXT`, `WAITING`, `DONE`, and `CANCELLED`.
-`PROJECT` is therefore ordinary headline text, not a state. It cannot
-participate consistently in TODO transitions, state logging, or dependency
-logic.
+### 4.4 Meeting capture — fixed as a note
 
-If restored, either add `PROJECT` to a sequence or use a normal headline tagged
-`:project:`. There is no reason to resolve that design while Apple Reminders
-owns projects and actions.
-
-### 4.4 Meeting capture does not schedule the meeting
-
-The `m` template writes a heading under `agenda.org` but does not add a
-scheduled or active timestamp. It will not appear in the calendar portion of
-the agenda until a timestamp is added later. Prompt for the meeting time in the
-template if this capture is meant to make an appointment. In the present system,
-calendar commitments belong in Calendar/Reminders and durable meeting records
-belong in the Markdown knowledge base, so this template can be retired.
+The `m` template is explicitly a meeting **note**, not an appointment. It writes
+to `notes.org`, records the capture time as metadata, adds `:meeting:`, and
+leaves point in the note body. It intentionally has no scheduled timestamp.
 
 ### 4.5 Every unmarked task defaults to priority A
 
@@ -509,22 +527,32 @@ belong in the Markdown knowledge base, so this template can be retired.
 is generally a better neutral baseline; reserve A for a deliberate exception.
 This is a workflow choice, not a technical error, but it should be intentional.
 
-### 4.6 Deadline and project views can hide valid work
+### 4.6 Deadline view fixed; project depth remains a workflow choice
 
-The custom deadline block accepts only headlines matching `* NEXT`. Deadlines
-on `TODO` or `WAITING` entries will not appear in that block. Likewise, the
-project view requires `LEVEL=3` and `TODO="NEXT"`; one extra or missing outline
-level makes a valid next action disappear.
+The GTD deadline section now finds every heading with a deadline, independent
+of date range. It excludes completed states, sorts by deadline, and places
+`WAITING` deadlines in their own block.
 
-These would need semantic queries rather than fixed text/levels if the GTD
-system returned. They are not a reason to install `org-ql` now.
+The project template currently makes project headings level 1, a `Tasks`
+container level 2, and its actions level 3. Therefore the existing project view
+correctly finds `NEXT` items created by that template. Yes, a valid `NEXT` can
+exist at another level: it may be entered directly under a project, nested
+under a subproject, or moved by refile. The fixed-level query will then omit it.
+Keep it only if the three-level project structure is an intentional invariant;
+otherwise a later improvement should select `NEXT` descendants of a
+`:project:` ancestor semantically, probably with `org-ql` or a small skip
+function. This is not changed now because it is a workflow decision.
 
-### 4.7 Appointment notifications are not refreshed reliably
+### 4.7 Appointment refresh — fixed
 
-`org-agenda-to-appt` is called when `org-agenda` loads. New or rescheduled Org
-entries may not enter the appointment list until it is rebuilt. Apple Reminders
-now owns notification delivery, so remove or disable this `appt` integration
-instead of adding refresh timers and native notification adapters.
+The built-in appointment integration now loads reliably and calls
+`org-agenda-to-appt` with its refresh argument after a capture is finalized and
+after an agenda file is saved. Saves are debounced for two seconds. A fifteen
+minute timer also catches changes arriving from Nextcloud, Dropbox, or another
+editor without requiring a local save operation.
+
+The following sections are deferred workflow choices, not confirmed bugs. They
+should be revisited together if Org becomes the active task system again.
 
 ### 4.8 Hard-coded daylight offsets are unnecessary
 
@@ -561,14 +589,25 @@ every 30 seconds, and sends Customize output to a new temporary file on each
 startup. Each choice is defensible alone; together they favor convenience over
 recoverability.
 
-### Recommended changes
+### What lockfiles and auto-save actually protect
 
-- Re-enable lockfiles for normal files. They warn when the same Org or Denote
-  note is open in two Emacs processes—especially relevant until the server
-  lifecycle is fixed.
-- Keep normal auto-save recovery. Consider disabling `auto-save-visited-mode`
-  for Org/Denote or increasing its interval. A mistaken edit currently reaches
-  the real file quickly.
+- Re-enable lockfiles for normal files. They warn when the same file is visited
+  by two Emacs processes on a filesystem where both processes can see the lock.
+  They do **not** lock a file against Drafts, a cloud client, Neovim, or an
+  offline computer. They reduce accidental two-daemon editing; they do not
+  solve distributed synchronization.
+- Normal Emacs auto-save writes a separate recovery file. By contrast,
+  `auto-save-visited-mode` writes the actual visited file every 30 seconds in
+  this configuration. That makes changes reach Nextcloud or Dropbox quickly and
+  improves recovery from an Emacs crash, but it can also upload half-finished
+  edits, create sync churn, and turn an accidental edit into the current cloud
+  version before it is noticed. Dropbox explicitly lists an open file being
+  autosaved on another computer as a cause of
+  [conflicted copies](https://help.dropbox.com/organize/conflicted-copy).
+- With one Emacs server per machine, lockfiles re-enabled, and Drafts creating
+  one new file per capture, the 30-second setting is defensible. If conflicts
+  appear, increase the interval or disable visited-file auto-save for
+  synchronized Org/Denote buffers while retaining normal recovery auto-save.
 - Put `custom-file` at a stable, ignored path if Customize should persist. A
   temporary file makes successful customization silently vanish on restart.
 - Enable built-in `save-place-mode`, `recentf-mode`, `winner-mode`, and
@@ -580,6 +619,49 @@ recoverability.
   Sync is not backup. Git is excellent for history but not automatic mobile
   synchronization; do not run Git, iCloud, and Obsidian Sync concurrently over
   the same files.
+
+### A safe Drafts-to-Org synchronization boundary
+
+Use exactly one sync provider for the Org directory: Nextcloud **or** Dropbox,
+never both. Keep Drafts one-way:
+
+```text
+Drafts capture
+    ↓ explicit Export as Org action
+new file in mobile-captures/
+    ↓ one cloud provider
+Emacs triage/refile
+    ↓
+notes.org, a Denote note, or deletion
+```
+
+New-file creation is substantially safer than appending to a shared
+`inbox.org`: two machines can create different filenames without merging the
+same bytes. The timestamp should include seconds; adding a short device suffix
+is cheap insurance. Do not let Drafts edit canonical project, agenda, or Denote
+files. If Inbox membership is required, add an Emacs import command later that
+refiles the spool entry into `inbox.org`; that preserves the file-based Inbox
+definition without making the mobile device a concurrent writer.
+
+With Nextcloud, Drafts can use its WebDAV action directly. Nextcloud documents
+[WebDAV access](https://docs.nextcloud.com/server/latest/user_manual/en/files/access_webdav.html)
+and recommends its desktop clients when local offline copies are wanted. This
+route offers control and works on macOS and Linux, but the server, WebDAV, TLS,
+and sync client are all parts that must remain healthy. Nextcloud creates a
+separate conflict file when local and remote versions both change, as described
+in its [conflict documentation](https://docs.nextcloud.com/desktop/3.8/conflicts.html).
+
+Dropbox is the easier operational route if self-hosting is not a goal. Drafts
+has a direct Dropbox action and documents that iOS folder bookmarks work with
+the Dropbox file provider. Dropbox still cannot merge arbitrary simultaneous
+text edits; it also creates conflicted copies. The one-file-per-capture design
+is therefore useful with either provider, not merely a Nextcloud workaround.
+
+Connecting to the server and editing with terminal Emacs avoids cloud conflicts
+and gives the full configuration, but it is an online-only workflow. Drafts can
+capture locally while offline and retain the draft until export can be retried.
+That division is honest: the phone supplies a durable capture queue, while the
+server or desktop Emacs remains the place where Org structure is edited.
 
 For private notes, use EasyPG (`.org.gpg`/`.md.gpg`) or a separately encrypted
 storage area. Denote documents how to define encrypted file types, but encrypt
@@ -1015,37 +1097,42 @@ tangle would undo it.
 
 ### Phase 1: reliability and safety
 
-1. Document and enforce the one-server policy.
-2. Add the `ect` terminal command while retaining `ec` for GUI frames.
-3. Restore Babel confirmation.
-4. Re-enable lockfiles and reconsider 30-second visited-file writes for notes.
-5. Archive or remove the dormant Org GTD, agenda, appointment, and task-capture
-   configuration; keep Org's document/Babel/export features.
-6. Replace the Mac modifier variable with the documented NS variable.
-7. Remove duplicate/obsolete option assignments without changing the remaining
-   intended behavior.
+- [x] Document the one-server policy.
+- [ ] Add the `ect` terminal command while retaining `ec` for GUI frames.
+- [x] Repair Org Babel safety, file-based Inbox membership, deadline grouping,
+  project containers, meeting-note capture, and appointment refreshing.
+- [x] Keep the repaired Org workflow dormant but usable while Apple Reminders
+  remains authoritative.
+- [ ] Choose Nextcloud or Dropbox, then decide lockfile and 30-second
+  visited-file auto-save policy as one synchronization decision.
+- [ ] Replace the Mac modifier variable with the documented NS variable.
+- [ ] Remove duplicate/default option assignments without changing intended
+  behavior.
 
 ### Phase 2: daily workflow
 
-1. Enable save-place, Recentf, Winner, and Repeat modes.
-2. Make a backup and test Denote against a representative subset of real
-   Obsidian Markdown notes.
-3. Configure Obsidian Mobile to append to one bookmarked mobile inbox.
-4. Test link creation, conversion, rename behavior, YAML properties, and sync on
-   macOS, Debian, iPhone, and iPad.
-5. Decide whether Denote owns a subdirectory or the whole vault.
-6. Promote `~/denote-test/` only after that trial succeeds.
+- [ ] Enable save-place, Recentf, Winner, and Repeat modes.
+- [ ] Make a backup and test Denote against a representative subset of real
+  Obsidian Markdown notes.
+- [ ] Choose the mobile capture route: an Obsidian Markdown inbox, or Drafts
+  exporting one new Org file per capture.
+- [ ] Implement one desktop triage command for the chosen mobile inbox.
+- [ ] Test link creation, conversion, rename behavior, YAML properties, and
+  synchronization on macOS, Debian, iPhone, and iPad.
+- [ ] Decide whether Denote owns a subdirectory or the whole vault.
+- [ ] Promote `~/denote-test/` only after that trial succeeds.
 
 ### Phase 3: selective expansion
 
-1. Add a macOS-only “Add Reminder” command only if leaving Emacs for capture is
-   genuinely disruptive.
-2. Build a Denote-filename Shortcut only if mobile-inbox triage becomes costly.
-3. Trial `denote-journal` if a daily knowledge log is wanted.
-4. Trial project tabs or Activities, not both at first.
-5. Add Eat or Vterm only if project-local shells inside Emacs would be used.
-6. Add transclusion, bibliography, or PDF-note packages only when a real
-   document workflow calls for them.
+- [ ] Add a macOS-only “Add Reminder” command only if leaving Emacs for capture
+  is genuinely disruptive.
+- [ ] Build a Denote-filename Shortcut only if mobile-inbox triage becomes
+  costly.
+- [ ] Trial `denote-journal` if a daily knowledge log is wanted.
+- [ ] Trial project tabs or Activities, not both at first.
+- [ ] Add Eat or Vterm only if project-local shells inside Emacs would be used.
+- [ ] Add transclusion, bibliography, or PDF-note packages only when a real
+  document workflow calls for them.
 
 ## 14. Practical command reference
 

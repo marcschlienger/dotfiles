@@ -32,13 +32,7 @@
   :hook
   (text-mode . flyspell-mode)
   (prog-mode . flyspell-prog-mode)
-  ;; Off again for shell scripts.  `flyspell-prog-mode' checks comments AND
-  ;; strings, and a shell buffer is mostly those two things — comments up
-  ;; top, then strings full of paths, flags and command names.  The result
-  ;; is underlining everywhere and no signal.
-  ;;
-  ;; This runs after the prog-mode hook that switched it on: a derived mode
-  ;; runs its parent's hooks first, then its own.
+  ;; Shell paths and command strings create too many false positives.
   (sh-mode . ms/flyspell-disable))
 
 (use-package emacs
