@@ -71,17 +71,23 @@
   :config
   (setq dired-subtree-use-backgrounds nil))
 
+(defun ms/dired-preview-setup ()
+  "Bind the Dired preview toggle after the local keymap is active."
+  (keymap-local-set "V" #'dired-preview-mode))
+
 (use-package dired-preview
   :ensure t
-  :after dired
+  :commands dired-preview-mode
+  :hook (dired-mode . ms/dired-preview-setup)
   :custom
   (dired-preview-delay 0.5)
   (dired-preview-max-size (* 10 1024 1024))
   (dired-preview-ignored-extensions-regexp
    (rx "." (or "gz" "zst" "tar" "xz" "rar" "zip"
                "iso" "dmg" "epub")
-       string-end))
-  :config
+       string-end)))
+
+(with-eval-after-load 'dired
   (keymap-set dired-mode-map "V" #'dired-preview-mode))
 
 (use-package wdired
