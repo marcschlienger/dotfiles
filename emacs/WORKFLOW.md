@@ -913,8 +913,9 @@ Before installing packages, use more of the Emacs already present.
 
 These restore positions, surface recently visited files, undo/redo window
 layouts, and make repeated key sequences shorter. They work in GUI and TTY
-frames and have negligible conceptual cost. They should be enabled globally,
-with remote files excluded or time-limited in Recentf if TRAMP latency appears.
+frames and have negligible conceptual cost. They are enabled globally. Recentf
+keeps 200 entries, and remote file-access checks are limited to five seconds so
+an unavailable TRAMP host cannot block Recentf indefinitely.
 
 ### `project.el`
 
@@ -1109,7 +1110,7 @@ tangle would undo it.
 
 ### Phase 2: daily workflow
 
-- [ ] Enable save-place, Recentf, Winner, and Repeat modes.
+- [x] Enable save-place, Recentf, Winner, and Repeat modes.
 - [ ] Make a backup and test Denote against a representative subset of real
   Obsidian Markdown notes.
 - [ ] Choose the mobile capture route: an Obsidian Markdown inbox, or Drafts

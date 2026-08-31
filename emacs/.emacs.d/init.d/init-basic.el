@@ -23,6 +23,35 @@
   (global-auto-revert-mode 1)
   (setq auto-revert-verbose t))
 
+;; Restore point when reopening files.
+(use-package saveplace
+  :ensure nil
+  :config
+  (save-place-mode 1))
+
+;; Include recently visited files in commands such as `consult-buffer'.
+(use-package recentf
+  :ensure nil
+  :custom
+  (recentf-max-saved-items 200)
+  (remote-file-name-access-timeout 5)
+  :config
+  (recentf-mode 1))
+
+;; Undo and redo changes to window layouts.
+(use-package winner
+  :ensure nil
+  :bind (("C-c w u" . winner-undo)
+         ("C-c w r" . winner-redo))
+  :init
+  (winner-mode 1))
+
+;; Continue supported command families with short repeat keys.
+(use-package repeat
+  :ensure nil
+  :config
+  (repeat-mode 1))
+
 ;; Easily move the current line up or down.
 (defun move-line-up ()
   "Move up the current line."
