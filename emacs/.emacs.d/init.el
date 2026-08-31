@@ -12,9 +12,6 @@
 ;; Package settings.
 (require 'package)
 (setq package-name-column-width 40)
-(setq package-version-column-width 14)
-(setq package-status-column-width 12)
-(setq package-archive-column-width 8)
 (add-hook 'package-menu-mode-hook #'hl-line-mode)
 
 (setq package-archives

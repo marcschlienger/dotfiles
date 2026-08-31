@@ -82,12 +82,10 @@
   (setq org-read-date-prefer-future 'time)
   (setq org-highlight-latex-and-related nil) ; other options affect elisp regexp in src blocks
   (setq org-fontify-quote-and-verse-blocks t)
-  (setq org-fontify-whole-block-delimiter-line t)
   (setq org-track-ordered-property-with-tag t)
   (setq org-highest-priority ?A)
   (setq org-lowest-priority ?C)
   (setq org-default-priority ?A)
-  (setq org-priority-faces nil)
   :hook
   ((org-mode . org-indent-mode)
    (org-mode . ms-org-enable-appt-refresh-after-save)))
@@ -107,8 +105,6 @@
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
   (setq org-fontify-done-headline nil)
-  (setq org-fontify-todo-headline nil)
-  (setq org-fontify-whole-heading-line nil)
   (setq org-enforce-todo-dependencies t)
   (setq org-enforce-todo-checkbox-dependencies t)
   )
@@ -311,13 +307,8 @@
           (todo priority-down category-keep)
           (tags priority-down category-keep)
           (search category-keep)))
-  (setq org-agenda-breadcrumbs-separator "->")
-  (setq org-agenda-todo-keyword-format "%-1s")
-  (setq org-agenda-fontify-priorities 'cookies)
-  (setq org-agenda-category-icon-alist nil)
   (setq org-agenda-remove-times-when-in-prefix nil)
   (setq org-agenda-remove-timeranges-from-blocks nil)
-  (setq org-agenda-compact-blocks nil)
   (setq org-agenda-block-separator ?—)
 
 ;;;; Agenda marks

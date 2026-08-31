@@ -91,9 +91,6 @@ find everything related to my Emacs setup.
 ;; Package settings.
 (require 'package)
 (setq package-name-column-width 40)
-(setq package-version-column-width 14)
-(setq package-status-column-width 12)
-(setq package-archive-column-width 8)
 (add-hook 'package-menu-mode-hook #'hl-line-mode)
 
 (setq package-archives
@@ -335,7 +332,6 @@ find everything related to my Emacs setup.
             (or (executable-find "open") "open")
           (or (executable-find "xdg-open") "xdg-open")))
   (setq image-dired-thumb-size 80)
-  (setq image-dired-thumb-margin 2)
   (setq image-dired-thumb-relief 0)
   (setq image-dired-thumbs-per-row 4))
 
@@ -344,7 +340,6 @@ find everything related to my Emacs setup.
   :ensure t
   :init
   (setq trashed-action-confirmer 'y-or-n-p)
-  (setq trashed-use-header-line t)
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 
@@ -358,8 +353,6 @@ find everything related to my Emacs setup.
   (setq ibuffer-show-empty-filter-groups nil)
   (setq ibuffer-movement-cycle nil)
   (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
   (setq ibuffer-formats
         '((mark modified read-only locked " "
                 (name 40 40 :left :elide)
@@ -807,7 +800,6 @@ The next sunrise or sunset event restores automatic switching."
 
 ;;; Modeline settings.
 (column-number-mode t)
-(setq mode-line-compact nil)
 
 (use-package minions
   :ensure t
@@ -842,10 +834,7 @@ The next sunrise or sunset event restores automatic switching."
 
 ;;; Icons
 (use-package nerd-icons
-  :ensure t
-  :custom
-  ;; Installed by the repository's font setup scripts.
-  (nerd-icons-font-family "Symbols Nerd Font Mono"))
+  :ensure t)
 
 (use-package nerd-icons-dired
   :ensure t
@@ -1626,12 +1615,10 @@ The next sunrise or sunset event restores automatic switching."
   (setq org-read-date-prefer-future 'time)
   (setq org-highlight-latex-and-related nil) ; other options affect elisp regexp in src blocks
   (setq org-fontify-quote-and-verse-blocks t)
-  (setq org-fontify-whole-block-delimiter-line t)
   (setq org-track-ordered-property-with-tag t)
   (setq org-highest-priority ?A)
   (setq org-lowest-priority ?C)
   (setq org-default-priority ?A)
-  (setq org-priority-faces nil)
   :hook
   ((org-mode . org-indent-mode)
    (org-mode . ms-org-enable-appt-refresh-after-save)))
@@ -1651,8 +1638,6 @@ The next sunrise or sunset event restores automatic switching."
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
   (setq org-fontify-done-headline nil)
-  (setq org-fontify-todo-headline nil)
-  (setq org-fontify-whole-heading-line nil)
   (setq org-enforce-todo-dependencies t)
   (setq org-enforce-todo-checkbox-dependencies t)
   )
@@ -1855,13 +1840,8 @@ The next sunrise or sunset event restores automatic switching."
           (todo priority-down category-keep)
           (tags priority-down category-keep)
           (search category-keep)))
-  (setq org-agenda-breadcrumbs-separator "->")
-  (setq org-agenda-todo-keyword-format "%-1s")
-  (setq org-agenda-fontify-priorities 'cookies)
-  (setq org-agenda-category-icon-alist nil)
   (setq org-agenda-remove-times-when-in-prefix nil)
   (setq org-agenda-remove-timeranges-from-blocks nil)
-  (setq org-agenda-compact-blocks nil)
   (setq org-agenda-block-separator ?—)
 
 ;;;; Agenda marks

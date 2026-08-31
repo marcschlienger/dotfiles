@@ -106,7 +106,6 @@
             (or (executable-find "open") "open")
           (or (executable-find "xdg-open") "xdg-open")))
   (setq image-dired-thumb-size 80)
-  (setq image-dired-thumb-margin 2)
   (setq image-dired-thumb-relief 0)
   (setq image-dired-thumbs-per-row 4))
 
@@ -115,7 +114,6 @@
   :ensure t
   :init
   (setq trashed-action-confirmer 'y-or-n-p)
-  (setq trashed-use-header-line t)
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 
@@ -129,8 +127,6 @@
   (setq ibuffer-show-empty-filter-groups nil)
   (setq ibuffer-movement-cycle nil)
   (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
   (setq ibuffer-formats
         '((mark modified read-only locked " "
                 (name 40 40 :left :elide)

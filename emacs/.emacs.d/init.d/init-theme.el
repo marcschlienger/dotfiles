@@ -409,7 +409,6 @@ The next sunrise or sunset event restores automatic switching."
 
 ;;; Modeline settings.
 (column-number-mode t)
-(setq mode-line-compact nil)
 
 (use-package minions
   :ensure t
@@ -444,10 +443,7 @@ The next sunrise or sunset event restores automatic switching."
 
 ;;; Icons
 (use-package nerd-icons
-  :ensure t
-  :custom
-  ;; Installed by the repository's font setup scripts.
-  (nerd-icons-font-family "Symbols Nerd Font Mono"))
+  :ensure t)
 
 (use-package nerd-icons-dired
   :ensure t
