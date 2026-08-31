@@ -28,9 +28,19 @@
 ;;; Upgrade built-in packages.
 (setq package-install-upgrade-built-in t)
 
-;; Real auto save mode.
-(auto-save-visited-mode 1)
-(setq auto-save-visited-interval 30)
+;; Keep ordinary recovery auto-saves outside the repository and synced files.
+(let ((auto-save-directory
+       (expand-file-name
+        "emacs/auto-save/"
+        (or (getenv "XDG_CACHE_HOME")
+            (if (eq system-type 'darwin)
+                (expand-file-name "~/Library/Caches/")
+              (expand-file-name "~/.cache/"))))))
+  (make-directory auto-save-directory t)
+  (setq auto-save-file-name-transforms
+        `((".*" ,auto-save-directory t)))
+  (setq auto-save-list-file-prefix
+        (expand-file-name ".saves-" auto-save-directory)))
 
 ;; Load config modules.
 (mapc

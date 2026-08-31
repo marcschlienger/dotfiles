@@ -88,7 +88,7 @@ does not list approaches that should simply be avoided.
 | 3 | Use Obsidian Mobile for Denote/Markdown capture | Very high | Low | Best Denote mobile route |
 | 4 | Use one server/client lifecycle per machine | Very high | Low | Policy documented; adopt operationally |
 | 5 | Keep Org capture, agenda, appointment refresh, and Babel behavior correct | Very high | Low | Completed 2026-08-30 |
-| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Single-writer policy documented; provider and auto-save choices remain |
+| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Nextcloud selected; single-writer and recovery auto-save policy documented |
 | 7 | Use `emacsclient -t` for local and remote terminal frames | High | None | Usage practice; no Emacs configuration change |
 | 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Completed 2026-08-31 |
 | 9 | Define a mobile-note inbox and desktop triage command | High | Low | After choosing the sync layout |
@@ -588,19 +588,18 @@ retangled from the canonical literate file.
 ## 5. Persistence, synchronization, and recovery
 
 The current configuration intentionally disables lockfiles because stale locks
-have repeatedly required manual cleanup. It also writes visited buffers to disk
-every 30 seconds and sends Customize output to a new temporary file on each
-startup. These choices favor convenience over stronger local coordination and
-recoverability.
+have repeatedly required manual cleanup. Normal recovery auto-save remains
+enabled, but Emacs does not automatically write the visited file. Customize
+output is sent to a new temporary file on each startup.
 
 ### What the synchronization method changes
 
-Choosing Nextcloud instead of Dropbox does not materially change concurrent
-editing safety. Both maintain separate local replicas, synchronize whole-file
-changes, and preserve competing edits as conflict copies rather than merging
-Org or Markdown structure. Their differences are operational: Nextcloud offers
-self-hosting and WebDAV, while Dropbox is simpler to operate and integrate with
-mobile applications.
+Nextcloud is the selected provider for the time being. Choosing it instead of
+Dropbox does not materially change concurrent editing safety. Both maintain
+separate local replicas, synchronize whole-file changes, and preserve competing
+edits as conflict copies rather than merging Org or Markdown structure. Their
+differences are operational: Nextcloud offers self-hosting and WebDAV, while
+Dropbox is simpler to operate and integrate with mobile applications.
 
 The consequential choice is the storage model:
 
@@ -625,18 +624,21 @@ note edits safely.
   Drafts, a cloud client, Neovim, or an offline computer. Revisit this decision
   only if accidental same-filesystem concurrent edits become a recurring
   problem.
-- Normal Emacs auto-save writes a separate recovery file. By contrast,
-  `auto-save-visited-mode` writes the actual visited file every 30 seconds in
-  this configuration. That makes changes reach Nextcloud or Dropbox quickly and
-  improves recovery from an Emacs crash, but it can also upload half-finished
-  edits, create sync churn, and turn an accidental edit into the current cloud
-  version before it is noticed. Dropbox explicitly lists an open file being
-  autosaved on another computer as a cause of
-  [conflicted copies](https://help.dropbox.com/organize/conflicted-copy).
-- With one Emacs server per machine, a single-writer policy, and Drafts creating
-  one new file per capture, the 30-second setting is defensible. If conflicts
-  appear, increase the interval or disable visited-file auto-save for
-  synchronized Org/Denote buffers while retaining normal recovery auto-save.
+- Normal Emacs auto-save writes separate recovery files. They are kept outside
+  the dotfiles repository and synchronized directories under the platform cache
+  directory. The visited Nextcloud file changes only on an explicit or
+  workflow-driven save.
+- The former policy wrote the actual visited file after 30 idle seconds. It can
+  be restored if explicit saving proves inconvenient:
+
+  ```elisp
+  (auto-save-visited-mode 1)
+  (setq auto-save-visited-interval 30)
+  ```
+
+  This sends changes to Nextcloud quickly, but it can also synchronize
+  half-finished or accidental edits and create more filesystem activity. If the
+  former policy is restored, retain the separate recovery-file location.
 - Put `custom-file` at a stable, ignored path if Customize should persist. A
   temporary file makes successful customization silently vanish on restart.
 - Enable built-in `save-place-mode`, `recentf-mode`, `winner-mode`, and
@@ -1100,9 +1102,8 @@ tangle would undo it.
   remains authoritative.
 - [x] Keep lockfiles disabled because stale locks have repeatedly caused
   problems; revisit only if same-filesystem concurrent edits recur.
-- [ ] Choose exactly one cloud provider if local replicas are needed, and
-  decide whether synchronized notes should use 30-second visited-file
-  auto-save.
+- [x] Use Nextcloud as the sole cloud provider for the time being and retain
+  normal recovery auto-save without 30-second writes to visited files.
 - [x] Replace the Mac modifier variable with the documented NS variable.
 - [x] Remove duplicate/default assignments, low-value presentation defaults,
   and the unused Agenda logging/clocking block.
