@@ -1104,7 +1104,7 @@ tangle would undo it.
 - [ ] Re-enable lockfiles regardless of sync provider, choose exactly one cloud
   provider if local replicas are needed, and decide whether synchronized notes
   should use 30-second visited-file auto-save.
-- [ ] Replace the Mac modifier variable with the documented NS variable.
+- [x] Replace the Mac modifier variable with the documented NS variable.
 - [ ] Remove duplicate/default option assignments without changing intended
   behavior.
 

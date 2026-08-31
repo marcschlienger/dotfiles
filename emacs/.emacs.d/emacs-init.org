@@ -212,11 +212,10 @@ find everything related to my Emacs setup.
 (use-package emacs
   :if (eq system-type 'darwin)
   :config
-  (setq mac-command-modifier 'super) ; use the cmd key as modifier
-  ;(setq mac-option-modifier 'nil) ; diable the option key as modifier
-  (setq ns-alternate-modifier 'meta) ; diable the option key as modifier
-  (setq ns-right-alternate-modifier 'none) ; diable the option key as modifier
-  (setq ns-pop-up-frames nil) ; reuse existing frames whenever possible
+  (setq ns-command-modifier 'super
+        ns-alternate-modifier 'meta
+        ns-right-alternate-modifier 'none
+        ns-pop-up-frames nil) ; reuse existing frames whenever possible
 )
 
 (provide 'init-basic)
