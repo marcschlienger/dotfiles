@@ -88,7 +88,7 @@ does not list approaches that should simply be avoided.
 | 3 | Use Obsidian Mobile for Denote/Markdown capture | Very high | Low | Best Denote mobile route |
 | 4 | Use one server/client lifecycle per machine | Very high | Low | Policy documented; adopt operationally |
 | 5 | Keep Org capture, agenda, appointment refresh, and Babel behavior correct | Very high | Low | Completed 2026-08-30 |
-| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Provider choice does not solve concurrency; implement the documented policy |
+| 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Single-writer policy documented; provider and auto-save choices remain |
 | 7 | Use `emacsclient -t` for local and remote terminal frames | High | None | Usage practice; no Emacs configuration change |
 | 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Completed 2026-08-31 |
 | 9 | Define a mobile-note inbox and desktop triage command | High | Low | After choosing the sync layout |
@@ -587,9 +587,10 @@ retangled from the canonical literate file.
 
 ## 5. Persistence, synchronization, and recovery
 
-The current configuration disables lockfiles, writes visited buffers to disk
-every 30 seconds, and sends Customize output to a new temporary file on each
-startup. Each choice is defensible alone; together they favor convenience over
+The current configuration intentionally disables lockfiles because stale locks
+have repeatedly required manual cleanup. It also writes visited buffers to disk
+every 30 seconds and sends Customize output to a new temporary file on each
+startup. These choices favor convenience over stronger local coordination and
 recoverability.
 
 ### What the synchronization method changes
@@ -606,23 +607,24 @@ The consequential choice is the storage model:
 | Method | Concurrent-editing behavior | Main tradeoff |
 | --- | --- | --- |
 | Nextcloud or Dropbox | Separate local replicas can diverge; Emacs lockfiles do not cross machines | Offline access and convenient mobile sync, with conflict risk |
-| One authoritative server | Clients edit one filesystem, so Emacs lockfiles can warn cooperating Emacs processes | Lowest conflict risk, but remote access requires a connection |
+| One authoritative server | Clients edit one filesystem, making a single-writer policy easier to follow | Lowest conflict risk, but remote access requires a connection |
 | Git | Conflicts are explicit and history is strong, but synchronization is manual | Good history and review, poor transparent mobile sync |
 
 The conflict policy therefore does not need to wait for a choice between
 Nextcloud and Dropbox: use only one provider, do not edit the same canonical
-file on two machines, re-enable Emacs lockfiles for same-filesystem protection,
-and make mobile capture create uniquely named files. Choose between the two
-providers based on hosting and client convenience, not an expectation that one
-can merge simultaneous note edits safely.
+file on two machines, keep one Emacs server per machine, and make mobile capture
+create uniquely named files. Choose between the two providers based on hosting
+and client convenience, not an expectation that one can merge simultaneous
+note edits safely.
 
 ### What lockfiles and auto-save actually protect
 
-- Re-enable lockfiles for normal files. They warn when the same file is visited
-  by two Emacs processes on a filesystem where both processes can see the lock.
-  They do **not** lock a file against Drafts, a cloud client, Neovim, or an
-  offline computer. They reduce accidental two-daemon editing; they do not
-  solve distributed synchronization.
+- Keep `create-lockfiles` disabled. Lockfiles can warn when two Emacs processes
+  see the same filesystem, but stale locks have caused more disruption in this
+  workflow than that warning has prevented. They would not lock a file against
+  Drafts, a cloud client, Neovim, or an offline computer. Revisit this decision
+  only if accidental same-filesystem concurrent edits become a recurring
+  problem.
 - Normal Emacs auto-save writes a separate recovery file. By contrast,
   `auto-save-visited-mode` writes the actual visited file every 30 seconds in
   this configuration. That makes changes reach Nextcloud or Dropbox quickly and
@@ -631,10 +633,8 @@ can merge simultaneous note edits safely.
   version before it is noticed. Dropbox explicitly lists an open file being
   autosaved on another computer as a cause of
   [conflicted copies](https://help.dropbox.com/organize/conflicted-copy).
-- With one Emacs server per machine, lockfiles re-enabled, and Drafts creating
-  one new file per capture, the 30-second setting is defensible. Lockfiles still
-  protect only processes that see the same filesystem; they cannot prevent a
-  second cloud-synchronized machine from editing its replica. If conflicts
+- With one Emacs server per machine, a single-writer policy, and Drafts creating
+  one new file per capture, the 30-second setting is defensible. If conflicts
   appear, increase the interval or disable visited-file auto-save for
   synchronized Org/Denote buffers while retaining normal recovery auto-save.
 - Put `custom-file` at a stable, ignored path if Customize should persist. A
@@ -1098,9 +1098,11 @@ tangle would undo it.
   project containers, meeting-note capture, and appointment refreshing.
 - [x] Keep the repaired Org workflow dormant but usable while Apple Reminders
   remains authoritative.
-- [ ] Re-enable lockfiles regardless of sync provider, choose exactly one cloud
-  provider if local replicas are needed, and decide whether synchronized notes
-  should use 30-second visited-file auto-save.
+- [x] Keep lockfiles disabled because stale locks have repeatedly caused
+  problems; revisit only if same-filesystem concurrent edits recur.
+- [ ] Choose exactly one cloud provider if local replicas are needed, and
+  decide whether synchronized notes should use 30-second visited-file
+  auto-save.
 - [x] Replace the Mac modifier variable with the documented NS variable.
 - [x] Remove duplicate/default assignments, low-value presentation defaults,
   and the unused Agenda logging/clocking block.
