@@ -200,11 +200,6 @@
   :ensure t
   :config
   (setq rust-format-on-save t)
-  :init
-  (setq rust-mode-treesitter-derive
-        (and (fboundp 'treesit-available-p)
-             (treesit-available-p)
-             (treesit-language-available-p 'rust)))
   :hook
   (rust-mode . (lambda () (prettify-symbols-mode 1)))
   (rust-mode . (lambda () (setq-local indent-tabs-mode nil))))

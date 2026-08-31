@@ -1163,11 +1163,6 @@ The next sunrise or sunset event restores automatic switching."
   :ensure t
   :config
   (setq rust-format-on-save t)
-  :init
-  (setq rust-mode-treesitter-derive
-        (and (fboundp 'treesit-available-p)
-             (treesit-available-p)
-             (treesit-language-available-p 'rust)))
   :hook
   (rust-mode . (lambda () (prettify-symbols-mode 1)))
   (rust-mode . (lambda () (setq-local indent-tabs-mode nil))))
@@ -1309,12 +1304,7 @@ The next sunrise or sunset event restores automatic switching."
 
   ;; Emacs 30 and newer: Disable Ispell completion function. As an alternative,
   ;; try `cape-dict'.
-  (setq text-mode-ispell-word-completion nil)
-
-  ;; Emacs 28 and newer: Hide commands in M-x which do not apply to the current
-  ;; mode.  Corfu commands are hidden, since they are not used via M-x. This
-  ;; setting is useful beyond Corfu.
-  (setq read-extended-command-predicate #'command-completion-default-include-p))
+  (setq text-mode-ispell-word-completion nil))
 
 ;; Cape
 (use-package cape
@@ -1908,7 +1898,6 @@ The next sunrise or sunset event restores automatic switching."
   (setq org-agenda-skip-scheduled-delay-if-deadline nil)
   (setq org-agenda-skip-additional-timestamps-same-entry nil)
   (setq org-agenda-skip-timestamp-if-done nil)
-  (setq org-agenda-search-headline-for-time nil)
   (setq org-scheduled-past-days 365)
   (setq org-deadline-past-days 365)
   (setq org-agenda-move-date-from-past-immediately-to-today t)
@@ -1973,7 +1962,6 @@ The next sunrise or sunset event restores automatic switching."
   (setq org-agenda-search-view-force-full-words nil)
   (setq org-agenda-search-view-max-outline-level 0)
   (setq org-agenda-search-headline-for-time t)
-  (setq org-agenda-use-time-grid t)
   (setq org-agenda-cmp-user-defined nil)
   (setq org-agenda-sort-notime-is-late t) 
   (setq org-agenda-sort-noeffort-is-high t))
