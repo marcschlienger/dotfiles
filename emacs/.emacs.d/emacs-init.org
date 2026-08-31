@@ -1920,31 +1920,7 @@ The next sunrise or sunset event restores automatic switching."
   ;(setq org-agenda-hide-tags-regexp ".")
   (setq org-agenda-remove-tags nil)
   ;(setq org-agenda-remove-tags t)
-  (setq org-agenda-tags-column -100)
-
-;;;; Agenda logging and clocking
-  ;; I plan to use this in the future.
-  ;; For the time being I leave everything to its default value.
-  (setq org-agenda-log-mode-items '(closed clock))
-  (setq org-agenda-clock-consistency-checks
-        '(:max-duration "10:00" :min-duration 0 :max-gap "0:05" :gap-ok-around
-                       ("4:00")
-                       :default-face
-                       ((:background "DarkRed")
-                        (:foreground "white"))
-                       :overlap-face nil :gap-face nil :no-end-time-face nil
-                       :long-face nil :short-face nil))
-  (setq org-agenda-log-mode-add-notes t)
-  (setq org-agenda-start-with-log-mode nil)
-  (setq org-agenda-start-with-clockreport-mode nil)
-  (setq org-agenda-clockreport-parameter-plist '(:link t :maxlevel 2))
-  (setq org-agenda-search-view-always-boolean nil)
-  (setq org-agenda-search-view-force-full-words nil)
-  (setq org-agenda-search-view-max-outline-level 0)
-  (setq org-agenda-search-headline-for-time t)
-  (setq org-agenda-cmp-user-defined nil)
-  (setq org-agenda-sort-notime-is-late t) 
-  (setq org-agenda-sort-noeffort-is-high t))
+  (setq org-agenda-tags-column -100))
 
 (provide 'init-org)
 #+end_src
