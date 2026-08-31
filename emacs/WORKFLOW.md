@@ -90,7 +90,7 @@ does not list approaches that should simply be avoided.
 | 5 | Keep Org capture, agenda, appointment refresh, and Babel behavior correct | Very high | Low | Completed 2026-08-30 |
 | 6 | Protect notes from concurrent writes and sync conflicts | High | Low | Provider choice does not solve concurrency; implement the documented policy |
 | 7 | Use `emacsclient -t` for local and remote terminal frames | High | None | Usage practice; no Emacs configuration change |
-| 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Next small configuration change |
+| 8 | Add persistent places, recent files, repeat keys, and window undo | High | Low | Completed 2026-08-31 |
 | 9 | Define a mobile-note inbox and desktop triage command | High | Low | After choosing the sync layout |
 | 10 | Promote the Denote trial only after testing real Obsidian notes | High | Low | After the trial |
 | 11 | Use TRAMP as the default remote-editing route | High | Low | Adopt as practice |
@@ -577,16 +577,13 @@ changes. The current README already mentions this; the workflow should make it
 routine rather than mysterious. If task refiling is retired, remove the cache
 configuration too.
 
-### 4.10 The Org configuration is more verbose than its behavior requires
+### 4.10 Configuration cleanup — completed
 
-Many options restate defaults, and a few are assigned twice—for example,
-`org-agenda-search-headline-for-time` is first `nil` and later `t`, and
-`org-agenda-use-time-grid` is repeated. This is not generally a runtime bug, but
-it obscures which setting is authoritative and makes upgrades harder to audit.
-
-In a later refactor, group options by desired behavior and remove values that
-match the upstream default unless they serve as explicit documentation. Keep
-the canonical literate file and generated modules synchronized.
+Duplicate assignments, settings that only repeated upstream defaults, and
+low-value presentation defaults have been removed. The unused Agenda
+logging/clocking block and its future-use comment were removed as well. Settings
+that define intentional behavior remain, and the generated modules were
+retangled from the canonical literate file.
 
 ## 5. Persistence, synchronization, and recovery
 
@@ -1105,8 +1102,8 @@ tangle would undo it.
   provider if local replicas are needed, and decide whether synchronized notes
   should use 30-second visited-file auto-save.
 - [x] Replace the Mac modifier variable with the documented NS variable.
-- [ ] Remove duplicate/default option assignments without changing intended
-  behavior.
+- [x] Remove duplicate/default assignments, low-value presentation defaults,
+  and the unused Agenda logging/clocking block.
 
 ### Phase 2: daily workflow
 
