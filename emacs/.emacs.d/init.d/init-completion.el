@@ -53,12 +53,14 @@
   (completion-category-overrides '((file (styles partial-completion))))
   :init
   (when (boundp 'completion-pcm-leading-wildcard)
-    (setq completion-pcm-leading-wildcard t)))
+    (setq completion-pcm-leading-wildcard nil)))
 
 ;;; In-buffer completion
 (use-package corfu
   :ensure t
   :bind (:map corfu-map
+              ("TAB" . corfu-next)
+              ([tab] . corfu-next)
               ("S-TAB" . corfu-previous)
               ([backtab] . corfu-previous))
   :custom
@@ -82,7 +84,7 @@
 (use-package emacs
   :ensure nil
   :custom
-  (completion-cycle-threshold 3)
+  (completion-cycle-threshold nil)
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -164,18 +166,37 @@
 ;;; Minibuffer completion
 (use-package vertico
   :ensure t
+  :bind (:map vertico-map
+              ("TAB" . ms/vertico-complete-or-next)
+              ([tab] . ms/vertico-complete-or-next)
+              ("S-TAB" . vertico-previous)
+              ([backtab] . vertico-previous))
   :custom
   (vertico-cycle t)
+  (vertico-preselect 'prompt)
   :init
+  (defun ms/vertico-complete-or-next ()
+    "Complete the input, then cycle through the candidates with TAB."
+    (interactive)
+    (if (memq last-command
+              '(ms/vertico-complete-or-next vertico-next vertico-previous))
+        (vertico-next)
+      (minibuffer-complete)))
   (vertico-mode))
 
 (use-package vertico-directory
   :ensure nil
+  :after vertico)
+
+(use-package vertico-multiform
+  :ensure nil
   :after vertico
-  :bind (:map vertico-map
-              ("RET" . vertico-directory-enter)
-              ("DEL" . vertico-directory-delete-char)
-              ("M-DEL" . vertico-directory-delete-word)))
+  :custom
+  (vertico-multiform-categories
+   '((file (vertico-sort-function . vertico-sort-directories-first)
+           (:keymap . vertico-directory-map))))
+  :init
+  (vertico-multiform-mode))
 
 (use-package vertico-repeat
   :ensure nil
