@@ -89,7 +89,11 @@
   (setq org-fold-catch-invisible-edits 'show)
   (setq org-return-follows-link nil)
   (setq org-loop-over-headlines-in-active-region 'start-level)
-  (setq org-modules '(ol-info ol-eww))
+  ;; Org's default pulls in eleven `ol-' link modules -- bbdb, gnus, irc,
+  ;; mhe, rmail, w3m and the rest -- the first time any Org buffer opens,
+  ;; and this file is an Org buffer.  None of them are used: notes live in
+  ;; Obsidian, so there is nothing to store an Info or eww link into.
+  (setq org-modules nil)
   (setq org-use-sub-superscripts '{})
   (setq org-insert-heading-respect-content t)
   (setq org-read-date-prefer-future 'time)
