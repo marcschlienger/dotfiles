@@ -66,11 +66,12 @@
   :custom
   (corfu-auto t)
   (corfu-cycle t)
+  (corfu-preview-current nil)
   (corfu-preselect 'prompt)
   :init
-  (global-corfu-mode)
-  (corfu-history-mode)
-  (corfu-popupinfo-mode))
+  (global-corfu-mode 1)
+  (corfu-history-mode 1)
+  (corfu-popupinfo-mode 1))
 
 ;; Emacs 31 supports Corfu child frames in terminal frames directly.
 (when (< emacs-major-version 31)
@@ -78,22 +79,26 @@
     :ensure t
     :after corfu
     :config
-    (corfu-terminal-mode)))
+    (corfu-terminal-mode 1)))
 
 ;;; Completion behavior
 (use-package emacs
   :ensure nil
   :custom
-  (completion-cycle-threshold nil)
+  (completion-ignore-case t)
+  (completion-cycle-threshold t)
   (enable-recursive-minibuffers t)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
+  (read-buffer-completion-ignore-case t)
   (read-extended-command-predicate #'command-completion-default-include-p)
+  (read-file-name-completion-ignore-case t)
   (tab-always-indent 'complete)
   (text-mode-ispell-word-completion nil)
   :hook
   (minibuffer-setup . cursor-intangible-mode)
   :init
+  (minibuffer-depth-indicate-mode 1)
   (defun ms/completing-read-multiple-indicator (args)
     "Add a multiple-selection indicator to the minibuffer prompt."
     (cons (format "[CRM%s] %s"
@@ -101,8 +106,11 @@
                    "\\`\\[.*?\\]\\*\\|\\[.*?\\]\\*\\'" "" crm-separator)
                   (car args))
           (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args
-              #'ms/completing-read-multiple-indicator))
+  (if (< emacs-major-version 31)
+      (advice-add #'completing-read-multiple :filter-args
+                  #'ms/completing-read-multiple-indicator)
+    (advice-remove #'completing-read-multiple
+                   #'ms/completing-read-multiple-indicator)))
 
 ;;; Completion-at-point extensions
 (use-package cape
@@ -110,14 +118,16 @@
   :bind ("C-c p" . cape-prefix-map)
   :init
   (advice-add #'eglot-completion-at-point :around #'cape-wrap-buster)
-  (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  (add-hook 'completion-at-point-functions #'cape-file))
+  ;; `add-hook' prepends by default.  Add these in reverse priority order so
+  ;; ordinary text completion wins over incidental file-name matches.
+  (add-hook 'completion-at-point-functions #'cape-file)
+  (add-hook 'completion-at-point-functions #'cape-dabbrev))
 
 ;; Which key
 (use-package which-key
   :ensure t
   :config
-  (which-key-mode))
+  (which-key-mode 1))
 
 ;;; Consult
 (use-package consult
@@ -167,22 +177,15 @@
 (use-package vertico
   :ensure t
   :bind (:map vertico-map
-              ("TAB" . ms/vertico-complete-or-next)
-              ([tab] . ms/vertico-complete-or-next)
+              ("TAB" . minibuffer-complete)
+              ([tab] . minibuffer-complete)
               ("S-TAB" . vertico-previous)
               ([backtab] . vertico-previous))
   :custom
   (vertico-cycle t)
   (vertico-preselect 'prompt)
   :init
-  (defun ms/vertico-complete-or-next ()
-    "Complete the input, then cycle through the candidates with TAB."
-    (interactive)
-    (if (memq last-command
-              '(ms/vertico-complete-or-next vertico-next vertico-previous))
-        (vertico-next)
-      (minibuffer-complete)))
-  (vertico-mode))
+  (vertico-mode 1))
 
 (use-package vertico-directory
   :ensure nil
@@ -196,7 +199,7 @@
    '((file (vertico-sort-function . vertico-sort-directories-first)
            (:keymap . vertico-directory-map))))
   :init
-  (vertico-multiform-mode))
+  (vertico-multiform-mode 1))
 
 (use-package vertico-repeat
   :ensure nil
@@ -214,7 +217,7 @@
   :config
   (add-to-list 'savehist-additional-variables 'kill-ring)
   :init
-  (savehist-mode))
+  (savehist-mode 1))
 
 ;;; Completion annotations
 (use-package marginalia
@@ -222,7 +225,7 @@
   :bind (:map minibuffer-local-map
               ("M-A" . marginalia-cycle))
   :init
-  (marginalia-mode))
+  (marginalia-mode 1))
 
 ;;; Embark
 (use-package embark
