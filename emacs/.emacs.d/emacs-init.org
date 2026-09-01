@@ -1216,7 +1216,6 @@ The next sunrise or sunset event restores automatic switching."
 (use-package eglot
   :ensure nil
   :config
-  (setq completion-category-defaults nil)
   (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
@@ -1258,69 +1257,71 @@ The next sunrise or sunset event restores automatic switching."
   :ensure t
   :hook ((python-mode python-ts-mode) . ruff-format-on-save-mode))
 
-;; In-buffer completion with corfu
+;;; Completion styles
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  :init
+  (when (boundp 'completion-pcm-leading-wildcard)
+    (setq completion-pcm-leading-wildcard t)))
+
+;;; In-buffer completion
 (use-package corfu
   :ensure t
-  :bind
-  ( :map corfu-map
-        ("TAB" . corfu-next)
-        ([tab] . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous))
+  :bind (:map corfu-map
+              ("S-TAB" . corfu-previous)
+              ([backtab] . corfu-previous))
   :custom
-  (corfu-cycle t)
   (corfu-auto t)
-  ;(corfu-quit-at-boundary nil)
-  ;(corfu-quit-no-match nil)
-  ;(corfu-preview-current nil)
-  ;(corfu-preselect 'prompt)
-  ;(corfu-on-exact-match nil)
+  (corfu-cycle t)
+  (corfu-preselect 'prompt)
   :init
-  (global-corfu-mode))
+  (global-corfu-mode)
+  (corfu-history-mode)
+  (corfu-popupinfo-mode))
 
-;; A few more useful configurations...
+;; Emacs 31 supports Corfu child frames in terminal frames directly.
+(when (< emacs-major-version 31)
+  (use-package corfu-terminal
+    :ensure t
+    :after corfu
+    :config
+    (corfu-terminal-mode)))
+
+;;; Completion behavior
 (use-package emacs
   :ensure nil
+  :custom
+  (completion-cycle-threshold 3)
+  (enable-recursive-minibuffers t)
+  (minibuffer-prompt-properties
+   '(read-only t cursor-intangible t face minibuffer-prompt))
+  (read-extended-command-predicate #'command-completion-default-include-p)
+  (tab-always-indent 'complete)
+  (text-mode-ispell-word-completion nil)
+  :hook
+  (minibuffer-setup . cursor-intangible-mode)
   :init
-  ;; TAB cycle if there are only few candidates
-  (setq completion-cycle-threshold 3)
+  (defun ms/completing-read-multiple-indicator (args)
+    "Add a multiple-selection indicator to the minibuffer prompt."
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?\\]\\*\\|\\[.*?\\]\\*\\'" "" crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args
+              #'ms/completing-read-multiple-indicator))
 
-  ;; Enable indentation+completion using the TAB key.
-  ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete)
-
-  ;; Emacs 30 and newer: Disable Ispell completion function. As an alternative,
-  ;; try `cape-dict'.
-  (setq text-mode-ispell-word-completion nil))
-
-;; Cape
+;;; Completion-at-point extensions
 (use-package cape
   :ensure t
-  ;; Bind dedicated completion commands
-  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (("C-c p p" . completion-at-point)
-         ("C-c p t" . complete-tag)
-         ("C-c p d" . cape-dabbrev)
-         ("C-c p h" . cape-history)
-         ("C-c p f" . cape-file)
-         ("C-c p k" . cape-keyword)
-         ("C-c p s" . cape-elisp-symbol)
-         ("C-c p e" . cape-elisp-block)
-         ("C-c p a" . cape-abbrev)
-         ("C-c p l" . cape-line)
-         ("C-c p w" . cape-dict)
-         ("C-c p :" . cape-emoji)
-         ("C-c p \\" . cape-tex)
-         ("C-c p _" . cape-tex)
-         ("C-c p ^" . cape-tex)
-         ("C-c p &" . cape-sgml)
-         ("C-c p r" . cape-rfc1345))
-  :config
-  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+  :bind ("C-c p" . cape-prefix-map)
   :init
-  (add-hook 'completion-at-point-functions #'cape-keyword)
+  (advice-add #'eglot-completion-at-point :around #'cape-wrap-buster)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  (add-hook 'completion-at-point-functions #'cape-tex))
+  (add-hook 'completion-at-point-functions #'cape-file))
 
 ;; Which key
 (use-package which-key
@@ -1372,68 +1373,45 @@ The next sunrise or sunset event restores automatic switching."
    consult-source-recent-file consult-source-project-recent-file
    :preview-key '(:debounce 0.4 any)))
 
-;; Vertico
+;;; Minibuffer completion
 (use-package vertico
   :ensure t
-  :bind
-  ( :map vertico-map
-    ("TAB" . minibuffer-complete))
   :custom
-  (vertico-scroll-margin 0)
-  (vertico-count 8)
-  (vertico-resize nil)
   (vertico-cycle t)
   :init
   (vertico-mode))
 
 (use-package vertico-directory
   :ensure nil
-  :after vertico)
+  :after vertico
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word)))
 
-;;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package vertico-repeat
+  :ensure nil
+  :after vertico
+  :bind ("M-R" . vertico-repeat)
+  :hook (minibuffer-setup . vertico-repeat-save))
+
+;;; Completion history
 (use-package savehist
-  :ensure t
+  :ensure nil
+  :custom
+  (history-delete-duplicates t)
+  (history-length 200)
+  (savehist-file (locate-user-emacs-file "savehist"))
   :config
-  (setq savehist-file (locate-user-emacs-file "savehist"))
-  (setq history-length 200)
-  (setq history-delete-duplicates t)
-  (setq savehist-save-minibuffer-history t)
   (add-to-list 'savehist-additional-variables 'kill-ring)
   :init
   (savehist-mode))
 
-;; A few more useful configurations...
-(use-package emacs
-  :custom
-  ;; Support opening new minibuffers from inside existing minibuffers.
-  (enable-recursive-minibuffers t)
-  ;; Hide commands in M-x which do not work in the current mode.  Vertico
-  ;; commands are hidden in normal buffers. This setting is useful beyond
-  ;; Vertico.
-  (read-extended-command-predicate #'command-completion-default-include-p)
-  :init
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
-  (defun crm-indicator (args)
-    (cons (format "[CRM%s] %s"
-                  (replace-regexp-in-string
-                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-                   crm-separator)
-                  (car args))
-          (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
-
-;; Enable rich annotations using the Marginalia package
+;;; Completion annotations
 (use-package marginalia
   :ensure t
-  :bind
-  ( :map minibuffer-local-map
-    ("M-A" . marginalia-cycle))
+  :bind (:map minibuffer-local-map
+              ("M-A" . marginalia-cycle))
   :init
   (marginalia-mode))
 
@@ -1453,17 +1431,8 @@ The next sunrise or sunset event restores automatic switching."
                  nil
                  (window-parameters (mode-line-format . none)))))
 
-;; Embark-Consult
 (use-package embark-consult
-  :ensure t
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
-
-(use-package orderless
-  :ensure t
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  :ensure t)
 
 ;; Template system for Emacs.
 (use-package yasnippet
