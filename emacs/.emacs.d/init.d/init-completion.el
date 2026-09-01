@@ -217,6 +217,8 @@
   :custom
   (history-delete-duplicates t)
   (history-length 200)
+  ;; Not redundant: the default is ~/.emacs.d/history.  This name is the one
+  ;; the existing history was written under.
   (savehist-file (locate-user-emacs-file "savehist"))
   :config
   (add-to-list 'savehist-additional-variables 'kill-ring)

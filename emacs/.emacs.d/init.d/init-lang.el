@@ -20,15 +20,28 @@
   "Turn flyspell off in the current buffer."
   (flyspell-mode -1))
 
+;; The spell checker itself.  These belong to ispell rather than flyspell:
+;; sitting in flyspell's :config they only took effect once flyspell had
+;; loaded, so `M-$' in a buffer flyspell never touched -- a shell script, say,
+;; where it is deliberately off -- fell back to a "default" dictionary that
+;; hunspell cannot open.  The variables go in :init so they are set before
+;; anything loads ispell; the two calls need ispell itself, so they stay in
+;; :config and run whenever it does load.
+(use-package ispell
+  :ensure nil
+  :defer t
+  :init
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "en_US,de_DE")
+  :config
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "en_US,de_DE"))
+
 (use-package flyspell
   :ensure nil
   :config
   (setq flyspell-issue-message-flag nil)
   (setq flyspell-issue-welcome-flag nil)
-  (setq ispell-program-name "hunspell")
-  (setq ispell-dictionary "en_US,de_DE")
-  (ispell-set-spellchecker-params)
-  (ispell-hunspell-add-multi-dic "en_US,de_DE")
   :hook
   (text-mode . flyspell-mode)
   (prog-mode . flyspell-prog-mode)
@@ -144,45 +157,49 @@
 
   (ms/treesit-activate-remappings))
 
-;;; Clojure(Script)
-;; Paredit inserts its own delimiters; leaving `electric-pair-mode' on as
-;; well gives doubled parens and quotes.
-(defun ms/paredit-setup ()
-  "Enable Paredit and stand `electric-pair-mode' down in this buffer."
+;;; Clojure was configured here -- clojure-mode, CIDER, clj-refactor and
+;;; Flycheck with clj-kondo -- but never used, and the Debian side never
+;;; installed a JVM or the Clojure CLI for any of it to talk to.  Removed.
+;;;
+;;; Flycheck went with it.  It is a general framework, but it had exactly one
+;;; hook here, `clojure-mode'.  Diagnostics everywhere else come from Flymake
+;;; (Eglot, flymake-ruff, package-lint-flymake, and `sh-shellcheck-flymake'
+;;; for shell scripts), and running both frameworks in one buffer duplicates
+;;; every message.
+
+;;; Emacs Lisp
+;; `lisp-data-mode' is the parent of `emacs-lisp-mode', so one hook covers
+;; .el sources and .eld data files alike.  IELM is deliberately left out:
+;; it derives from `comint-mode', where Paredit's RET would fight
+;; `comint-send-input'.
+(defun ms/lisp-mode-setup ()
+  "Structural editing and section navigation for Lisp buffers."
+  ;; Paredit inserts its own delimiters; `electric-pair-mode' as well gives
+  ;; doubled parens and quotes.
   (electric-pair-local-mode -1)
-  (paredit-mode 1))
+  (paredit-mode 1)
+  ;; The mode already sets `outline-regexp' to match `;;;' headings and
+  ;; `outline-level' to `lisp-outline-level', so this only switches it on.
+  (outline-minor-mode 1))
 
 (use-package paredit
   :ensure t
-  :hook (clojure-mode . ms/paredit-setup))
+  :hook (lisp-data-mode . ms/lisp-mode-setup))
 
-(use-package clojure-mode
-  :ensure t
-  :mode (("\\.clj[csx]?\\'" . clojure-mode)
-         ("\\.edn\\'" . clojure-mode)))
+;; Byte-compile and checkdoc diagnostics while typing.  Nothing else turns
+;; Flymake on in an ordinary .el buffer: `elisp-flymake-byte-compile' and
+;; `elisp-flymake-checkdoc' are registered by default but never run without
+;; the mode.  `package-lint-flymake-setup' used to enable it as a side
+;; effect, which stopped when that was restricted to real packages.
+(use-package elisp-mode
+  :ensure nil
+  :hook (emacs-lisp-mode . flymake-mode))
 
-(use-package cider
+;; Expand a macro in place, one step at a time, and collapse it again.
+(use-package macrostep
   :ensure t
-  :commands (cider-jack-in cider-jack-in-cljs
-             cider-connect-clj cider-connect-cljs))
-
-(use-package flycheck
-  :ensure t
-  :hook (clojure-mode . flycheck-mode))
-
-;; This brings the hints from clj-kondo to the screen.
-(use-package flycheck-clj-kondo
-  :ensure t
-  :after (flycheck clojure-mode))
-
-;; Provides all necessary refactoring tools.
-(use-package clj-refactor
-  :ensure t
-  :after clojure-mode
-  :hook (clojure-mode . clj-refactor-mode)
-  :config
-  ;; This choice of keybinding leaves cider-macroexpand-1 unbound.
-  (cljr-add-keybindings-with-prefix "C-c C-m"))
+  :bind ( :map emacs-lisp-mode-map
+          ("C-c e" . macrostep-expand)))
 
 ;;; C, C++, Java, ...
 (defun ms/c-mode-setup ()

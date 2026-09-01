@@ -461,7 +461,7 @@ find everything related to my Emacs setup.
   :ensure nil
   :bind ( :map ctl-x-x-map
           ("v" . variable-pitch-mode))
-  :hook ((text-mode notmuch-show-mode) . ms/enable-variable-pitch-mode))
+  :hook (text-mode . ms/enable-variable-pitch-mode))
 
 ;; Theme packages.  Ef inherits the comprehensive Modus theme machinery.
 (use-package modus-themes
@@ -818,8 +818,7 @@ The next sunrise or sunset event restores automatic switching."
                ("k" . 'evil-previous-visual-line))
   :config
   (evil-mode 1)
-  (dolist (mode '(ag-mode
-                  dired-mode
+  (dolist (mode '(dired-mode
                   eshell-mode
                   git-rebase-mode
                   org-capture-mode
@@ -923,15 +922,28 @@ The next sunrise or sunset event restores automatic switching."
   "Turn flyspell off in the current buffer."
   (flyspell-mode -1))
 
+;; The spell checker itself.  These belong to ispell rather than flyspell:
+;; sitting in flyspell's :config they only took effect once flyspell had
+;; loaded, so `M-$' in a buffer flyspell never touched -- a shell script, say,
+;; where it is deliberately off -- fell back to a "default" dictionary that
+;; hunspell cannot open.  The variables go in :init so they are set before
+;; anything loads ispell; the two calls need ispell itself, so they stay in
+;; :config and run whenever it does load.
+(use-package ispell
+  :ensure nil
+  :defer t
+  :init
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "en_US,de_DE")
+  :config
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "en_US,de_DE"))
+
 (use-package flyspell
   :ensure nil
   :config
   (setq flyspell-issue-message-flag nil)
   (setq flyspell-issue-welcome-flag nil)
-  (setq ispell-program-name "hunspell")
-  (setq ispell-dictionary "en_US,de_DE")
-  (ispell-set-spellchecker-params)
-  (ispell-hunspell-add-multi-dic "en_US,de_DE")
   :hook
   (text-mode . flyspell-mode)
   (prog-mode . flyspell-prog-mode)
@@ -1047,45 +1059,49 @@ The next sunrise or sunset event restores automatic switching."
 
   (ms/treesit-activate-remappings))
 
-;;; Clojure(Script)
-;; Paredit inserts its own delimiters; leaving `electric-pair-mode' on as
-;; well gives doubled parens and quotes.
-(defun ms/paredit-setup ()
-  "Enable Paredit and stand `electric-pair-mode' down in this buffer."
+;;; Clojure was configured here -- clojure-mode, CIDER, clj-refactor and
+;;; Flycheck with clj-kondo -- but never used, and the Debian side never
+;;; installed a JVM or the Clojure CLI for any of it to talk to.  Removed.
+;;;
+;;; Flycheck went with it.  It is a general framework, but it had exactly one
+;;; hook here, `clojure-mode'.  Diagnostics everywhere else come from Flymake
+;;; (Eglot, flymake-ruff, package-lint-flymake, and `sh-shellcheck-flymake'
+;;; for shell scripts), and running both frameworks in one buffer duplicates
+;;; every message.
+
+;;; Emacs Lisp
+;; `lisp-data-mode' is the parent of `emacs-lisp-mode', so one hook covers
+;; .el sources and .eld data files alike.  IELM is deliberately left out:
+;; it derives from `comint-mode', where Paredit's RET would fight
+;; `comint-send-input'.
+(defun ms/lisp-mode-setup ()
+  "Structural editing and section navigation for Lisp buffers."
+  ;; Paredit inserts its own delimiters; `electric-pair-mode' as well gives
+  ;; doubled parens and quotes.
   (electric-pair-local-mode -1)
-  (paredit-mode 1))
+  (paredit-mode 1)
+  ;; The mode already sets `outline-regexp' to match `;;;' headings and
+  ;; `outline-level' to `lisp-outline-level', so this only switches it on.
+  (outline-minor-mode 1))
 
 (use-package paredit
   :ensure t
-  :hook (clojure-mode . ms/paredit-setup))
+  :hook (lisp-data-mode . ms/lisp-mode-setup))
 
-(use-package clojure-mode
-  :ensure t
-  :mode (("\\.clj[csx]?\\'" . clojure-mode)
-         ("\\.edn\\'" . clojure-mode)))
+;; Byte-compile and checkdoc diagnostics while typing.  Nothing else turns
+;; Flymake on in an ordinary .el buffer: `elisp-flymake-byte-compile' and
+;; `elisp-flymake-checkdoc' are registered by default but never run without
+;; the mode.  `package-lint-flymake-setup' used to enable it as a side
+;; effect, which stopped when that was restricted to real packages.
+(use-package elisp-mode
+  :ensure nil
+  :hook (emacs-lisp-mode . flymake-mode))
 
-(use-package cider
+;; Expand a macro in place, one step at a time, and collapse it again.
+(use-package macrostep
   :ensure t
-  :commands (cider-jack-in cider-jack-in-cljs
-             cider-connect-clj cider-connect-cljs))
-
-(use-package flycheck
-  :ensure t
-  :hook (clojure-mode . flycheck-mode))
-
-;; This brings the hints from clj-kondo to the screen.
-(use-package flycheck-clj-kondo
-  :ensure t
-  :after (flycheck clojure-mode))
-
-;; Provides all necessary refactoring tools.
-(use-package clj-refactor
-  :ensure t
-  :after clojure-mode
-  :hook (clojure-mode . clj-refactor-mode)
-  :config
-  ;; This choice of keybinding leaves cider-macroexpand-1 unbound.
-  (cljr-add-keybindings-with-prefix "C-c C-m"))
+  :bind ( :map emacs-lisp-mode-map
+          ("C-c e" . macrostep-expand)))
 
 ;;; C, C++, Java, ...
 (defun ms/c-mode-setup ()
@@ -1404,6 +1420,8 @@ The next sunrise or sunset event restores automatic switching."
   :custom
   (history-delete-duplicates t)
   (history-length 200)
+  ;; Not redundant: the default is ~/.emacs.d/history.  This name is the one
+  ;; the existing history was written under.
   (savehist-file (locate-user-emacs-file "savehist"))
   :config
   (add-to-list 'savehist-additional-variables 'kill-ring)
@@ -1467,6 +1485,34 @@ The next sunrise or sunset event restores automatic switching."
 
 * Org mode
 
+Org is used here as an *editing mode* --- this file is an Org document ---
+but not for task management. Notes live in Obsidian and tasks in
+Reminders, so =~/org= is empty and the agenda, capture and refile
+settings below are configured but idle. They are kept because they cost
+nothing while =org-agenda= stays unloaded, and rebuilding them would be
+tedious if that ever changes.
+
+** Enabling appointment reminders
+
+=appt= shows a reminder in the mode line before a timed Org entry. It is
+deliberately *not* started at startup: that would load =org-agenda= in
+every session to scan an empty directory, costing most of a second and
+finding nothing. Three ways to turn it on:
+
+- *This session only* --- =M-x ms-org-appt-initialise=. It loads
+  org-agenda, activates =appt=, builds the reminder list from
+  =org-agenda-files= and starts the refresh timer. It reports how many
+  entries it found, so an empty agenda is immediately obvious.
+- *Every session* --- uncomment the =emacs-startup-hook= line in the
+  =appt= block below.
+- *On demand* --- what happens today: opening the agenda with =C-c a=
+  loads =org-agenda=, and the =with-eval-after-load= form then starts
+  reminders for the rest of the session.
+
+Once running, three hooks in =lib-org.el= keep the list current: a
+debounced refresh after saving any agenda file, one after finishing a
+capture, and a periodic refresh every fifteen minutes.
+
 #+begin_src emacs-lisp :tangle init.d/init-org.el :mkdirp yes
 ;;-*- lexical-binding: t; -*-
 
@@ -1501,11 +1547,18 @@ The next sunrise or sunset event restores automatic switching."
         appt-display-mode-line t
         appt-display-interval 3
         appt-audible nil)
-  ;; This used to hang off `with-eval-after-load' on org-agenda, which is
-  ;; only loaded when you press C-c a -- so a session in which you never
-  ;; opened the agenda got no reminders at all.  Loading org-agenda eagerly
-  ;; would cost most of a second of startup, so take the first idle moment.
-  (run-with-idle-timer 1 nil #'ms-org-appt-initialise))
+  ;; Reminders are NOT started at startup.  Org is not used for task
+  ;; management here, so waking org-agenda to scan an empty `org-directory'
+  ;; would cost most of a second of every session and find nothing.
+  ;;
+  ;; How to enable them:
+  ;;   this session only  ->  M-x ms-org-appt-initialise
+  ;;   every session      ->  uncomment the `emacs-startup-hook' line below
+  ;;   as things stand    ->  they start if and when you open the agenda
+  ;;                          (C-c a), through the form after that.
+  ;;
+  ;; (add-hook 'emacs-startup-hook #'ms-org-appt-initialise)
+  (with-eval-after-load 'org-agenda (ms-org-appt-initialise)))
 
 ;; Org mode
 (use-package org
@@ -1576,7 +1629,9 @@ The next sunrise or sunset event restores automatic switching."
   (setq org-refile-use-outline-path 'file)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-outline-path-complete-in-steps nil)
-  (setq org-refile-use-cache t)
+  ;; The cache does not notice files appearing in `org-agenda-files', which
+  ;; is a directory here, so targets go stale until C-0 C-c C-w clears it.
+  (setq org-refile-use-cache nil)
   (setq org-reverse-note-order nil)
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
@@ -1634,7 +1689,6 @@ The next sunrise or sunset event restores automatic switching."
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)
-     (clojure . t)
      (python . t)
      (R . t)
      (shell . t))))
@@ -2005,6 +2059,8 @@ The next sunrise or sunset event restores automatic switching."
   (diff-hl-disable-on-remote t)
   :hook
   (after-init . global-diff-hl-mode)
+  ;; Without this the fringe only catches up when the buffer is saved.
+  (after-init . diff-hl-flydiff-mode)
   (dired-mode . diff-hl-dired-mode)
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh)
@@ -2153,15 +2209,25 @@ Leave ordinary headings, such as project containers, unchanged."
           (run-at-time (* 15 60) (* 15 60) #'ms-org-refresh-appt))))
 
 (defun ms-org-appt-initialise ()
-  "Enable appointment reminders and fill them from the Org agenda.
-Loading `org-agenda' is what makes `org-agenda-to-appt' available, so it
-is required here rather than waited for."
+  "Switch on Org appointment reminders and keep them up to date.
+
+Nothing calls this at startup: `org-agenda' is not loaded then, and Org
+is not used for task management in this configuration.  Run it with
+\\[execute-extended-command] ms-org-appt-initialise for the current
+session, or add it to `emacs-startup-hook' from init-org.el to get
+reminders in every session.  Loading `org-agenda' is what makes
+`org-agenda-to-appt' available, so it is required here rather than
+waited for."
+  (interactive)
   (condition-case error-data
       (progn
         (require 'org-agenda)
         (appt-activate 1)
         (ms-org-refresh-appt)
-        (ms-org-start-appt-refresh-timer))
+        (ms-org-start-appt-refresh-timer)
+        (message "Org appointment reminders on (%d entries from %d agenda file(s))"
+                 (length appt-time-msg-list)
+                 (length (org-agenda-files t))))
     (error
      (display-warning
       'appt

@@ -35,6 +35,8 @@
   (diff-hl-disable-on-remote t)
   :hook
   (after-init . global-diff-hl-mode)
+  ;; Without this the fringe only catches up when the buffer is saved.
+  (after-init . diff-hl-flydiff-mode)
   (dired-mode . diff-hl-dired-mode)
   (magit-pre-refresh . diff-hl-magit-pre-refresh)
   (magit-post-refresh . diff-hl-magit-post-refresh)

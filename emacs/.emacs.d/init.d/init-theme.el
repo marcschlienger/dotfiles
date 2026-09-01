@@ -68,7 +68,7 @@
   :ensure nil
   :bind ( :map ctl-x-x-map
           ("v" . variable-pitch-mode))
-  :hook ((text-mode notmuch-show-mode) . ms/enable-variable-pitch-mode))
+  :hook (text-mode . ms/enable-variable-pitch-mode))
 
 ;; Theme packages.  Ef inherits the comprehensive Modus theme machinery.
 (use-package modus-themes

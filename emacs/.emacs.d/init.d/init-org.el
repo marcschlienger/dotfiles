@@ -31,11 +31,18 @@
         appt-display-mode-line t
         appt-display-interval 3
         appt-audible nil)
-  ;; This used to hang off `with-eval-after-load' on org-agenda, which is
-  ;; only loaded when you press C-c a -- so a session in which you never
-  ;; opened the agenda got no reminders at all.  Loading org-agenda eagerly
-  ;; would cost most of a second of startup, so take the first idle moment.
-  (run-with-idle-timer 1 nil #'ms-org-appt-initialise))
+  ;; Reminders are NOT started at startup.  Org is not used for task
+  ;; management here, so waking org-agenda to scan an empty `org-directory'
+  ;; would cost most of a second of every session and find nothing.
+  ;;
+  ;; How to enable them:
+  ;;   this session only  ->  M-x ms-org-appt-initialise
+  ;;   every session      ->  uncomment the `emacs-startup-hook' line below
+  ;;   as things stand    ->  they start if and when you open the agenda
+  ;;                          (C-c a), through the form after that.
+  ;;
+  ;; (add-hook 'emacs-startup-hook #'ms-org-appt-initialise)
+  (with-eval-after-load 'org-agenda (ms-org-appt-initialise)))
 
 ;; Org mode
 (use-package org
@@ -106,7 +113,9 @@
   (setq org-refile-use-outline-path 'file)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-outline-path-complete-in-steps nil)
-  (setq org-refile-use-cache t)
+  ;; The cache does not notice files appearing in `org-agenda-files', which
+  ;; is a directory here, so targets go stale until C-0 C-c C-w clears it.
+  (setq org-refile-use-cache nil)
   (setq org-reverse-note-order nil)
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
@@ -164,7 +173,6 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((C . t)
-     (clojure . t)
      (python . t)
      (R . t)
      (shell . t))))

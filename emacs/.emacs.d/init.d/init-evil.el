@@ -17,8 +17,7 @@
                ("k" . 'evil-previous-visual-line))
   :config
   (evil-mode 1)
-  (dolist (mode '(ag-mode
-                  dired-mode
+  (dolist (mode '(dired-mode
                   eshell-mode
                   git-rebase-mode
                   org-capture-mode
