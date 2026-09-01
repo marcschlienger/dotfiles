@@ -75,9 +75,9 @@
   (corfu-popupinfo-mode 1))
 
 ;; Emacs 31 draws Corfu's child frames in a terminal frame by itself.  The
-;; Debian machine runs a hand-built Emacs 30, so the fallback still earns
-;; its place; corfu warns about the package being installed on 31, which is
-;; the price of one configuration serving both.
+;; Debian machine is on the distribution's Emacs 30.1, so the fallback still
+;; earns its place; corfu warns about the package being installed on 31,
+;; which is the price of one configuration serving both.
 (when (< emacs-major-version 31)
   (use-package corfu-terminal
     :ensure t
