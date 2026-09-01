@@ -46,12 +46,6 @@
   :ensure t
   :hook ((python-mode python-ts-mode) . ruff-format-on-save-mode))
 
-;;
-(use-package rfn-eshadow
-  :ensure nil
-  :config
-  (file-name-shadow-mode 1))
-
 ;; In-buffer completion with corfu
 (use-package corfu
   :ensure t
@@ -215,15 +209,12 @@
   (vertico-count 8)
   (vertico-resize nil)
   (vertico-cycle t)
-  :config
-  (with-eval-after-load 'rfn-eshadow
-    ;; This works with `file-name-shadow-mode' enabled.  When you are in
-    ;; a sub-directory and use, say, `find-file' to go to your home '~/'
-    ;; or root '/' directory, Vertico will clear the old path to keep
-    ;; only your current input.
-    (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
   :init
   (vertico-mode))
+
+(use-package vertico-directory
+  :ensure nil
+  :after vertico)
 
 ;;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist

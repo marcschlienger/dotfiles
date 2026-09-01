@@ -47,12 +47,6 @@
   (setq dired-vc-rename-file t)
   (setq dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir)))))
 
-;(use-package emacs
- ; :ensure nil
-  ;:config
-;  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
-;  (file-name-shadow-mode t))
-
 (use-package dired-x
   :ensure nil
   :after dired
