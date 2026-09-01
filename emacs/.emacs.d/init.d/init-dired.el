@@ -109,9 +109,10 @@
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 
-;; Ibuffer is a dired-like advanced replacement for BufferMenu
+;; Ibuffer is a dired-like advanced replacement for BufferMenu.  Bundled
+;; with Emacs, so there is nothing for ELPA to install.
 (use-package ibuffer
-  :ensure t
+  :ensure nil
   :init
   (setq ibuffer-expert t)
   (setq ibuffer-display-summary nil)

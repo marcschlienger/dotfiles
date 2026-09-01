@@ -265,8 +265,12 @@
   ;; forever and `yas-global-mode' would never run.
   :demand t
   :bind
+  ;; Not M-z: `yas-minor-mode-map' is active almost everywhere under
+  ;; `yas-global-mode', so binding there shadowed `zap-to-char' globally.
+  ;; The field-motion keys below are safe -- `yas-keymap' is only live
+  ;; while a snippet field is active.
   ( :map yas-minor-mode-map
-    ("M-z" . yas-expand)                ; expand a snippet
+    ("C-c y" . yas-expand)              ; expand a snippet
     :map yas-keymap
     ("M-j" . yas-next-field-or-maybe-expand) ; jump between fields
     ("M-k" . yas-prev-field))

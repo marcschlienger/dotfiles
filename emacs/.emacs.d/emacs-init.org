@@ -30,13 +30,20 @@ find everything related to my Emacs setup.
       frame-resize-pixelwise t
       frame-title-format '("%b")
       inhibit-startup-buffer-menu t
-      inhibit-startup-echo-area-message user-login-name
       inhibit-startup-screen t
       inhibit-x-resources t
       ring-bell-function 'ignore
       use-dialog-box t
       use-file-dialog nil
       use-short-answers t)
+
+;; `inhibit-startup-echo-area-message' cannot do this job.  Emacs only
+;; honours it when init.el contains a setq of that one variable followed by
+;; the login name as a literal string and an immediate close paren -- it
+;; greps the file for exactly that.  A variable reference, a multi-variable
+;; setq, or living in early-init.el all defeat it, and hardcoding the account
+;; name would break on the other machine anyway.
+(advice-add 'display-startup-echo-area-message :override #'ignore)
 
 ;; Disable GUI elements.
 (menu-bar-mode -1)
@@ -345,9 +352,10 @@ find everything related to my Emacs setup.
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 
-;; Ibuffer is a dired-like advanced replacement for BufferMenu
+;; Ibuffer is a dired-like advanced replacement for BufferMenu.  Bundled
+;; with Emacs, so there is nothing for ELPA to install.
 (use-package ibuffer
-  :ensure t
+  :ensure nil
   :init
   (setq ibuffer-expert t)
   (setq ibuffer-display-summary nil)
@@ -454,7 +462,10 @@ find everything related to my Emacs setup.
 ;; and face-remap.el does not define this one.
 (defun ms/enable-variable-pitch-mode ()
   "Use a proportional font, except where column alignment carries meaning."
-  (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
+  ;; `TeX-mode' covers LaTeX-mode and docTeX-mode, both of which descend from
+  ;; `text-mode' and so would otherwise land here.  Tabular and align
+  ;; environments are columns, and columns need a monospaced font.
+  (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode 'TeX-mode)
     (variable-pitch-mode 1)))
 
 (use-package face-remap
@@ -1468,8 +1479,12 @@ The next sunrise or sunset event restores automatic switching."
   ;; forever and `yas-global-mode' would never run.
   :demand t
   :bind
+  ;; Not M-z: `yas-minor-mode-map' is active almost everywhere under
+  ;; `yas-global-mode', so binding there shadowed `zap-to-char' globally.
+  ;; The field-motion keys below are safe -- `yas-keymap' is only live
+  ;; while a snippet field is active.
   ( :map yas-minor-mode-map
-    ("M-z" . yas-expand)                ; expand a snippet
+    ("C-c y" . yas-expand)              ; expand a snippet
     :map yas-keymap
     ("M-j" . yas-next-field-or-maybe-expand) ; jump between fields
     ("M-k" . yas-prev-field))
@@ -1962,7 +1977,8 @@ capture, and a periodic refresh every fifteen minutes.
   (LaTeX-mode . flymake-mode)
   (LaTeX-mode . LaTeX-math-mode)
   (LaTeX-mode . turn-on-reftex)
-  (LaTeX-mode . turn-on-auto-fill)
+  ;; No `turn-on-auto-fill' here: LaTeX-mode descends from `text-mode',
+  ;; whose hook already turns it on.
   (LaTeX-mode . outline-minor-mode)
   :config
   (add-hook 'TeX-after-compilation-finished-functions

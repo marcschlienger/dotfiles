@@ -25,7 +25,8 @@
   (LaTeX-mode . flymake-mode)
   (LaTeX-mode . LaTeX-math-mode)
   (LaTeX-mode . turn-on-reftex)
-  (LaTeX-mode . turn-on-auto-fill)
+  ;; No `turn-on-auto-fill' here: LaTeX-mode descends from `text-mode',
+  ;; whose hook already turns it on.
   (LaTeX-mode . outline-minor-mode)
   :config
   (add-hook 'TeX-after-compilation-finished-functions

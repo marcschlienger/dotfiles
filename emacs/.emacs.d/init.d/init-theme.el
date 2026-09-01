@@ -61,7 +61,10 @@
 ;; and face-remap.el does not define this one.
 (defun ms/enable-variable-pitch-mode ()
   "Use a proportional font, except where column alignment carries meaning."
-  (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
+  ;; `TeX-mode' covers LaTeX-mode and docTeX-mode, both of which descend from
+  ;; `text-mode' and so would otherwise land here.  Tabular and align
+  ;; environments are columns, and columns need a monospaced font.
+  (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode 'TeX-mode)
     (variable-pitch-mode 1)))
 
 (use-package face-remap
