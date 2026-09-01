@@ -367,23 +367,25 @@ The next sunrise or sunset event restores automatic switching."
   (TeX-mode . display-line-numbers-mode))
 
 ;;; Highlight the current line only in the active window and not in the shell.
-;; `global-hl-line-mode' draws its own overlay from `post-command-hook' and
-;; never consults the buffer-local `hl-line-mode', so turning that off in a
-;; shell buffer had no effect at all.  `global-hl-line-buffers' (Emacs 31) is
-;; the switch that does apply.  `comint-mode' covers shell-mode and every
-;; other REPL derived from it.
+;; `global-hl-line-mode' is not a globalized minor mode.  It draws its own
+;; overlay from `post-command-hook' and never consults the buffer-local
+;; `hl-line-mode', so `(hl-line-mode -1)' in a shell buffer did nothing.
+;; What that overlay function does test, on Emacs 30 and 31 alike, is the
+;; value of `global-hl-line-mode' itself -- so shadow it buffer-locally.
+;; `global-hl-line-buffers' would be tidier but is Emacs 31 only, and the
+;; Debian machine runs 30.  `comint-mode' covers shell-mode and every other
+;; REPL derived from it.
+(defun ms/disable-global-hl-line ()
+  "Suppress the global current-line highlight in this buffer."
+  (setq-local global-hl-line-mode nil))
+
 (use-package hl-line
   :ensure nil
   :custom
   (hl-line-sticky-flag nil)
-  (global-hl-line-buffers
-   '(not (or (lambda (b) (buffer-local-value 'cursor-face-highlight-mode b))
-             (lambda (b) (string-match-p "\\` " (buffer-name b)))
-             minibufferp
-             (derived-mode . comint-mode)
-             (derived-mode . eshell-mode)
-             (derived-mode . term-mode))))
-  (global-hl-line-mode t))
+  (global-hl-line-mode t)
+  :hook
+  ((comint-mode eshell-mode term-mode) . ms/disable-global-hl-line))
 
 ;;; Icons
 (use-package nerd-icons

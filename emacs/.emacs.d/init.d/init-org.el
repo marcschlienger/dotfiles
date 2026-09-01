@@ -154,7 +154,12 @@
   (setq org-src-fontify-natively t)
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
-  (setq org-src-content-indentation 0)   ; renamed in Org 9.8
+  ;; Renamed in Org 9.8.  Emacs 31 ships 9.8, Emacs 30 still ships 9.7 where
+  ;; only the old name exists.  On 9.8 the old name survives as an alias, so
+  ;; setting it works there too but warns when byte-compiling.
+  (if (boundp 'org-src-content-indentation)
+      (setq org-src-content-indentation 0)
+    (setq org-edit-src-content-indentation 0))
   (setq org-babel-python-command "python3")
   (org-babel-do-load-languages
    'org-babel-load-languages
