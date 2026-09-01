@@ -133,7 +133,6 @@ find everything related to my Emacs setup.
 (require 'init-basic)
 (require 'init-dired)
 (require 'init-theme)
-(require 'init-evil)
 (require 'init-lang)
 (require 'init-completion)
 (require 'init-org)
@@ -221,6 +220,14 @@ find everything related to my Emacs setup.
 
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
+
+;; Was reachable as SPC n through the Evil leader key; now M-x only.
+(defun ms-toggle-line-number-type ()
+  "Toggle absolute and relative line numbering type."
+  (interactive)
+  (if (eq display-line-numbers 'relative)
+      (setq display-line-numbers t)
+    (setq display-line-numbers 'relative)))
 
 ;; MacOS specific settings
 (use-package emacs
@@ -807,106 +814,38 @@ The next sunrise or sunset event restores automatic switching."
 #+RESULTS:
 : init-theme
 
-* Evil mode settings
+* Modal editing
 
-#+begin_src emacs-lisp :tangle init.d/init-evil.el :mkdirp yes
-;;; init-evil.el -*- lexical-binding: t -*-
+Evil was removed on this branch. It had been configured with
+=evil-collection=, =evil-escape=, =evil-goggles=, =evil-surround=,
+=evil-commentary=, =evil-tex= and =general= for a leader key --- and at
+the same time seven modes were pushed into =evil-emacs-state-modes=,
+including =dired-mode= and =eshell-mode=, which is precisely what
+=evil-collection= exists to handle. Paying for an emulation layer and
+then opting out of it where it matters most is the "feels like a hack"
+feeling made concrete.
 
-;;; Evil mode
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  (setq evil-want-C-i-jump nil)
-  (setq evil-mode-line-format nil)
-  (setq evil-undo-system 'undo-redo) ;; Make C-r work again
-  :bind ( :map evil-insert-state-map
-               ("C-g" . 'evil-normal-state)
-          :map evil-normal-state-map
-               ("j" . 'evil-next-visual-line)
-               ("k" . 'evil-previous-visual-line))
-  :config
-  (evil-mode 1)
-  (dolist (mode '(dired-mode
-                  eshell-mode
-                  git-rebase-mode
-                  org-capture-mode
-                  term-mode
-                  Info-mode))
-    (add-to-list 'evil-emacs-state-modes mode)))
+Only three leader bindings had ever been written, so the configuration
+cost of leaving is nil; the cost is muscle memory.
 
-(defun ms-toggle-line-number-type ()
-  "Toggle absolute and relative line numbering type."
-  (interactive)
-  (if (eq display-line-numbers 'relative)
-      (setq display-line-numbers t)
-    (setq display-line-numbers 'relative)))
+What each package did, and what now does it:
 
-;;; Define leader key and bindings using general.el
-;; `ms-leader-keys' is a macro that `general-create-definer' defines at load
-;; time, so the bindings have to follow it.  Called at top level instead, a
-;; failure to load general aborted the rest of init.el -- every module after
-;; this one.
-(use-package general
-  :ensure t
-  :config
-  (general-evil-setup t)
-  (general-create-definer ms-leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC")
-  (ms-leader-keys
-    "b" 'mode-line-other-buffer
-    "n" 'ms-toggle-line-number-type
-    "w" 'kill-buffer))
+| package          | replacement                                       |
+|------------------+---------------------------------------------------|
+| evil-commentary  | =M-;= (~comment-dwim~), built in and better       |
+| evil-tex         | AUCTeX's =C-c C-e= / =C-c C-m=, plus cdlatex      |
+| evil-surround    | =M-(= and friends; Paredit in Lisp buffers        |
+| evil-goggles     | =pulse.el=, built in                              |
+| goto-chg         | =C-u C-SPC= through the mark ring                 |
+| general          | plain ~global-set-key~ and use-package's =:bind=  |
+| evil-escape      | not needed; it was orphaned upstream anyway       |
 
-;;; Exit insert mode quickly
-(use-package evil-escape
-  :ensure t
-  :after evil
-  :config
-  (setq-default evil-escape-delay 0.2)
-  (setq-default evil-escape-key-sequence "jk")
-  (evil-escape-mode 1))
+=ms-toggle-line-number-type= survives in [[*Basic settings]]; it lost its
+=SPC n= binding and is now an ~M-x~ command.
 
-;;; Additional key bindings for evil mode
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
-
-;;; Highlighting
-(use-package evil-goggles
-  :after evil
-  :ensure t
-  :config
-  (evil-goggles-mode)
-  (setq evil-goggles-duration 0.500)
-  (evil-goggles-use-diff-faces))
-
-;;; Evil surround
-(use-package evil-surround
-  :ensure t
-  :config
-  (global-evil-surround-mode 1))
-
-;;; Evil Commentary
-(use-package evil-commentary
-  :ensure t
-  :config
-  (evil-commentary-mode))
-
-;;; Evil tex
-(use-package evil-tex
-  :ensure t
-  :config
-  (add-hook 'LaTeX-mode-hook #'evil-tex-mode))
-
-(provide 'init-evil)
-#+end_src
+The Evil packages are deliberately *not* uninstalled. =elpa/= is ignored
+by git and shared between branches, so removing them would break =main=
+as well. Uninstall them only if this branch is merged.
 
 * Language related settings
 

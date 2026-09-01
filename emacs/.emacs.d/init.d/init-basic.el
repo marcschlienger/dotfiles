@@ -75,6 +75,14 @@
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
 
+;; Was reachable as SPC n through the Evil leader key; now M-x only.
+(defun ms-toggle-line-number-type ()
+  "Toggle absolute and relative line numbering type."
+  (interactive)
+  (if (eq display-line-numbers 'relative)
+      (setq display-line-numbers t)
+    (setq display-line-numbers 'relative)))
+
 ;; MacOS specific settings
 (use-package emacs
   :if (eq system-type 'darwin)

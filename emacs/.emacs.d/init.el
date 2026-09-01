@@ -49,7 +49,6 @@
 (require 'init-basic)
 (require 'init-dired)
 (require 'init-theme)
-(require 'init-evil)
 (require 'init-lang)
 (require 'init-completion)
 (require 'init-org)
