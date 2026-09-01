@@ -24,7 +24,9 @@
     (setq dired-guess-shell-alist-user ; suggestions for ! and &
           `(("\\.\\(png\\|jpe?g\\|tiff\\)"
              ,@(delete-dups
-                (delq nil (list (executable-find "sxiv") opener))))
+                (delq nil (list (executable-find "nsxiv") ; Debian ships nsxiv
+                                (executable-find "imv")
+                                opener))))
             ("\\.\\(mp[34]\\|m4a\\|ogg\\|flac\\|webm\\|mkv\\)"
              ,@(delete-dups
                 (delq nil (list (executable-find "mpv") opener))))
@@ -33,8 +35,7 @@
   (setq dired-make-directory-clickable t) ; Emacs 29.1
   (setq dired-free-space nil) ; Emacs 29.1
   (setq dired-mouse-drag-files t) ; Emacs 29.1
-  (add-hook 'dired-mode-hook #'dired-hide-details-mode)
-  (add-hook 'dired-mode-hook #'hl-line-mode))
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode))
 
 (use-package dired-aux
   :ensure nil
@@ -65,14 +66,14 @@
   :config
   (setq dired-subtree-use-backgrounds nil))
 
-(defun ms/dired-preview-setup ()
-  "Bind the Dired preview toggle after the local keymap is active."
-  (keymap-local-set "V" #'dired-preview-mode))
-
 (use-package dired-preview
   :ensure t
   :commands dired-preview-mode
-  :hook (dired-mode . ms/dired-preview-setup)
+  :init
+  ;; A major mode's keymap is the buffer's local map, so `keymap-local-set'
+  ;; from a mode hook wrote into `dired-mode-map' anyway.  Bind it once.
+  (with-eval-after-load 'dired
+    (keymap-set dired-mode-map "V" #'dired-preview-mode))
   :custom
   (dired-preview-delay 0.5)
   (dired-preview-max-size (* 10 1024 1024))
@@ -80,9 +81,6 @@
    (rx "." (or "gz" "zst" "tar" "xz" "rar" "zip"
                "iso" "dmg" "epub")
        string-end)))
-
-(with-eval-after-load 'dired
-  (keymap-set dired-mode-map "V" #'dired-preview-mode))
 
 (use-package wdired
   :ensure nil
@@ -134,7 +132,6 @@
                 " " filename)))
   (setq ibuffer-saved-filter-groups nil)
   (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook #'hl-line-mode)
   :bind (:map global-map
 	      ("C-x C-b" . ibuffer))
   :bind (:map ibuffer-mode-map
@@ -146,6 +143,7 @@
 
 ;; Hide dotfiles.
 (use-package dired
+  :ensure nil
   :hook ((dired-mode . dired-omit-mode))
   :bind (:map dired-mode-map
           ( "."     . dired-omit-mode))

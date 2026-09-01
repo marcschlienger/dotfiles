@@ -1,15 +1,21 @@
 ;;; init-latex.el -*- lexical-binding: t -*-
 
+;; Bound globally below, so it has to say no politely elsewhere rather than
+;; failing inside AUCTeX.
+(defun ms/latex-save-and-build ()
+  "Save the buffer and run `TeX-command-run-all'."
+  (interactive)
+  (unless (derived-mode-p 'TeX-mode)
+    (user-error "Not a TeX buffer"))
+  (save-buffer)
+  (TeX-command-run-all nil))
+
 ;; AUCTeX
 (use-package tex-site
   :ensure auctex
   :mode ("\\.tex\\'" . LaTeX-mode)
   :bind
-  ("<f7>" . (lambda ()
-		     "Save the buffer and run `TeX-command-run-all`."
-		     (interactive)
-		     (save-buffer)
-		     (TeX-command-run-all nil)))
+  ("<f7>" . ms/latex-save-and-build)
   :custom
   (TeX-save-query nil)
   (TeX-source-correlate-mode t)
@@ -56,14 +62,20 @@
 
 ;; Optional PDF Tools integration.  Keep it dormant until the package is
 ;; installed explicitly, then activate it on the next Emacs startup.
+(defun ms/pdf-view-setup ()
+  "Reload a PDF buffer when the file on disk is rebuilt."
+  (auto-revert-mode 1))
+
 (use-package pdf-tools
   :ensure nil
   :if (locate-library "pdf-tools")
-  :defer t
-  :hook
-  (pdf-view-mode . (lambda () (auto-revert-mode 1)))
+  ;; `:demand t', not `:defer t'.  `pdf-tools-install' is the call that
+  ;; registers pdf-view-mode for .pdf files, so deferring the package left
+  ;; nothing to trigger it and DocView kept winning.
+  :demand t
+  :hook (pdf-view-mode . ms/pdf-view-setup)
   :config
-  (pdf-tools-install)
+  (pdf-tools-install t)
   (setq-default pdf-view-display-size 'fit-page)
   (setq pdf-view-use-scaling t)
   (setq pdf-view-use-imagemagick nil))

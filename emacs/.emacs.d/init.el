@@ -1,18 +1,28 @@
 ;;-*- lexical-binding: t; -*-
 
+;; Load config modules.  This has to come first: the settings below are
+;; written in terms of `ms-cache-file' from lib.d.
+(mapc
+ (lambda (string)
+   (add-to-list 'load-path (locate-user-emacs-file string)))
+ '("lib.d" "init.d"))
+
+(require 'lib-paths)
+
 ;; Save backup files in a dedicated backup directory.
-(setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
+(setq backup-directory-alist `(("" . ,(ms-cache-file "backup/"))))
 
 ;; Do not create lock files.
 (setq create-lockfiles nil)
 
-;; Write persistant cutomisations to a temporary file.
-(setq custom-file (make-temp-file "custom.el"))
+;; Discard persistent customisations.  Custom insists on a file to write to,
+;; so give it a fixed one and never load it.  `make-temp-file' also works but
+;; leaves a fresh file behind on every single start.
+(setq custom-file (ms-cache-file "custom.el"))
 
 ;; Package settings.
 (require 'package)
 (setq package-name-column-width 40)
-(add-hook 'package-menu-mode-hook #'hl-line-mode)
 
 (setq package-archives
       '(("elpa" . "https://elpa.gnu.org/packages/")
@@ -29,24 +39,12 @@
 (setq package-install-upgrade-built-in t)
 
 ;; Keep ordinary recovery auto-saves outside the repository and synced files.
-(let ((auto-save-directory
-       (expand-file-name
-        "emacs/auto-save/"
-        (or (getenv "XDG_CACHE_HOME")
-            (if (eq system-type 'darwin)
-                (expand-file-name "~/Library/Caches/")
-              (expand-file-name "~/.cache/"))))))
+(let ((auto-save-directory (ms-cache-file "auto-save/")))
   (make-directory auto-save-directory t)
   (setq auto-save-file-name-transforms
         `((".*" ,auto-save-directory t)))
   (setq auto-save-list-file-prefix
         (expand-file-name ".saves-" auto-save-directory)))
-
-;; Load config modules.
-(mapc
- (lambda (string)
-   (add-to-list 'load-path (locate-user-emacs-file string)))
- '("lib.d" "init.d"))
 
 (require 'init-basic)
 (require 'init-dired)

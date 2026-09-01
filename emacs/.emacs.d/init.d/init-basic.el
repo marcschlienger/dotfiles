@@ -1,9 +1,12 @@
 ;;-*- lexical-binding: t; -*-
 
 ;; Ensure environment variables inside Emacs look the same as in the shell.
+;; A GUI or daemon Emacs inherits launchd's or systemd's environment instead
+;; of the login shell's.  One started from a terminal already has the right
+;; environment, and spawning a shell there only costs startup time.
 (use-package exec-path-from-shell
   :ensure t
-  :if (memq system-type '(darwin gnu/linux))
+  :if (or (memq window-system '(mac ns x pgtk)) (daemonp))
   :config
   (exec-path-from-shell-initialize))
 
@@ -12,13 +15,11 @@
   :ensure nil
   :hook (after-init . delete-selection-mode))
 
-;; Always make sure that there is a final newline character when saving a file.
+;; Always end a file with a newline, and revert buffers when the file on disk
+;; changes underneath them.
 (use-package emacs
   :custom
-  (require-final-newline t))
-
-;; Revert buffers when the underlying file has changed
-(use-package emacs
+  (require-final-newline t)
   :config
   (global-auto-revert-mode 1)
   (setq auto-revert-verbose t))
@@ -53,14 +54,17 @@
   (repeat-mode 1))
 
 ;; Easily move the current line up or down.
-(defun move-line-up ()
+(defun ms/move-line-up ()
   "Move up the current line."
   (interactive)
-  (transpose-lines 1)
-  (forward-line -2)
-  (indent-according-to-mode))
+  ;; `transpose-lines' on the first line swaps it with the second, which
+  ;; moves the line down -- the opposite of what was asked for.
+  (when (> (line-number-at-pos) 1)
+    (transpose-lines 1)
+    (forward-line -2)
+    (indent-according-to-mode)))
 
-(defun move-line-down ()
+(defun ms/move-line-down ()
   "Move down the current line."
   (interactive)
   (forward-line 1)
@@ -68,8 +72,8 @@
   (forward-line -1)
   (indent-according-to-mode))
 
-(global-set-key (kbd "M-<down>") 'move-line-down)
-(global-set-key (kbd "M-<up>") 'move-line-up)
+(global-set-key (kbd "M-<down>") #'ms/move-line-down)
+(global-set-key (kbd "M-<up>") #'ms/move-line-up)
 
 ;; MacOS specific settings
 (use-package emacs

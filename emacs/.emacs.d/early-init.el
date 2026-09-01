@@ -5,10 +5,8 @@
   (add-to-list var '(height . (text-pixels . 900))))
 
 (when (eq system-type 'darwin)
-  (progn
-    ;;(add-to-list 'default-frame-alist '(undecorated-round . t))
-    (setq ns-use-proxy-icon nil)
-    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))))
+  (setq ns-use-proxy-icon nil)
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)))
 
 (setq frame-inhibit-implied-resize t
       frame-resize-pixelwise t

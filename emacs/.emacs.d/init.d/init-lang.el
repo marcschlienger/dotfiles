@@ -35,14 +35,19 @@
   ;; Shell paths and command strings create too many false positives.
   (sh-mode . ms/flyspell-disable))
 
+;; Trailing whitespace is a hard line break in Markdown and part of the table
+;; syntax in Org, so those two are left alone.  A named function can be
+;; removed again and does not pile up a second copy when init.el is reloaded.
+(defun ms/delete-trailing-whitespace-maybe ()
+  "Trim trailing whitespace unless the major mode gives it meaning."
+  (unless (derived-mode-p 'markdown-mode 'org-mode)
+    (delete-trailing-whitespace)))
+
 (use-package emacs
   :bind
   (:map global-map
         ("\C-m" . newline-and-indent))
-  :hook (before-save . (lambda()
-                              (when (not (or (derived-mode-p 'markdown-mode)
-                                             (derived-mode-p 'org-mode)))
-                                (delete-trailing-whitespace))))
+  :hook (before-save . ms/delete-trailing-whitespace-maybe)
   :config
   (setq-default indent-tabs-mode nil)
   (setq-default tab-width 2))
@@ -73,11 +78,22 @@
           flymake-mode-line-warning-counter
           flymake-mode-line-note-counter "")))
 
-;;; Elisp packaging requirements
+;;; Elisp packaging requirements.  `package-lint-flymake-setup' switches
+;;; Flymake on unconditionally, and its checks -- Package-Requires, Version,
+;;; a Commentary section, prefixed symbols -- are all meaningless in a
+;;; personal init file, where they produced eighteen diagnostics per module.
+;;; Run it only in buffers that declare themselves a package.
+(defun ms/package-lint-flymake-setup ()
+  "Enable package-lint diagnostics in real package sources only."
+  (when (save-excursion
+          (goto-char (point-min))
+          (re-search-forward "^;;+ *Package-Requires *:"
+                             (min 4000 (point-max)) t))
+    (package-lint-flymake-setup)))
+
 (use-package package-lint-flymake
   :ensure t
-  :after flymake
-  :hook (emacs-lisp-mode . package-lint-flymake-setup))
+  :hook (emacs-lisp-mode . ms/package-lint-flymake-setup))
 
 ;;; Tree-sitter
 (defvar rust-mode-treesitter-derive)
@@ -129,9 +145,16 @@
   (ms/treesit-activate-remappings))
 
 ;;; Clojure(Script)
+;; Paredit inserts its own delimiters; leaving `electric-pair-mode' on as
+;; well gives doubled parens and quotes.
+(defun ms/paredit-setup ()
+  "Enable Paredit and stand `electric-pair-mode' down in this buffer."
+  (electric-pair-local-mode -1)
+  (paredit-mode 1))
+
 (use-package paredit
   :ensure t
-  :hook (clojure-mode . paredit-mode))
+  :hook (clojure-mode . ms/paredit-setup))
 
 (use-package clojure-mode
   :ensure t
@@ -186,28 +209,26 @@
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
 
-;;; Pyhon
-;(use-package python-mode
-;  :ensure nil
-;  :mode (("\\.py\\'" . python-ts-mode))
-;  :config
-;  (setq indent-tabs-mode nil)
-;  (setq tab-width 4)
-;  (setq python-indent 4))
-
 ;;; Rust
+(defun ms/rust-mode-setup ()
+  "Apply personal settings to Rust buffers."
+  (prettify-symbols-mode 1)
+  (setq-local indent-tabs-mode nil))
+
 (use-package rust-mode
   :ensure t
-  :config
-  (setq rust-format-on-save t)
-  :hook
-  (rust-mode . (lambda () (prettify-symbols-mode 1)))
-  (rust-mode . (lambda () (setq-local indent-tabs-mode nil))))
+  :hook (rust-mode . ms/rust-mode-setup))
 
+;; Rustic owns formatting.  It replaces `rust-before-save-hook' with its own
+;; function, and that function asks `rustic-format-on-save-p', which reads
+;; `rustic-format-trigger' and ignores `rust-format-on-save' entirely.  With
+;; the trigger left at nil, `rust-format-on-save t' looked like
+;; format-on-save while formatting nothing.
 (use-package rustic
   :ensure t
   :after (rust-mode)
   :config
+  (setq rustic-format-trigger 'on-save)
   (setq rustic-lsp-client 'eglot))
 
 ;;; Shell mode
@@ -229,18 +250,25 @@
   :mode (("\\.swift\\'" . swift-mode))
   :interpreter "swift")
 
-;; .editorconfig file support
+;; .editorconfig file support.  Built into Emacs since 30.
 (use-package editorconfig
-    :ensure t
+    :ensure nil
     :config (editorconfig-mode +1))
 
 ;;; Plain text (text-mode)
+(defun ms/prog-mode-sentence-spacing ()
+  "Require two spaces after a sentence in code, as Emacs Lisp does."
+  (setq-local sentence-end-double-space t))
+
 (use-package text-mode
   :ensure nil
-  :mode "\\`\\(README\\|CHANGELOG\\|COPYING\\|LICENSE\\)\\'"
+  ;; `auto-mode-alist' is matched against the whole path, so a regexp
+  ;; anchored with \` matched a bare "README" and never /some/where/README
+  ;; -- which is every file you actually open.  Anchor on the separator.
+  :mode "\\(?:\\`\\|/\\)\\(README\\|CHANGELOG\\|COPYING\\|LICENSE\\)\\'"
   :hook
   ((text-mode . turn-on-auto-fill)
-   (prog-mode . (lambda () (setq-local sentence-end-double-space t))))
+   (prog-mode . ms/prog-mode-sentence-spacing))
   :config
   (setq sentence-end-double-space nil)
   (setq sentence-end-without-period nil)

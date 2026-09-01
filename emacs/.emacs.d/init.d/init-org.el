@@ -1,6 +1,7 @@
 ;;-*- lexical-binding: t; -*-
 
 (require 'lib-org)
+(require 'lib-paths)                    ; `ms-cache-file'
 
 ;; Calendar
 (use-package calendar
@@ -30,16 +31,21 @@
         appt-display-mode-line t
         appt-display-interval 3
         appt-audible nil)
-  (with-eval-after-load 'org-agenda
-    (appt-activate 1)
-    (org-agenda-to-appt t)
-    (ms-org-start-appt-refresh-timer)))
+  ;; This used to hang off `with-eval-after-load' on org-agenda, which is
+  ;; only loaded when you press C-c a -- so a session in which you never
+  ;; opened the agenda got no reminders at all.  Loading org-agenda eagerly
+  ;; would cost most of a second of startup, so take the first idle moment.
+  (run-with-idle-timer 1 nil #'ms-org-appt-initialise))
 
 ;; Org mode
 (use-package org
   :ensure nil
   :init
+  ;; Every capture template and `org-agenda-files' resolve against this
+  ;; path, and both fail outright when it does not exist -- which is the
+  ;; state of every freshly bootstrapped machine.
   (setq org-directory (expand-file-name "~/org"))
+  (make-directory org-directory t)
   (setq org-imenu-depth 7)
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
   (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
@@ -148,7 +154,7 @@
   (setq org-src-fontify-natively t)
   (setq org-src-preserve-indentation t)
   (setq org-src-tab-acts-natively t)
-  (setq org-edit-src-content-indentation 0)
+  (setq org-src-content-indentation 0)   ; renamed in Org 9.8
   (setq org-babel-python-command "python3")
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -234,7 +240,10 @@
   ( :map global-map
     ("C-c a" . org-agenda))
   :config
-  (setq org-default-notes-file (make-temp-file "org-default-notes-")) ;send it to oblivion
+  ;; Unused: every capture template names its own target.  A fixed path in
+  ;; the cache keeps it out of `org-directory' without leaving a fresh
+  ;; temporary file behind on each session.
+  (setq org-default-notes-file (ms-cache-file "org-default-notes.org"))
   ;; Directory entries are expanded whenever Org builds an agenda, so newly
   ;; created Org files are picked up without restarting Emacs.
   (setq org-agenda-files (list org-directory))
@@ -319,7 +328,7 @@
   (setq org-agenda-insert-diary-strategy 'date-tree)
   (setq org-agenda-insert-diary-extract-time nil)
   (setq org-agenda-include-diary nil)
-  (setq diary-file (make-temp-file "diary-")) ;send it to oblivion
+  (setq diary-file (ms-cache-file "diary")) ;send it to oblivion
   (setq org-agenda-diary-file 'diary-file)
 
 ;;;; Agenda follow mode
@@ -384,9 +393,7 @@
   (setq org-agenda-use-tag-inheritance
         '(todo search agenda))
   (setq org-agenda-hide-tags-regexp nil)
-  ;(setq org-agenda-hide-tags-regexp ".")
   (setq org-agenda-remove-tags nil)
-  ;(setq org-agenda-remove-tags t)
   (setq org-agenda-tags-column -100))
 
 (provide 'init-org)

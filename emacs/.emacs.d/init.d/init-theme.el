@@ -55,77 +55,20 @@
 (add-hook 'after-make-frame-functions #'ms/configure-frame-fonts)
 (ms/configure-frame-fonts (selected-frame))
 
-;;; Fontaine (font configurations)
-;(use-package fontaine
-;  :ensure t
-;  :hook
-;  ;; Persist the latest font preset when closing/starting Emacs.
-;  ((after-init . fontaine-mode)
-;   (after-init . (lambda ()
-;                   ;; Set last preset or fall back to desired style from `fontaine-presets'.
-;                   (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular)))))
-;  :bind
-;  (("C-c f" . fontaine-set-preset)
-;   ("C-c F" . fontaine-toggle-preset))
-;  :config
-;  (setq-default text-scale-remap-header-line t)
-;  (setq fontaine-presets
-;        '((small
-;           :default-height 80)
-;          (regular)
-;          (medium
-;           :default-weight semilight
-;           :default-height 115
-;           :bold-weight extrabold)
-;          (large
-;           :inherit medium
-;           :default-height 150)
-;          (jumbo
-;           :default-height 260)
-;          (t
-;           :default-family "FiraCode Nerd Font"
-;           :default-weight regular
-;           :default-slant normal
-;           :default-width normal
-;           :default-height 130
-;
-;           :fixed-pitch-family "FiraCode Nerd Font"
-;           :fixed-pitch-weight nil
-;           :fixed-pitch-slant nil
-;           :fixed-pitch-width nil
-;           :fixed-pitch-height 1.0
-;
-;           :variable-pitch-family "Linux Libertine O"
-;           :variable-pitch-weight nil
-;           :variable-pitch-slant nil
-;           :variable-pitch-width nil
-;           :variable-pitch-height 1.5
-;
-;           :bold-fmily nil
-;           :bold-slant nil
-;           :bold-weight bold
-;           :bold-width nil
-;           :bold-height 1.0
-;
-;           :italic-family nil
-;           :italic-weight nil
-;           :italic-slant italic
-;           :italic-width nil
-;           :italic-height 1.0
-;
-;           :line-spacing nil))))
-
 ;;; `variable-pitch-mode' setup
+;; Defined at top level, not in :config.  use-package turns a :hook function
+;; it does not already know about into an autoload pointing at the package --
+;; and face-remap.el does not define this one.
+(defun ms/enable-variable-pitch-mode ()
+  "Use a proportional font, except where column alignment carries meaning."
+  (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
+    (variable-pitch-mode 1)))
+
 (use-package face-remap
   :ensure nil
-  :functions ms/enable-variable-pitch-mode
   :bind ( :map ctl-x-x-map
           ("v" . variable-pitch-mode))
-  :hook ((text-mode notmuch-show-mode) . ms/enable-variable-pitch-mode)
-  :config
-  (defun ms/enable-variable-pitch-mode ()
-    (unless (derived-mode-p 'mhtml-mode 'nxml-mode 'yaml-mode)
-      (variable-pitch-mode 1))))
+  :hook ((text-mode notmuch-show-mode) . ms/enable-variable-pitch-mode))
 
 ;; Theme packages.  Ef inherits the comprehensive Modus theme machinery.
 (use-package modus-themes
@@ -133,8 +76,6 @@
   :demand t
   :init
   (setq modus-themes-to-toggle '(modus-operandi-tinted modus-vivendi-tinted)
-        ;modus-themes-mode-line '(accented borderless)
-        ;modus-themes-mode-line '(accented)
         modus-themes-bold-constructs t
         modus-themes-italic-constructs t
         modus-themes-mixed-fonts t)
@@ -159,12 +100,6 @@
           (bg-heading-4 bg-cyan-nuanced)
           (prose-done green-faint)
           (prose-todo red-faint)
-          ;(bg-mode-line-active bg-sage)
-          ;(fg-mode-line-active fg-main)
-          ;(border-mode-line-active bg-green-intense)
-          ;(bg-mode-line-active bg-blue-intense)
-          ;(fg-mode-line-active fg-main)
-          ;(border-mode-line-active blue-intense)
           (bg-mode-line-active bg-lavender)
           (fg-mode-line-active fg-main)
           (border-mode-line-active bg-magenta-intense))))
@@ -432,14 +367,23 @@ The next sunrise or sunset event restores automatic switching."
   (TeX-mode . display-line-numbers-mode))
 
 ;;; Highlight the current line only in the active window and not in the shell.
-(use-package emacs
+;; `global-hl-line-mode' draws its own overlay from `post-command-hook' and
+;; never consults the buffer-local `hl-line-mode', so turning that off in a
+;; shell buffer had no effect at all.  `global-hl-line-buffers' (Emacs 31) is
+;; the switch that does apply.  `comint-mode' covers shell-mode and every
+;; other REPL derived from it.
+(use-package hl-line
+  :ensure nil
   :custom
   (hl-line-sticky-flag nil)
-  (global-hl-line-mode t)
-  :hook
-  (eshell-mode . (lambda () (hl-line-mode -1)))
-  (shell-mode . (lambda () (hl-line-mode -1)))
-  (term-mode . (lambda () (hl-line-mode -1))))
+  (global-hl-line-buffers
+   '(not (or (lambda (b) (buffer-local-value 'cursor-face-highlight-mode b))
+             (lambda (b) (string-match-p "\\` " (buffer-name b)))
+             minibufferp
+             (derived-mode . comint-mode)
+             (derived-mode . eshell-mode)
+             (derived-mode . term-mode))))
+  (global-hl-line-mode t))
 
 ;;; Icons
 (use-package nerd-icons

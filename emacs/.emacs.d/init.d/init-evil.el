@@ -26,22 +26,6 @@
                   Info-mode))
     (add-to-list 'evil-emacs-state-modes mode)))
 
-;;; Define leader key and bindings using genral.el
-(use-package general
-  :ensure t
-  :config
-  (general-evil-setup t)
-  (general-create-definer ms-leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC"))
-
-(ms-leader-keys
-  "b" 'mode-line-other-buffer
-  "n" 'ms-toggle-line-number-type
-  "w" 'kill-buffer
-  )
-
 (defun ms-toggle-line-number-type ()
   "Toggle absolute and relative line numbering type."
   (interactive)
@@ -49,13 +33,32 @@
       (setq display-line-numbers t)
     (setq display-line-numbers 'relative)))
 
+;;; Define leader key and bindings using general.el
+;; `ms-leader-keys' is a macro that `general-create-definer' defines at load
+;; time, so the bindings have to follow it.  Called at top level instead, a
+;; failure to load general aborted the rest of init.el -- every module after
+;; this one.
+(use-package general
+  :ensure t
+  :config
+  (general-evil-setup t)
+  (general-create-definer ms-leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+  (ms-leader-keys
+    "b" 'mode-line-other-buffer
+    "n" 'ms-toggle-line-number-type
+    "w" 'kill-buffer))
+
 ;;; Exit insert mode quickly
 (use-package evil-escape
   :ensure t
+  :after evil
   :config
-  (evil-escape-mode t)
   (setq-default evil-escape-delay 0.2)
-  (setq-default evil-escape-key-sequence "jk"))
+  (setq-default evil-escape-key-sequence "jk")
+  (evil-escape-mode 1))
 
 ;;; Additional key bindings for evil mode
 (use-package evil-collection

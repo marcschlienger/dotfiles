@@ -49,6 +49,23 @@ Leave ordinary headings, such as project containers, unchanged."
     (setq ms-org-appt-periodic-refresh-timer
           (run-at-time (* 15 60) (* 15 60) #'ms-org-refresh-appt))))
 
+(defun ms-org-appt-initialise ()
+  "Enable appointment reminders and fill them from the Org agenda.
+Loading `org-agenda' is what makes `org-agenda-to-appt' available, so it
+is required here rather than waited for."
+  (condition-case error-data
+      (progn
+        (require 'org-agenda)
+        (appt-activate 1)
+        (ms-org-refresh-appt)
+        (ms-org-start-appt-refresh-timer))
+    (error
+     (display-warning
+      'appt
+      (format "Could not start Org appointment reminders: %s"
+              (error-message-string error-data))
+      :warning))))
+
 ;; Save all `org-agenda-files' buffers automatically after refiling.
 (defun ms-org--save-org-agenda-file-buffers (&rest _)
   "Save `org-agenda-files' buffers without user confirmation.

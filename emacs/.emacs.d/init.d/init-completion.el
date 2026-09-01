@@ -9,7 +9,6 @@
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
-  (add-to-list 'eglot-server-programs '(LaTeX-ts-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(python-ts-mode . ("ty" "server")))
   (add-to-list 'eglot-server-programs '(python-mode . ("ty" "server")))
   (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
@@ -28,7 +27,6 @@
   (c++-mode . eglot-ensure)
   (c++-ts-mode . eglot-ensure)
   (LaTeX-mode . eglot-ensure)
-  (LaTeX-ts-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)
   (rust-mode . eglot-ensure)
@@ -36,9 +34,12 @@
 
 ;; Keep ty as Python's semantic server.  Ruff adds lint diagnostics through
 ;; Flymake and formats Python buffers on save without competing for Eglot.
+;; No `:after eglot': Eglot is first loaded by `eglot-ensure' from inside
+;; `python-mode-hook', and a function added to a hook while that hook is
+;; running is not seen until the next buffer -- so the first Python file of
+;; the session opened without any Ruff diagnostics.
 (use-package flymake-ruff
   :ensure t
-  :after eglot
   :hook ((python-mode python-ts-mode) . flymake-ruff-load))
 
 (use-package ruff-format
@@ -73,14 +74,6 @@
   (corfu-history-mode 1)
   (corfu-popupinfo-mode 1))
 
-;; Emacs 31 supports Corfu child frames in terminal frames directly.
-(when (< emacs-major-version 31)
-  (use-package corfu-terminal
-    :ensure t
-    :after corfu
-    :config
-    (corfu-terminal-mode 1)))
-
 ;;; Completion behavior
 (use-package emacs
   :ensure nil
@@ -106,11 +99,11 @@
                    "\\`\\[.*?\\]\\*\\|\\[.*?\\]\\*\\'" "" crm-separator)
                   (car args))
           (cdr args)))
-  (if (< emacs-major-version 31)
-      (advice-add #'completing-read-multiple :filter-args
-                  #'ms/completing-read-multiple-indicator)
-    (advice-remove #'completing-read-multiple
-                   #'ms/completing-read-multiple-indicator)))
+  ;; Emacs 31 shows the CRM indicator itself.  The advice was never added on
+  ;; a fresh process, so removing it in the other branch did nothing.
+  (when (< emacs-major-version 31)
+    (advice-add #'completing-read-multiple :filter-args
+                #'ms/completing-read-multiple-indicator)))
 
 ;;; Completion-at-point extensions
 (use-package cape
@@ -123,9 +116,9 @@
   (add-hook 'completion-at-point-functions #'cape-file)
   (add-hook 'completion-at-point-functions #'cape-dabbrev))
 
-;; Which key
+;; Which key.  Built into Emacs since 30; there is no ELPA copy to install.
 (use-package which-key
-  :ensure t
+  :ensure nil
   :config
   (which-key-mode 1))
 
@@ -216,6 +209,9 @@
   (savehist-file (locate-user-emacs-file "savehist"))
   :config
   (add-to-list 'savehist-additional-variables 'kill-ring)
+  ;; `corfu-history-mode' sorts candidates by history, but only savehist
+  ;; carries that history across sessions.
+  (add-to-list 'savehist-additional-variables 'corfu-history)
   :init
   (savehist-mode 1))
 
@@ -244,20 +240,25 @@
                  (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
-  :ensure t)
+  :ensure t
+  :after (embark consult)
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; Template system for Emacs.
 (use-package yasnippet
   :ensure t
+  ;; :demand t is load-bearing: the bindings below live in keymaps that only
+  ;; exist once yasnippet is loaded, so :bind alone would defer the package
+  ;; forever and `yas-global-mode' would never run.
+  :demand t
+  :bind
+  ( :map yas-minor-mode-map
+    ("M-z" . yas-expand)                ; expand a snippet
+    :map yas-keymap
+    ("M-j" . yas-next-field-or-maybe-expand) ; jump between fields
+    ("M-k" . yas-prev-field))
   :config
   (yas-global-mode 1))
-
-;; Use Meta-z to exapnd a snippet
-(define-key yas-minor-mode-map (kbd "M-z") 'yas-expand)
-
-;; Use Meta-j and Meta-k to jump between fields
-(define-key yas-keymap (kbd "M-j") 'yas-next-field-or-maybe-expand)
-(define-key yas-keymap (kbd "M-k") 'yas-prev-field)
 
 (use-package yasnippet-snippets
   :ensure t
