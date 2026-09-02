@@ -493,8 +493,9 @@ workflow choices are recorded separately and remain open for a later decision.
 
 ### 4.1 Babel confirmation — fixed
 
-`org-confirm-babel-evaluate` is now `t`, so enabled C, Clojure, Python, R, and
-shell blocks require confirmation. Org's manual treats a source block as
+`org-confirm-babel-evaluate` is now `t`, so enabled C, Python, R, and shell
+blocks require confirmation. Clojure went with the rest of the Clojure
+configuration. Org's manual treats a source block as
 equivalent in risk to an executable file and warns against removing the
 safeguard in [Code Evaluation Security](https://orgmode.org/manual/Code-Evaluation-Security.html).
 
@@ -568,7 +569,11 @@ knows when the transition occurs. Rely on the system zone unless the labels are
 needed for a deliberate presentation. Hard-coded labels become misleading when
 travelling or when the system zone changes.
 
-### 4.9 Refile caching needs an invalidation policy
+### 4.9 Refile caching needs an invalidation policy — resolved by removal
+
+`org-refile-use-cache` is now nil, so nothing goes stale and no invalidation
+policy is needed. The reasoning below is kept for the case where task refiling
+returns and the cache is wanted again.
 
 `org-refile-use-cache` improves completion performance, but large manual
 outline changes can leave candidates stale. Bind or document
@@ -590,7 +595,8 @@ retangled from the canonical literate file.
 The current configuration intentionally disables lockfiles because stale locks
 have repeatedly required manual cleanup. Normal recovery auto-save remains
 enabled, but Emacs does not automatically write the visited file. Customize
-output is sent to a new temporary file on each startup.
+output goes to a fixed file in the cache directory that is never loaded, so it
+is written and then ignored.
 
 ### What the synchronization method changes
 

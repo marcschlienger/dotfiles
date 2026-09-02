@@ -163,8 +163,10 @@ The generated `emacs/.emacs.d/tree-sitter/` directory is ignored by Git.
 On a fresh clone, the configuration first checks `treesit-available-p` to make
 sure Emacs itself has Tree-sitter support. It then checks every language with
 `treesit-language-available-p`. Only grammars that can be loaded are remapped
-to their Tree-sitter major modes; otherwise C, C++, Go, and Python keep
-using their traditional major modes. A missing grammar therefore degrades
+to their Tree-sitter major modes; otherwise C, C++ and Python keep using their
+traditional major modes. Go has no traditional fallback -- `go-mode` is not
+installed -- so `.go` reaches `go-ts-mode` only when the grammar is present;
+the configuration claims the extension itself if Emacs has not already. A missing grammar therefore degrades
 cleanly instead of breaking file opening. Rust uses `rust-mode`'s separate
 Tree-sitter integration only when the Rust grammar is available at startup;
 otherwise it derives from ordinary `prog-mode`. The Emacs Lisp grammar is not
@@ -219,8 +221,8 @@ become more important than automatically picking up parser updates.
 - The default-notes and diary files point into the cache directory rather
   than `org-directory`. Neither feature is used; give them real paths if that
   changes.
-- Refile caching improves completion speed but may need
-  `org-refile-cache-clear` after large outline changes.
+- Refile caching is disabled: it did not notice files appearing in a
+  directory-based `org-agenda-files`, so targets went stale.
 
 ## Package reproducibility and startup
 
@@ -263,7 +265,7 @@ become more important than automatically picking up parser updates.
   files; disable it or add a large-file guard if this becomes noticeable.
 - Rainbow mode on every programming buffer can be expensive for large or
   generated files; selective hooks are an alternative.
-- Eglot currently leaves hover enabled, but ignores server-side formatting,
-  document highlighting, color, and folding. Ruff deliberately owns Python
-  formatting; revisit `eglot-ignored-server-capabilities` if the other
-  features are wanted later.
+- Eglot ignores document highlighting, color, and folding for every server.
+  Formatting is ignored only in Python and Rust buffers, where Ruff and
+  rustfmt own it; clangd and texlab keep theirs, because nothing else formats
+  C, C++, or LaTeX here.
