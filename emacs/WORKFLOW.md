@@ -99,7 +99,7 @@ does not list approaches that should simply be avoided.
 | 14 | Add `denote-journal` only if a daily knowledge log is wanted | Medium | Low | Optional |
 | 15 | Add `envrc` for per-project development environments | Medium | Low | Useful for mixed toolchains |
 | 16 | Add Popper for transient help/build/process buffers | Medium | Medium | If transient-buffer clutter recurs |
-| 17 | Add `dired-preview` to the existing Dired setup | Medium | Low | If previews would be used regularly |
+| 17 | ~~Add `dired-preview` to the existing Dired setup~~ | — | — | Done; bound to `V` in Dired |
 | 18 | Add Eat or Vterm as an in-Emacs terminal | Medium | Medium | Only if project-local shells would be used |
 | 19 | Add `org-modern`, `org-appear`, or `org-transclusion` | Medium | Low/medium | Only for document work |
 | 20 | Use Drafts only as a capture-to-Org front end | Medium | Medium | Only if it improves Org capture enough to justify another app |
@@ -639,8 +639,11 @@ note edits safely.
   This sends changes to Nextcloud quickly, but it can also synchronize
   half-finished or accidental edits and create more filesystem activity. If the
   former policy is restored, retain the separate recovery-file location.
-- Put `custom-file` at a stable, ignored path if Customize should persist. A
-  temporary file makes successful customization silently vanish on restart.
+- `custom-file` is now a stable path in the cache directory, but deliberately
+  never loaded: the configuration is this Org file, not Customize. That keeps
+  Customize from silently competing with it, and stops the old `make-temp-file`
+  call leaving a stray file behind on every start. Load it if Customize should
+  ever persist.
 - Enable built-in `save-place-mode`, `recentf-mode`, `winner-mode`, and
   `repeat-mode`. Recentf is documented in [File Conveniences](https://www.gnu.org/software/emacs/manual/html_node/emacs/File-Conveniences.html),
   window-layout undo in [Window Convenience](https://www.gnu.org/s/emacs/manual/html_node/emacs/Window-Convenience.html),
@@ -993,12 +996,12 @@ working layout. It has real value in a development-heavy Emacs, but requires a
 carefully curated popup buffer list. Poor rules are more irritating than
 default `display-buffer` behavior.
 
-#### `dired-preview`
+#### `dired-preview` — installed
 
-The existing Dired setup is already capable. [`dired-preview`](https://elpa.gnu.org/packages/dired-preview.html)
-adds a focused preview window and is a smaller change than replacing Dired with
-a new file-manager interface. Treat preview as a manual toggle for image or
-document triage, not a default on remote/large directories.
+No longer a candidate. [`dired-preview`](https://elpa.gnu.org/packages/dired-preview.html)
+is configured and bound to `V` in `dired-mode-map`, as a manual toggle rather
+than a default, with a delay and a size limit and archives and disk images
+excluded — which is the shape this section recommended.
 
 #### Eat or Vterm
 
