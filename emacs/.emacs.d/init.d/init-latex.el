@@ -48,8 +48,11 @@
       (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
             TeX-view-program-list '(("System PDF viewer" "open %o"))))
      ((executable-find "zathura")
-      (setq TeX-view-program-selection '((output-pdf "Zathura"))
-            TeX-view-program-list '(("Zathura" "zathura %o"))))
+      ;; Select AUCTeX's own entry rather than defining one.  Its builtin
+      ;; Zathura command carries `--synctex-forward' and an emacsclient
+      ;; inverse-search hook; a bare "zathura %o" in `TeX-view-program-list'
+      ;; shadows it and silently drops both directions of SyncTeX.
+      (setq TeX-view-program-selection '((output-pdf "Zathura"))))
      (t
       (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
             TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))

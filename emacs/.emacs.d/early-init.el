@@ -27,10 +27,14 @@
 ;; name would break on the other machine anyway.
 (advice-add 'display-startup-echo-area-message :override #'ignore)
 
-;; Disable GUI elements.
+;; Disable GUI elements.  loadup.el preloads menu-bar unconditionally, but
+;; loads scroll-bar only `(if (boundp 'x-toolkit-scroll-bars))' and tool-bar
+;; only for window-system builds.  On a terminal-only Emacs -- emacs-nox on a
+;; server -- those two are undefined, and an unguarded call would abort
+;; early-init before anything else in it had run.
 (menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
 ;; Initialise installed packages.
 (setq package-enable-at-startup t)
