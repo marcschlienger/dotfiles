@@ -72,7 +72,15 @@
   :ensure t
   :custom
   (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles partial-completion))))
+  ;; One sort function for both sides.  Vertico takes `display-sort-function'
+  ;; from the completion metadata, while `completion-all-sorted-completions'
+  ;; -- the list TAB cycles through -- takes `cycle-sort-function'.  Setting
+  ;; only Vertico's own sort variable moved the display without moving the
+  ;; cycle, so the first candidate shown was not the one TAB inserted.
+  (completion-category-overrides
+   '((file (styles partial-completion)
+           (display-sort-function . vertico-sort-directories-first)
+           (cycle-sort-function . vertico-sort-directories-first))))
   :init
   (when (boundp 'completion-pcm-leading-wildcard)
     (setq completion-pcm-leading-wildcard nil)))
@@ -221,8 +229,11 @@
   :after vertico
   :custom
   (vertico-multiform-categories
-   '((file (vertico-sort-function . vertico-sort-directories-first)
-           (:keymap . vertico-directory-map))))
+   ;; Sorting is set through `completion-category-overrides' instead, so that
+   ;; it reaches TAB as well; `vertico-sort-function' is consulted only after
+   ;; `display-sort-function' and would never be seen by the completion
+   ;; machinery.  Only the keymap belongs here.
+   '((file (:keymap . vertico-directory-map))))
   :init
   (vertico-multiform-mode 1))
 
@@ -242,7 +253,9 @@
   ;; the existing history was written under.
   (savehist-file (locate-user-emacs-file "savehist"))
   :config
-  (add-to-list 'savehist-additional-variables 'kill-ring)
+  ;; Not the kill ring.  Cross-session clipboard history is worth little
+  ;; next to the chance of a password copied out of KeePassXC surviving on
+  ;; disk in plain text.
   ;; `corfu-history-mode' sorts candidates by history, but only savehist
   ;; carries that history across sessions.
   (add-to-list 'savehist-additional-variables 'corfu-history)
