@@ -1223,15 +1223,33 @@ spell checking section of emacs-init.org."
       (python python-mode python-ts-mode))
     "Tree-sitter remappings enabled when their grammar is available.")
   :config
+  (defun ms/treesit-associate-go ()
+    "Make sure .go files reach `go-ts-mode'.
+Does nothing when the grammar is missing, and nothing when something has
+already claimed the extension -- so it repairs Emacs 30 without displacing
+the dispatcher Emacs 31 installs."
+    (when (and (treesit-language-available-p 'go)
+               (not (assoc-default "x.go" auto-mode-alist #'string-match)))
+      (add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))))
+
   (defun ms/treesit-activate-remappings ()
-    "Use tree-sitter modes whose grammar is available locally."
+    "Pick up every tree-sitter grammar that is available locally.
+Remaps the modes that have a traditional counterpart, and claims .go,
+which needs an association rather than a remapping because `go-mode' is
+not installed.  Run this after installing a grammar to use it in the
+current session without restarting."
+    (interactive)
     (dolist (entry ms/treesit-major-mode-remappings)
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
         (when (treesit-language-available-p language)
           (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
     ;; `rust-mode' chooses its parent mode when its package is loaded.
     (setq rust-mode-treesitter-derive
-          (treesit-language-available-p 'rust)))
+          (treesit-language-available-p 'rust))
+    ;; Go is not in the remapping list, so it has to be picked up here too --
+    ;; otherwise installing the grammar in a running session left .go
+    ;; unassociated until the next restart.
+    (ms/treesit-associate-go))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -1249,17 +1267,7 @@ spell checking section of emacs-init.org."
               :warning))))))
     (ms/treesit-activate-remappings))
 
-  (defun ms/treesit-associate-go ()
-    "Make sure .go files reach `go-ts-mode'.
-Does nothing when the grammar is missing, and nothing when something has
-already claimed the extension -- so it repairs Emacs 30 without displacing
-the dispatcher Emacs 31 installs."
-    (when (and (treesit-language-available-p 'go)
-               (not (assoc-default "x.go" auto-mode-alist #'string-match)))
-      (add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))))
-
-  (ms/treesit-activate-remappings)
-  (ms/treesit-associate-go))
+  (ms/treesit-activate-remappings))
 
 ;;; Clojure was configured here -- clojure-mode, CIDER, clj-refactor and
 ;;; Flycheck with clj-kondo -- but never used, and the Debian side never

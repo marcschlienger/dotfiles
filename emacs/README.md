@@ -198,10 +198,13 @@ others. It then enables remapping only for the grammars that loaded
 successfully. The locally generated binaries will be `.dylib`-compatible on
 macOS and `.so` libraries on Linux, so every machine must build its own copies.
 
-After installation, restart Emacs. For C, C++, Go, and Python, running
-`M-x ms/treesit-activate-remappings` is enough to refresh the remappings in the
-current session. Restarting is still required if `rust-mode` was already loaded,
-because that package chooses its parent mode when it loads. Confirm a buffer is
+After installation, `M-x ms/treesit-activate-remappings` is enough to pick up
+C, C++, Python, and Go in the current session — it remaps the first three and
+claims `.go`, which needs an association rather than a remapping because
+`go-mode` is not installed. `M-x ms/treesit-install-missing-grammars` calls it
+for you, so the two routes behave the same. Restarting is still required if
+`rust-mode` was already loaded, because that package chooses its parent mode
+when it loads. Confirm a buffer is
 using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, and Python should
 have a `-ts-mode` name; Rust remains named `rust-mode` even when it derives from
 `rust-ts-mode`.
