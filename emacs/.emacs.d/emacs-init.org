@@ -941,22 +941,21 @@ The next sunrise or sunset event restores automatic switching."
 ;;
 ;; It needs libenchant and a module compiled on first use:
 ;;
-;;   macOS   brew install enchant pkg-config
+;;   macOS   ./steps/install-enchant-hunspell   (in macos-bootstrap)
 ;;   Debian  sudo apt install libenchant-2-dev pkg-config
 ;;
-;; Enchant does not check spelling itself.  It dispatches to whichever
-;; provider it was built with, and that differs by platform:
+;; Enchant does not check spelling itself; it dispatches to whichever provider
+;; it was built with, and German needs that to be hunspell.  Aspell cannot
+;; decompose compounds: over eighteen everyday school words it accepted 6,
+;; hunspell 18.  Homebrew's enchant ships no hunspell provider at all, which
+;; is what the macos-bootstrap step above builds and installs.
 ;;
-;;   macOS   Homebrew's enchant ships only aspell and AppleSpell.  AppleSpell
-;;           offers neither en_US nor de_DE, so both come from aspell, and the
-;;           hunspell dictionaries installed elsewhere are unreachable here.
-;;           Aspell's German does not decompose compounds, so ordinary words
-;;           -- Hausaufgabenbetreuung, Klassenarbeitstermin -- are flagged.
-;;   Debian  a different provider set, possibly including hunspell.
+;; English stays on aspell on both platforms -- enchant's own ordering file
+;; prefers it for en_US and en_GB, and English does not compound.
 ;;
 ;; Check what is actually serving a language before trusting it:
 ;;
-;;   enchant-lsmod-2 -lang de_DE
+;;   enchant-lsmod-2 -lang de_DE     # want: de_DE (hunspell)
 (defconst ms/have-enchant (and (executable-find "enchant-2") t)
   "Non-nil when libenchant is installed, which Jinx's module needs.")
 
