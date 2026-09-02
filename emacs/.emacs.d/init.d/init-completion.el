@@ -38,6 +38,11 @@
 ;; exclusion to one language.
 (defun ms/eglot-server-formatting-off ()
   "Ignore the server's formatting capabilities in this buffer."
+  ;; `add-hook' prepends, so this runs before the `eglot-ensure' on the same
+  ;; hook -- which means Eglot is not loaded yet and its variable is void.
+  ;; Requiring it here costs nothing: `eglot-ensure' is about to load it
+  ;; anyway, one hook entry later.
+  (require 'eglot)
   (setq-local eglot-ignored-server-capabilities
               (append '(:documentFormattingProvider
                         :documentRangeFormattingProvider

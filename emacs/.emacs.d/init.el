@@ -57,7 +57,18 @@ Return the number of files that failed to compile."
       ;; package.el regenerates these two itself; compiling them proves nothing.
       (unless (string-match-p "\\(?:-autoloads\\|-pkg\\)\\.el\\'" file)
         (setq total (1+ total))
-        (unless (byte-recompile-file file t 0)
+        ;; `byte-recompile-file' returns nil for a file that will not
+        ;; compile, but it *signals* for a filesystem problem -- an
+        ;; unwritable .elc, say.  Uncaught, that would abort init.el and
+        ;; leave the rest of the configuration unloaded, which is a far
+        ;; worse outcome than a stale .elc.
+        (unless (condition-case err
+                    (byte-recompile-file file t 0)
+                  (error
+                   (message "Recompiling %s failed: %s"
+                            (file-name-nondirectory file)
+                            (error-message-string err))
+                   nil))
           (setq failed (1+ failed)))))
     (message "Recompiled %d package files, %d failed" total failed)
     failed))

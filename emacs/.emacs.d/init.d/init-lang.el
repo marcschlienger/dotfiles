@@ -82,7 +82,15 @@ spell checking section of emacs-init.org."
     (add-hook 'text-mode-hook #'flyspell-mode)
     (add-hook 'prog-mode-hook #'flyspell-prog-mode)
     ;; Shell paths and command strings create too many false positives.
-    (add-hook 'sh-mode-hook #'ms/flyspell-disable)))
+    (add-hook 'sh-mode-hook #'ms/flyspell-disable)
+    ;; A hook only reaches buffers created after it is installed, and this
+    ;; runs from `emacs-startup-hook' -- after any file named on the command
+    ;; line has already been visited.  Catch those up.
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (cond ((derived-mode-p 'sh-mode))    ; deliberately unchecked
+              ((derived-mode-p 'prog-mode) (flyspell-prog-mode))
+              ((derived-mode-p 'text-mode) (flyspell-mode 1)))))))
 
 (add-hook 'emacs-startup-hook #'ms/spell-checker-setup)
 
@@ -91,6 +99,23 @@ spell checking section of emacs-init.org."
   :defer t
   :custom
   (jinx-languages "en_US de_DE"))
+
+;; The spell checker underneath.  These belong to ispell rather than flyspell:
+;; sitting in flyspell's :config they only took effect once flyspell had
+;; loaded, so `M-$' in a buffer flyspell never touched fell back to a
+;; "default" dictionary that hunspell cannot open.  They matter whichever
+;; checker wins: Flyspell drives ispell directly, and `ispell-buffer' and
+;; friends stay available under Jinx.  Without them ispell picks whatever it
+;; finds first -- aspell, with no dictionary set.
+(use-package ispell
+  :ensure nil
+  :defer t
+  :init
+  (setq ispell-program-name "hunspell")
+  (setq ispell-dictionary "en_US,de_DE")
+  :config
+  (ispell-set-spellchecker-params)
+  (ispell-hunspell-add-multi-dic "en_US,de_DE"))
 
 (defun ms/flyspell-disable ()
   "Turn flyspell off in the current buffer."
