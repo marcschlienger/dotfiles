@@ -919,7 +919,12 @@ The next sunrise or sunset event restores automatic switching."
 ;; It needs libenchant and a module compiled on first use:
 ;;
 ;;   macOS   ./steps/install-enchant-hunspell   (in macos-bootstrap)
-;;   Debian  sudo apt install libenchant-2-dev pkg-config
+;;   Debian  ./extras spell                      (in debian-bootstrap)
+;;
+;; What the module actually needs is the library and its headers plus a
+;; compiler -- libenchant-2-dev, pkg-config, build-essential.  The enchant-2
+;; command is a separate package and Jinx does not use it; it is installed
+;; only so `enchant-lsmod-2' below can be run.
 ;;
 ;; Enchant does not check spelling itself; it dispatches to whichever provider
 ;; it was built with, and German needs that to be hunspell.  Aspell cannot
@@ -933,55 +938,60 @@ The next sunrise or sunset event restores automatic switching."
 ;; Check what is actually serving a language before trusting it:
 ;;
 ;;   enchant-lsmod-2 -lang de_DE     # want: de_DE (hunspell)
-(defconst ms/have-enchant (and (executable-find "enchant-2") t)
-  "Non-nil when libenchant is installed, which Jinx's module needs.")
+(defun ms/spell-checker-setup ()
+  "Enable Jinx if its module builds and loads here, otherwise Flyspell.
 
-;; use-package runs :ensure outside the :if guard, so the package is
-;; installed either way; without enchant it simply stays dormant.
+Whether Jinx works is not something the presence of the enchant CLI can
+answer, which is what this used to test.  Debian packages the command
+line tools (enchant-2), the library (libenchant-2-2) and the headers
+(libenchant-2-dev) separately, so the probe said no on a machine where
+Jinx would have worked -- and a machine with the command but no compiler
+or headers made it say yes, leaving Jinx enabled but broken while
+Flyspell was switched off, so nothing checked spelling at all.
+
+Ask the real question instead.  `jinx--load-module' is what compiles the
+module on first use and loads it afterwards, and it is the step that
+fails when enchant, pkg-config or a compiler are missing."
+  (if (condition-case err
+          (progn (require 'jinx) (jinx--load-module) t)
+        (error
+         (display-warning
+          'spell
+          (format "Jinx unavailable (%s).\nUsing Flyspell instead; see the \
+spell checking section of emacs-init.org."
+                  (error-message-string err))
+          :warning)
+         nil))
+      (progn
+        (global-jinx-mode 1)
+        ;; Bound here rather than with :bind so the keys follow whichever
+        ;; checker actually won.  Under Flyspell they keep their defaults,
+        ;; where M-$ is `ispell-word'.
+        (keymap-global-set "M-$" #'jinx-correct)
+        (keymap-global-set "C-M-$" #'jinx-languages))
+    (add-hook 'text-mode-hook #'flyspell-mode)
+    (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+    ;; Shell paths and command strings create too many false positives.
+    (add-hook 'sh-mode-hook #'ms/flyspell-disable)))
+
+(add-hook 'emacs-startup-hook #'ms/spell-checker-setup)
+
 (use-package jinx
   :ensure t
-  :if ms/have-enchant
-  :hook (emacs-startup . global-jinx-mode)
-  :bind (("M-$"   . jinx-correct)
-         ("C-M-$" . jinx-languages))
+  :defer t
   :custom
   (jinx-languages "en_US de_DE"))
 
-;; The spell checker underneath.  These belong to ispell rather than flyspell:
-;; sitting in flyspell's :config they only took effect once flyspell had
-;; loaded, so `M-$' in a buffer flyspell never touched -- a shell script, say,
-;; where it is deliberately off -- fell back to a "default" dictionary that
-;; hunspell cannot open.  The variables go in :init so they are set before
-;; anything loads ispell; the two calls need ispell itself, so they stay in
-;; :config and run whenever it does load.  Still useful with Jinx in place:
-;; `ispell-buffer' and friends remain available.
-(use-package ispell
-  :ensure nil
-  :defer t
-  :init
-  (setq ispell-program-name "hunspell")
-  (setq ispell-dictionary "en_US,de_DE")
-  :config
-  (ispell-set-spellchecker-params)
-  (ispell-hunspell-add-multi-dic "en_US,de_DE"))
-
-;; Fallback only: on a machine without enchant this keeps spell checking
-;; working, including the sh-mode surrender that Jinx makes unnecessary.
 (defun ms/flyspell-disable ()
   "Turn flyspell off in the current buffer."
   (flyspell-mode -1))
 
 (use-package flyspell
   :ensure nil
-  :if (not ms/have-enchant)
+  :defer t
   :config
   (setq flyspell-issue-message-flag nil)
-  (setq flyspell-issue-welcome-flag nil)
-  :hook
-  (text-mode . flyspell-mode)
-  (prog-mode . flyspell-prog-mode)
-  ;; Shell paths and command strings create too many false positives.
-  (sh-mode . ms/flyspell-disable))
+  (setq flyspell-issue-welcome-flag nil))
 
 ;; Trailing whitespace is a hard line break in Markdown and part of the table
 ;; syntax in Org, so those two are left alone.  A named function can be
