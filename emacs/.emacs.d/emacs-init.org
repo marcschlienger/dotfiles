@@ -1162,10 +1162,26 @@ spell checking section of emacs-init.org."
           (go "https://github.com/tree-sitter/tree-sitter-go")
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (rust "https://github.com/tree-sitter/tree-sitter-rust")))
+  ;; No `go' entry.  A remapping needs a mode to remap *from*, and `go-mode'
+  ;; is not installed; Emacs supplies the association itself, because its own
+  ;; go-ts-mode.el autoloads `go-ts-mode-maybe' into `auto-mode-alist'.  A .go
+  ;; file therefore opens in `go-ts-mode' with no help from this list, which
+  ;; is why the entry was dead rather than wrong.  The grammar recipe below
+  ;; stays: go-ts-mode needs the grammar even though it needs no remapping.
+  ;;
+  ;; Worth confirming on Debian's Emacs 30.1, where that autoload may predate
+  ;; the `-maybe' dispatcher:
+  ;;
+  ;;   emacs -Q --batch --eval \
+  ;;     '(princ (assoc-default "x.go" auto-mode-alist (quote string-match)))'
+  ;;
+  ;; Anything printed means .go is associated and nothing is needed here.  If
+  ;; it prints nothing, add the association rather than a remapping:
+  ;;
+  ;;   (add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
-      (go go-mode go-ts-mode)
       (python python-mode python-ts-mode))
     "Tree-sitter remappings enabled when their grammar is available.")
   :config
