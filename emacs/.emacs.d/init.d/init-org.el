@@ -48,11 +48,12 @@
 (use-package org
   :ensure nil
   :init
-  ;; Every capture template and `org-agenda-files' resolve against this
-  ;; path, and both fail outright when it does not exist -- which is the
-  ;; state of every freshly bootstrapped machine.
+  ;; Left at Org's own default.  Where notes should live is undecided --
+  ;; if Org ever takes over note-taking it will most likely be a synced
+  ;; directory under Nextcloud or iCloud, so this gets set properly then.
+  ;; Nothing here creates the directory: an empty ~/org appearing on a
+  ;; machine that does not use Org is noise, and Org copes without it.
   (setq org-directory (expand-file-name "~/org"))
-  (make-directory org-directory t)
   (setq org-imenu-depth 7)
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
   (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
