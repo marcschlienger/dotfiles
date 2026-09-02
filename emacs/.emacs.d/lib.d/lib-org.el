@@ -1,10 +1,20 @@
 ;;; lib-org.el -*- lexical-binding: t -*-
 
 ;; Change a TODO entry automatically to DONE when all children are DONE.
+(defconst ms-org-summary-managed-states '("TODO" "DONE")
+  "Parent states `ms-org-summary-todo' may rewrite automatically.
+Anything else -- WAITING, NEXT, CANCELLED -- carries a decision that a
+child's checkbox has no business overturning.")
+
 (defun ms-org-summary-todo (n-done n-not-done)
   "Update a TODO parent from the state of its child entries.
-Leave ordinary headings, such as project containers, unchanged."
-  (when (and (org-get-todo-state)
+Leave ordinary headings, such as project containers, unchanged, and leave
+any state not in `ms-org-summary-managed-states' alone: rewriting those to
+TODO discards information.  A parent marked WAITING is waiting on
+something external, NEXT is a deliberate choice of what to do next, and
+CANCELLED means the work is not happening -- none of which follow from a
+child still being open."
+  (when (and (member (org-get-todo-state) ms-org-summary-managed-states)
              (> (+ n-done n-not-done) 0))
     (let (org-log-done org-todo-log-states) ; turn off logging
       (org-todo (if (= n-not-done 0) "DONE" "TODO")))))

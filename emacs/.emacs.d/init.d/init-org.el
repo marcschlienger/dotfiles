@@ -42,7 +42,13 @@
   ;;                          (C-c a), through the form after that.
   ;;
   ;; (add-hook 'emacs-startup-hook #'ms-org-appt-initialise)
-  (with-eval-after-load 'org-agenda (ms-org-appt-initialise)))
+  ;;
+  ;; The call itself lives at the end of the org-agenda block below, not
+  ;; here.  Both would be `with-eval-after-load' forms on org-agenda, and
+  ;; those run in registration order -- so from here it would run before
+  ;; `org-agenda-files' had been set, build its reminder list from nothing,
+  ;; and leave the first refresh empty until the periodic one caught up.
+  )
 
 ;; Org mode
 (use-package org
@@ -412,6 +418,10 @@
         '(todo search agenda))
   (setq org-agenda-hide-tags-regexp nil)
   (setq org-agenda-remove-tags nil)
-  (setq org-agenda-tags-column -100))
+  (setq org-agenda-tags-column -100)
+
+  ;; Last, so the first appointment refresh sees the settings above --
+  ;; `org-agenda-files' in particular.  See the appt block near the top.
+  (ms-org-appt-initialise))
 
 (provide 'init-org)
