@@ -14,11 +14,12 @@
   (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom
+  ;; Formatting is *not* ignored globally.  Ruff owns it for Python and
+  ;; rustfmt through Rustic for Rust, so it is switched off per buffer for
+  ;; those two below; clangd and texlab keep theirs, because nothing else
+  ;; formats C, C++ or LaTeX here.
   (eglot-ignored-server-capabilities
    '(:documentHighlightProvider
-     :documentFormattingProvider
-     :documentRangeFormattingProvider
-     :documentOnTypeFormattingProvider
      :colorProvider
      :foldingRangeProvider))
   :hook
@@ -31,6 +32,21 @@
   (python-ts-mode . eglot-ensure)
   (rust-mode . eglot-ensure)
   (rust-ts-mode . eglot-ensure))
+
+;; `eglot-server-capable' reads `eglot-ignored-server-capabilities' as a
+;; plain variable in the current buffer, so a buffer-local value scopes the
+;; exclusion to one language.
+(defun ms/eglot-server-formatting-off ()
+  "Ignore the server's formatting capabilities in this buffer."
+  (setq-local eglot-ignored-server-capabilities
+              (append '(:documentFormattingProvider
+                        :documentRangeFormattingProvider
+                        :documentOnTypeFormattingProvider)
+                      eglot-ignored-server-capabilities)))
+
+(dolist (hook '(python-mode-hook python-ts-mode-hook
+                rust-mode-hook rust-ts-mode-hook))
+  (add-hook hook #'ms/eglot-server-formatting-off))
 
 ;; Keep ty as Python's semantic server.  Ruff adds lint diagnostics through
 ;; Flymake and formats Python buffers on save without competing for Eglot.

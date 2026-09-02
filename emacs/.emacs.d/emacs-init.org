@@ -241,10 +241,16 @@ Run M-x ms-recompile-packages to see which files fail."
 (defun ms/move-line-down ()
   "Move down the current line."
   (interactive)
-  (forward-line 1)
-  (transpose-lines 1)
-  (forward-line -1)
-  (indent-according-to-mode))
+  ;; On the last line `transpose-lines' has nothing to swap with, so it
+  ;; appends a newline instead: the line stays where it is and the buffer
+  ;; grows a blank one.  `count-lines' is the right measure here --
+  ;; `line-number-at-pos' at `point-max' counts the empty line after a
+  ;; trailing newline and would let the last real line through.
+  (when (< (line-number-at-pos) (count-lines (point-min) (point-max)))
+    (forward-line 1)
+    (transpose-lines 1)
+    (forward-line -1)
+    (indent-according-to-mode)))
 
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
@@ -1371,11 +1377,12 @@ spell checking section of emacs-init.org."
   (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   :custom
+  ;; Formatting is *not* ignored globally.  Ruff owns it for Python and
+  ;; rustfmt through Rustic for Rust, so it is switched off per buffer for
+  ;; those two below; clangd and texlab keep theirs, because nothing else
+  ;; formats C, C++ or LaTeX here.
   (eglot-ignored-server-capabilities
    '(:documentHighlightProvider
-     :documentFormattingProvider
-     :documentRangeFormattingProvider
-     :documentOnTypeFormattingProvider
      :colorProvider
      :foldingRangeProvider))
   :hook
@@ -1388,6 +1395,21 @@ spell checking section of emacs-init.org."
   (python-ts-mode . eglot-ensure)
   (rust-mode . eglot-ensure)
   (rust-ts-mode . eglot-ensure))
+
+;; `eglot-server-capable' reads `eglot-ignored-server-capabilities' as a
+;; plain variable in the current buffer, so a buffer-local value scopes the
+;; exclusion to one language.
+(defun ms/eglot-server-formatting-off ()
+  "Ignore the server's formatting capabilities in this buffer."
+  (setq-local eglot-ignored-server-capabilities
+              (append '(:documentFormattingProvider
+                        :documentRangeFormattingProvider
+                        :documentOnTypeFormattingProvider)
+                      eglot-ignored-server-capabilities)))
+
+(dolist (hook '(python-mode-hook python-ts-mode-hook
+                rust-mode-hook rust-ts-mode-hook))
+  (add-hook hook #'ms/eglot-server-formatting-off))
 
 ;; Keep ty as Python's semantic server.  Ruff adds lint diagnostics through
 ;; Flymake and formats Python buffers on save without competing for Eglot.
@@ -2263,6 +2285,15 @@ capture, and a periodic refresh every fifteen minutes.
   :custom
   ; TODO Determine whether Tramp mode is slow without the following setting.
   (diff-hl-disable-on-remote t)
+  :config
+  ;; Fringes do not exist in a terminal frame, so the change indicators are
+  ;; simply invisible there.  `diff-hl-margin-mode' is global rather than
+  ;; per-frame, so this only switches automatically for an Emacs that is
+  ;; itself a terminal -- under a daemon serving both kinds of frame the
+  ;; choice cannot be made for you, and `M-x diff-hl-margin-mode' is the
+  ;; manual switch.
+  (unless (or (daemonp) (display-graphic-p))
+    (diff-hl-margin-mode 1))
   :hook
   (after-init . global-diff-hl-mode)
   ;; Without this the fringe only catches up when the buffer is saved.
