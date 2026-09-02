@@ -2026,11 +2026,23 @@ capture, and a periodic refresh every fifteen minutes.
             TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))
   (setq TeX-source-correlate-start-server t))
 
+;; `cdlatex-tab-hook' is a global defcustom, so putting `LaTeX-indent-line'
+;; in its default value had two faults.  It fired in Org buffers as well,
+;; where AUCTeX indentation is wrong; and use-package, seeing a :hook
+;; function it does not recognise, autoloaded it from cdlatex -- which does
+;; not define it, it is AUCTeX's.  Opening Org before any LaTeX file then
+;; failed with "Autoloading cdlatex.elc failed to define function
+;; LaTeX-indent-line".  Add it buffer-locally instead, in LaTeX buffers,
+;; where AUCTeX is loaded by definition.
+(defun ms/cdlatex-latex-setup ()
+  "Turn on CDLaTeX and let its TAB fall through to AUCTeX indentation."
+  (turn-on-cdlatex)
+  (add-hook 'cdlatex-tab-hook #'LaTeX-indent-line nil t))
+
 (use-package cdlatex
   :ensure t
-  :hook ((LaTeX-mode  . turn-on-cdlatex)
-         (org-mode    . turn-on-org-cdlatex)
-         (cdlatex-tab . LaTeX-indent-line)))
+  :hook ((LaTeX-mode . ms/cdlatex-latex-setup)
+         (org-mode   . turn-on-org-cdlatex)))
 
 ;; Optional PDF Tools integration.  Keep it dormant until the package is
 ;; installed explicitly, then activate it on the next Emacs startup.
