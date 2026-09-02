@@ -15,18 +15,46 @@
   :config
   (electric-pair-mode 1))
 
-;; Flyspell (spell checking)
-(defun ms/flyspell-disable ()
-  "Turn flyspell off in the current buffer."
-  (flyspell-mode -1))
+;;; Spell checking
+;;
+;; Jinx is the checker; Flyspell is the fallback where Jinx cannot run.
+;;
+;; Jinx checks only the visible region, and only text carrying prose faces.
+;; That is the important difference: Flyspell cannot tell code from prose, so
+;; shell scripts produced so many false positives that the checker had to be
+;; switched off there wholesale.  Jinx skips the code and still checks the
+;; comments.  Multiple languages are native to it rather than a hunspell
+;; multi-dictionary trick.
+;;
+;; It needs libenchant and a module compiled on first use:
+;;
+;;   macOS   brew install enchant pkg-config
+;;   Debian  sudo apt install libenchant-2-dev pkg-config
+;;
+;; Enchant uses hunspell underneath, so the existing en_US and de_DE
+;; dictionaries carry over unchanged.
+(defconst ms/have-enchant (and (executable-find "enchant-2") t)
+  "Non-nil when libenchant is installed, which Jinx's module needs.")
 
-;; The spell checker itself.  These belong to ispell rather than flyspell:
+;; use-package runs :ensure outside the :if guard, so the package is
+;; installed either way; without enchant it simply stays dormant.
+(use-package jinx
+  :ensure t
+  :if ms/have-enchant
+  :hook (emacs-startup . global-jinx-mode)
+  :bind (("M-$"   . jinx-correct)
+         ("C-M-$" . jinx-languages))
+  :custom
+  (jinx-languages "en_US de_DE"))
+
+;; The spell checker underneath.  These belong to ispell rather than flyspell:
 ;; sitting in flyspell's :config they only took effect once flyspell had
 ;; loaded, so `M-$' in a buffer flyspell never touched -- a shell script, say,
 ;; where it is deliberately off -- fell back to a "default" dictionary that
 ;; hunspell cannot open.  The variables go in :init so they are set before
 ;; anything loads ispell; the two calls need ispell itself, so they stay in
-;; :config and run whenever it does load.
+;; :config and run whenever it does load.  Still useful with Jinx in place:
+;; `ispell-buffer' and friends remain available.
 (use-package ispell
   :ensure nil
   :defer t
@@ -37,8 +65,15 @@
   (ispell-set-spellchecker-params)
   (ispell-hunspell-add-multi-dic "en_US,de_DE"))
 
+;; Fallback only: on a machine without enchant this keeps spell checking
+;; working, including the sh-mode surrender that Jinx makes unnecessary.
+(defun ms/flyspell-disable ()
+  "Turn flyspell off in the current buffer."
+  (flyspell-mode -1))
+
 (use-package flyspell
   :ensure nil
+  :if (not ms/have-enchant)
   :config
   (setq flyspell-issue-message-flag nil)
   (setq flyspell-issue-welcome-flag nil)
