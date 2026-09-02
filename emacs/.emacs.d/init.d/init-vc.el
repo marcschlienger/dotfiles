@@ -33,6 +33,15 @@
   :custom
   ; TODO Determine whether Tramp mode is slow without the following setting.
   (diff-hl-disable-on-remote t)
+  :config
+  ;; Fringes do not exist in a terminal frame, so the change indicators are
+  ;; simply invisible there.  `diff-hl-margin-mode' is global rather than
+  ;; per-frame, so this only switches automatically for an Emacs that is
+  ;; itself a terminal -- under a daemon serving both kinds of frame the
+  ;; choice cannot be made for you, and `M-x diff-hl-margin-mode' is the
+  ;; manual switch.
+  (unless (or (daemonp) (display-graphic-p))
+    (diff-hl-margin-mode 1))
   :hook
   (after-init . global-diff-hl-mode)
   ;; Without this the fringe only catches up when the buffer is saved.

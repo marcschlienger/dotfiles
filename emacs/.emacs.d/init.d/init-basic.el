@@ -67,10 +67,16 @@
 (defun ms/move-line-down ()
   "Move down the current line."
   (interactive)
-  (forward-line 1)
-  (transpose-lines 1)
-  (forward-line -1)
-  (indent-according-to-mode))
+  ;; On the last line `transpose-lines' has nothing to swap with, so it
+  ;; appends a newline instead: the line stays where it is and the buffer
+  ;; grows a blank one.  `count-lines' is the right measure here --
+  ;; `line-number-at-pos' at `point-max' counts the empty line after a
+  ;; trailing newline and would let the last real line through.
+  (when (< (line-number-at-pos) (count-lines (point-min) (point-max)))
+    (forward-line 1)
+    (transpose-lines 1)
+    (forward-line -1)
+    (indent-according-to-mode)))
 
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
