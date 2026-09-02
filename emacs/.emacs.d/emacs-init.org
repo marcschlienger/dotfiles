@@ -691,6 +691,22 @@ Use `ms/theme-family' when FAMILY is nil."
 
 (add-hook 'enable-theme-functions #'ms/theme-update-macos-appearance)
 
+;; Circadian only clears `circadian-next-timer' when it actually changes the
+;; theme, and `circadian-schedule' refuses to schedule while that variable is
+;; non-nil.  So a transition that lands on a theme which is already active --
+;; exactly what happens after toggling by hand to the theme due next -- leaves
+;; the spent timer in place and automatic switching stops for good.  Re-arm
+;; from the after-load hook, which Circadian runs on both paths.
+(defun ms/circadian-rearm (&rest _)
+  "Force Circadian to schedule its next transition."
+  (when (timerp circadian-next-timer)
+    (cancel-timer circadian-next-timer))
+  (setq circadian-next-timer nil)
+  (circadian-schedule))
+
+(with-eval-after-load 'circadian
+  (add-hook 'circadian-after-load-theme-hook #'ms/circadian-rearm))
+
 (defun ms/theme-pair-toggle ()
   "Toggle between the light and dark themes in the selected family.
 The next sunrise or sunset event restores automatic switching."
@@ -725,6 +741,15 @@ The next sunrise or sunset event restores automatic switching."
     (condition-case error-data
         (progn
           (circadian-setup)
+          ;; Circadian cannot be trusted to report a failure.  Its handler is
+          ;; written `(error "..." theme)', which names `error' as the
+          ;; condition and evaluates the string for its value, so a theme that
+          ;; fails to load is swallowed silently -- and because the old themes
+          ;; are disabled first, the frame is left with no theme at all.
+          ;; Check the outcome rather than the return.
+          (unless (seq-intersection (ms/theme-family--pair family)
+                                    custom-enabled-themes)
+            (error "Neither theme of the %s family could be loaded" family))
           ;; A read-only state directory must not prevent the visible switch.
           (ms/theme-family--write-state)
           (message "Automatic theme family: %s"
