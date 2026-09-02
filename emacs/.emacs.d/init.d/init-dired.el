@@ -101,9 +101,15 @@
   (setq image-dired-thumb-relief 0)
   (setq image-dired-thumbs-per-row 4))
 
-;; Dired-like mode for the system trash can
+;; Dired-like mode for the system trash can.  Trashed reads the Freedesktop
+;; layout ($XDG_DATA_HOME/Trash, with files/ and info/ beside each other) or
+;; the Windows Recycle Bin.  macOS keeps Finder's trash in ~/.Trash with
+;; different metadata, which Trashed cannot read -- there it would offer a
+;; view of a directory that does not exist.  `delete-by-moving-to-trash'
+;; still works on macOS; it goes through Finder rather than through this.
 (use-package trashed
   :ensure t
+  :if (not (eq system-type 'darwin))
   :init
   (setq trashed-action-confirmer 'y-or-n-p)
   (setq trashed-sort-key '("Date deleted" . t))

@@ -45,10 +45,14 @@ find everything related to my Emacs setup.
 ;; name would break on the other machine anyway.
 (advice-add 'display-startup-echo-area-message :override #'ignore)
 
-;; Disable GUI elements.
+;; Disable GUI elements.  loadup.el preloads menu-bar unconditionally, but
+;; loads scroll-bar only `(if (boundp 'x-toolkit-scroll-bars))' and tool-bar
+;; only for window-system builds.  On a terminal-only Emacs -- emacs-nox on a
+;; server -- those two are undefined, and an unguarded call would abort
+;; early-init before anything else in it had run.
 (menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
 ;; Initialise installed packages.
 (setq package-enable-at-startup t)
@@ -365,9 +369,15 @@ Run M-x ms-recompile-packages to see which files fail."
   (setq image-dired-thumb-relief 0)
   (setq image-dired-thumbs-per-row 4))
 
-;; Dired-like mode for the system trash can
+;; Dired-like mode for the system trash can.  Trashed reads the Freedesktop
+;; layout ($XDG_DATA_HOME/Trash, with files/ and info/ beside each other) or
+;; the Windows Recycle Bin.  macOS keeps Finder's trash in ~/.Trash with
+;; different metadata, which Trashed cannot read -- there it would offer a
+;; view of a directory that does not exist.  `delete-by-moving-to-trash'
+;; still works on macOS; it goes through Finder rather than through this.
 (use-package trashed
   :ensure t
+  :if (not (eq system-type 'darwin))
   :init
   (setq trashed-action-confirmer 'y-or-n-p)
   (setq trashed-sort-key '("Date deleted" . t))
@@ -2137,8 +2147,11 @@ capture, and a periodic refresh every fifteen minutes.
       (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
             TeX-view-program-list '(("System PDF viewer" "open %o"))))
      ((executable-find "zathura")
-      (setq TeX-view-program-selection '((output-pdf "Zathura"))
-            TeX-view-program-list '(("Zathura" "zathura %o"))))
+      ;; Select AUCTeX's own entry rather than defining one.  Its builtin
+      ;; Zathura command carries `--synctex-forward' and an emacsclient
+      ;; inverse-search hook; a bare "zathura %o" in `TeX-view-program-list'
+      ;; shadows it and silently drops both directions of SyncTeX.
+      (setq TeX-view-program-selection '((output-pdf "Zathura"))))
      (t
       (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
             TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))
