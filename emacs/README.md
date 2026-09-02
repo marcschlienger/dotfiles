@@ -36,13 +36,11 @@ Other configured features need these executables:
 | Feature | Executable | Current macOS status |
 | --- | --- | --- |
 | Rust build, Clippy, and format on save | `cargo`, Clippy, `rustfmt`, and `rust-src` | Installed (Rust `1.98.0`; all components present) |
-| Clojure development | `clojure` | Installed (CLI `1.12.5.1664`) |
-| Clojure diagnostics | `clj-kondo` | Installed (`2026.08.04`) |
 | LaTeX compilation | A TeX distribution providing `latexmk` or `pdflatex` | Missing |
 | Markdown export | `multimarkdown` | Installed (`6.8.0`) |
 | Org Babel Python | `python3` | Installed (`3.9.6`) |
 | Org Babel R | `R` | Installed (`4.6.1`) |
-| Spell checking | `hunspell` plus `en_US` and `de_DE` dictionaries | Installed (`1.7.3`); both dictionaries verified |
+| Spell checking | Enchant plus `en_US` and `de_DE` Hunspell dictionaries | Installed; Jinx is used where its module builds, Flyspell otherwise |
 
 Swift development intentionally belongs to Xcode. Emacs retains `swift-mode`
 for lightweight syntax highlighting, but has no Swift Eglot hook or Tree-sitter
@@ -216,12 +214,11 @@ become more important than automatically picking up parser updates.
   capture, agenda, or refile commands.
 - The agenda contains the directory itself rather than a one-time wildcard
   expansion, so new `.org` files are discovered without restarting Emacs.
-- `org-confirm-babel-evaluate` is still disabled. This is convenient, but it
-  lets source blocks in cloned or downloaded Org files execute without a
-  confirmation prompt. Consider enabling confirmation globally and exempting
-  only explicitly trusted languages or files.
-- The temporary default-notes and diary files are intentionally ephemeral.
-  Replace them with persistent files if those features should retain data.
+- `org-confirm-babel-evaluate` is enabled, so source blocks in cloned or
+  downloaded Org files prompt before running.
+- The default-notes and diary files point into the cache directory rather
+  than `org-directory`. Neither feature is used; give them real paths if that
+  changes.
 - Refile caching improves completion speed but may need
   `org-refile-cache-clear` after large outline changes.
 
@@ -233,19 +230,21 @@ become more important than automatically picking up parser updates.
 - Packages are not pinned or locked. Consider recording package versions with
   a reproducible package manager if identical macOS and Linux installations
   become important.
-- Heavy packages should remain command- or hook-driven. Magit and the Clojure
-  stack are now deferred, but the same rule should be applied to future
-  additions.
+- Heavy packages should remain command- or hook-driven. Magit is deferred,
+  and the same rule should be applied to future additions.
 - `all-the-icons` was unused and has been removed; `nerd-icons` is the active
   icon package.
 
 ## Editing and persistence choices
 
-- `custom-file` points to a new temporary file on every startup, so Customize
-  changes do not persist. Use a stable ignored file if persistence is wanted.
-- Lockfiles are disabled while visited files are automatically written every
-  30 seconds. This is convenient but reduces protection from concurrent Emacs
-  sessions and makes accidental edits reach disk quickly.
+- `custom-file` is a fixed path in the cache directory that is never loaded,
+  so Customize changes are written but have no effect on the next start. This
+  is deliberate: the configuration is the Org file, not Customize. It replaced
+  a `make-temp-file` call that left a stray file behind on every start.
+- Lockfiles are disabled. Emacs does not write the visited file on its own;
+  the earlier 30-second `auto-save-visited-mode` policy was removed because it
+  pushed edits into Nextcloud before they were finished. Ordinary recovery
+  auto-save still runs, into the cache directory rather than beside the file.
 - The global before-save whitespace cleanup can create large unrelated diffs.
   Consider limiting it to selected programming modes or using a dedicated
   whitespace-cleanup mode.
@@ -253,10 +252,12 @@ become more important than automatically picking up parser updates.
 ## Interface and integrations
 
 - Fonts are selected from platform-aware candidate lists for each graphical
-  frame. Both macOS and Linux prefer Linux Libertine O and then Linux Libertine;
-  the current Mac selects its installed `Linux Libertine` family. macOS then
-  falls back through Avenir Next, Helvetica Neue, and Arial, while Linux uses
-  Noto Serif, Liberation Serif, then DejaVu Serif. Daemon-created frames are
+  frame. Both lists now start with Aporetic: `Aporetic Sans Mono` for
+  fixed-pitch and `Aporetic Serif` for variable-pitch, followed by
+  FiraCode Nerd Font and Fira Code, then Linux Libertine O and Linux
+  Libertine. macOS falls back through Menlo and Monaco, or Avenir Next,
+  Helvetica Neue and Arial; Linux uses DejaVu Sans Mono and Liberation Mono,
+  or Noto Serif, Liberation Serif and DejaVu Serif. Daemon-created frames are
   configured by `after-make-frame-functions`.
 - `display-line-numbers-width-start` can add work when opening very large
   files; disable it or add a large-file guard if this becomes noticeable.

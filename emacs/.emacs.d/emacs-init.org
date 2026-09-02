@@ -1153,7 +1153,9 @@ spell checking section of emacs-init.org."
   :ensure t
   :hook (lisp-data-mode . ms/lisp-mode-setup))
 
-;; Byte-compile and checkdoc diagnostics while typing.  Nothing else turns
+;; Byte-compile and checkdoc diagnostics on save -- not while typing:
+;; `flymake-no-changes-timeout' is nil above, so nothing is checked until the
+;; buffer is written.  Nothing else turns
 ;; Flymake on in an ordinary .el buffer: `elisp-flymake-byte-compile' and
 ;; `elisp-flymake-checkdoc' are registered by default but never run without
 ;; the mode.  `package-lint-flymake-setup' used to enable it as a side
