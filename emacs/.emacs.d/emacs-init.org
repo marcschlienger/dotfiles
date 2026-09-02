@@ -1525,10 +1525,16 @@ The next sunrise or sunset event restores automatic switching."
                  nil
                  (window-parameters (mode-line-format . none)))))
 
+;; No preview hook here: embark-consult adds
+;; `consult--default-completion-list-preview-setup' to
+;; `embark-collect-mode-hook' itself.  The older idiom hooked
+;; `consult-preview-at-point-mode', which Consult 3.7 no longer defines --
+;; and because use-package turns an unknown :hook function into an autoload
+;; pointing at the package, that failed at the worst moment: entering a
+;; collect buffer, with "failed to define function".
 (use-package embark-consult
   :ensure t
-  :after (embark consult)
-  :hook (embark-collect-mode . consult-preview-at-point-mode))
+  :after (embark consult))
 
 ;; Template system for Emacs.
 (use-package yasnippet
