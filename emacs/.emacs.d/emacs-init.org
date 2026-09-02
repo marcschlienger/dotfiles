@@ -2132,6 +2132,15 @@ capture, and a periodic refresh every fifteen minutes.
   (save-buffer)
   (TeX-command-run-all nil))
 
+;; `LaTeX-math-mode' lives in AUCTeX's latex.el and AUCTeX does not autoload
+;; it.  Naming it in :hook below would therefore make use-package invent an
+;; autoload pointing at `tex-site', which cannot define it -- the same trap
+;; that broke the CDLaTeX TAB hook.  Opening a .tex file happens to repair
+;; that, because loading LaTeX-mode loads latex.el before the hook runs, but
+;; `M-x LaTeX-math-mode' in a session with no TeX buffer would hit the bad
+;; stub.  Declaring the real one first means use-package leaves it alone.
+(autoload 'LaTeX-math-mode "latex" "Toggle LaTeX math mode." t)
+
 ;; AUCTeX
 (use-package tex-site
   :ensure auctex
