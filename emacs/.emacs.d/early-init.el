@@ -32,30 +32,5 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; Byte-compiled packages are version-specific. Rebuild them once after an
-;; Emacs upgrade, forcing stale .elc files even when they are newer than source.
-;; Write the stamp only after the pass finishes so a hard failure is retried.
-(let* ((stamp (expand-file-name "emacs-version-stamp" user-emacs-directory))
-       (previous (and (file-exists-p stamp)
-                      (with-temp-buffer
-                        (insert-file-contents stamp)
-                        (string-trim (buffer-string)))))
-       ;; Not `package-user-dir': package.el is not loaded this early.
-       (elpa (expand-file-name "elpa" user-emacs-directory))
-       (done t))
-  (unless (equal previous emacs-version)
-    (when (and previous (file-directory-p elpa))
-      (message "Emacs %s -> %s: recompiling %s, this takes a minute..."
-               previous emacs-version elpa)
-      (condition-case err
-          (byte-recompile-directory elpa 0 t)
-        (error
-         (setq done nil)
-         (message "Recompiling failed: %s\nRun it by hand: emacs --batch --eval %s"
-                  (error-message-string err)
-                  "\"(byte-recompile-directory package-user-dir 0 t)\""))))
-    (when done
-      (with-temp-file stamp (insert emacs-version)))))
-
 ;; Initialise installed packages.
 (setq package-enable-at-startup t)
