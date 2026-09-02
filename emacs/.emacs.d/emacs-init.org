@@ -1966,6 +1966,19 @@ capture, and a periodic refresh every fifteen minutes.
            tags-todo "@home")
           ("w" "List all active tasks that have to be done @work"
            tags-todo "@work")
+          ;; This does not do what its name says, and is left as it is
+          ;; because Org is not used for task management here.  The query
+          ;; matches any level-three NEXT heading, whether or not it sits
+          ;; under a project, and misses project actions at every other
+          ;; depth -- it never mentions projects at all.  Since the capture
+          ;; template tags projects `:project:' and Org inherits tags, the
+          ;; honest version would be one of:
+          ;;
+          ;;   tags-todo "project"        ; every unfinished project action
+          ;;   tags-todo "project/NEXT"   ; only the ones marked NEXT
+          ;;
+          ;; Choosing between those is a workflow decision, so it waits
+          ;; until there is a workflow to decide about.
           ("p" "List all active project-related tasks"
            tags "+LEVEL=3+TODO=\"NEXT\"")))
   (setq org-agenda-max-entries nil)
