@@ -1636,34 +1636,6 @@ current session without restarting."
 
 * Org mode
 
-Org is used here as an *editing mode* --- this file is an Org document ---
-but not for task management. Notes live in Obsidian and tasks in
-Reminders, so =~/org= is empty and the agenda, capture and refile
-settings below are configured but idle. They are kept because they cost
-nothing while =org-agenda= stays unloaded, and rebuilding them would be
-tedious if that ever changes.
-
-** Enabling appointment reminders
-
-=appt= shows a reminder in the mode line before a timed Org entry. It is
-deliberately *not* started at startup: that would load =org-agenda= in
-every session to scan an empty directory, costing most of a second and
-finding nothing. Three ways to turn it on:
-
-- *This session only* --- =M-x ms-org-appt-initialise=. It loads
-  org-agenda, activates =appt=, builds the reminder list from
-  =org-agenda-files= and starts the refresh timer. It reports how many
-  entries it found, so an empty agenda is immediately obvious.
-- *Every session* --- uncomment the =emacs-startup-hook= line in the
-  =appt= block below.
-- *On demand* --- what happens today: opening the agenda with =C-c a=
-  loads =org-agenda=, and the =with-eval-after-load= form then starts
-  reminders for the rest of the session.
-
-Once running, three hooks in =lib-org.el= keep the list current: a
-debounced refresh after saving any agenda file, one after finishing a
-capture, and a periodic refresh every fifteen minutes.
-
 #+begin_src emacs-lisp :tangle init.d/init-org.el :mkdirp yes
 ;;-*- lexical-binding: t; -*-
 
