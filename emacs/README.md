@@ -12,7 +12,7 @@ set. Install every executable on both macOS and Linux:
 | Language | Executable | Used by | Current macOS status |
 | --- | --- | --- | --- |
 | C and C++ | `clangd` | Emacs and Neovim | Installed (`21.0.0`) |
-| Go | `gopls` | Emacs | Not installed |
+| Go | `gopls` | Emacs | Installed (`0.23.0`) |
 | Lua | `lua-language-server` | Neovim | Installed (`3.19.1`) |
 | Python semantics and type checking | `ty` (`ty server`) | Emacs and Neovim | Installed (`0.0.74`) |
 | Python linting and formatting | `ruff` (`ruff server` in Neovim) | Emacs and Neovim | Installed (`0.16.4`) |
