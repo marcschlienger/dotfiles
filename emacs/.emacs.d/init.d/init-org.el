@@ -1,7 +1,7 @@
 ;;-*- lexical-binding: t; -*-
 
 (require 'lib-org)
-(require 'lib-paths)                    ; `ms-cache-file'
+(require 'lib-paths)                    ; `ms-paths-cache-file'
 
 ;; Calendar
 (use-package calendar
@@ -266,7 +266,7 @@
   ;; Unused: every capture template names its own target.  A fixed path in
   ;; the cache keeps it out of `org-directory' without leaving a fresh
   ;; temporary file behind on each session.
-  (setq org-default-notes-file (ms-cache-file "org-default-notes.org"))
+  (setq org-default-notes-file (ms-paths-cache-file "org-default-notes.org"))
   ;; Directory entries are expanded whenever Org builds an agenda, so newly
   ;; created Org files are picked up without restarting Emacs.
   (setq org-agenda-files (list org-directory))
@@ -363,7 +363,7 @@
   (setq org-agenda-insert-diary-strategy 'date-tree)
   (setq org-agenda-insert-diary-extract-time nil)
   (setq org-agenda-include-diary nil)
-  (setq diary-file (ms-cache-file "diary")) ;send it to oblivion
+  (setq diary-file (ms-paths-cache-file "diary")) ;send it to oblivion
   (setq org-agenda-diary-file 'diary-file)
 
 ;;;; Agenda follow mode

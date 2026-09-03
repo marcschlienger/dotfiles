@@ -81,7 +81,7 @@
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
 
-(defun ms-toggle-line-number-type ()
+(defun ms/toggle-line-number-type ()
   "Toggle absolute and relative line numbering type."
   (interactive)
   (if (eq display-line-numbers 'relative)

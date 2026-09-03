@@ -36,5 +36,6 @@
 (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
-;; Initialise installed packages.
-(setq package-enable-at-startup t)
+;; Package activation is on by default; early-init only has to leave it
+;; alone.  What it must not do is load a package, which would run before
+;; `package-activate-all' and pick up whatever is on `load-path' then.

@@ -1,7 +1,7 @@
 ;;-*- lexical-binding: t; -*-
 
 ;; Load config modules.  This has to come first: the settings below are
-;; written in terms of `ms-cache-file' from lib.d.
+;; written in terms of `ms-paths-cache-file' from lib.d.
 (mapc
  (lambda (string)
    (add-to-list 'load-path (locate-user-emacs-file string)))
@@ -10,7 +10,7 @@
 (require 'lib-paths)
 
 ;; Save backup files in a dedicated backup directory.
-(setq backup-directory-alist `(("" . ,(ms-cache-file "backup/"))))
+(setq backup-directory-alist `(("" . ,(ms-paths-cache-file "backup/"))))
 
 ;; Do not create lock files.
 (setq create-lockfiles nil)
@@ -18,7 +18,7 @@
 ;; Discard persistent customisations.  Custom insists on a file to write to,
 ;; so give it a fixed one and never load it.  `make-temp-file' also works but
 ;; leaves a fresh file behind on every single start.
-(setq custom-file (ms-cache-file "custom.el"))
+(setq custom-file (ms-paths-cache-file "custom.el"))
 
 ;; Package settings.
 (require 'package)
@@ -98,7 +98,7 @@ Run M-x ms-recompile-packages to see which files fail."
          :warning)))))
 
 ;; Keep ordinary recovery auto-saves outside the repository and synced files.
-(let ((auto-save-directory (ms-cache-file "auto-save/")))
+(let ((auto-save-directory (ms-paths-cache-file "auto-save/")))
   (make-directory auto-save-directory t)
   (setq auto-save-file-name-transforms
         `((".*" ,auto-save-directory t)))

@@ -31,7 +31,9 @@
 (use-package diff-hl
   :ensure t
   :custom
-  ; TODO Determine whether Tramp mode is slow without the following setting.
+  ;; diff-hl asks version control for a diff every time the buffer changes.
+  ;; Over Tramp each of those is a remote process, paying the connection
+  ;; latency, so the indicators stay off for remote files.
   (diff-hl-disable-on-remote t)
   :config
   ;; Fringes do not exist in a terminal frame, so the change indicators are
