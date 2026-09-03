@@ -1174,16 +1174,6 @@ current session without restarting."
 
   (ms/treesit-activate-remappings))
 
-;;; Clojure was configured here -- clojure-mode, CIDER, clj-refactor and
-;;; Flycheck with clj-kondo -- but never used, and the Debian side never
-;;; installed a JVM or the Clojure CLI for any of it to talk to.  Removed.
-;;;
-;;; Flycheck went with it.  It is a general framework, but it had exactly one
-;;; hook here, `clojure-mode'.  Diagnostics everywhere else come from Flymake
-;;; (Eglot, flymake-ruff, package-lint-flymake, and `sh-shellcheck-flymake'
-;;; for shell scripts), and running both frameworks in one buffer duplicates
-;;; every message.
-
 ;;; Emacs Lisp
 ;; `lisp-data-mode' is the parent of `emacs-lisp-mode', so one hook covers
 ;; .el sources and .eld data files alike.  IELM is deliberately left out:
