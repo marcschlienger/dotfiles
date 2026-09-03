@@ -1776,9 +1776,9 @@ current session without restarting."
         appt-display-mode-line t
         appt-display-interval 3
         appt-audible nil)
-  ;; Reminders are NOT started at startup: `org-agenda' has to be loaded
-  ;; and every agenda file scanned before the first one can be queued,
-  ;; which costs most of a second of every session.
+  ;; Reminders are NOT started at startup: `org-agenda' has to be loaded,
+  ;; which pulls in Org itself, and every agenda file scanned before the
+  ;; first one can be queued -- measured at about 400 ms here.
   ;;
   ;; How to enable them:
   ;;   this session only  ->  M-x ms-org-appt-initialise
@@ -1861,6 +1861,7 @@ current session without restarting."
 ;;; refile, todo
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-refile-targets
         '(("projects.org" . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
@@ -1882,6 +1883,7 @@ current session without restarting."
 ;;; tags
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-tag-alist
         '(("@home" . ?h)
@@ -1893,6 +1895,7 @@ current session without restarting."
 ;;; log
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
@@ -1903,6 +1906,7 @@ current session without restarting."
 ;;; links
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-link-context-for-files t)
   (setq org-link-keep-stored-after-insertion nil)
@@ -1911,6 +1915,7 @@ current session without restarting."
 ;;; code blocks
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-confirm-babel-evaluate t)
   (setq org-src-window-setup 'current-window)
@@ -1935,8 +1940,9 @@ current session without restarting."
 ;;; export
 (use-package org
   :ensure nil
+  :defer t
   :init
-  ;; This variable needs to be set before org.el ist loaded.
+  ;; This variable needs to be set before org.el is loaded.
   (setq org-export-backends '(html latex md odt texinfo))
   :config
   (setq org-export-with-toc t)
@@ -2516,8 +2522,8 @@ child still being open."
 (defun ms-org-appt-initialise ()
   "Switch on Org appointment reminders and keep them up to date.
 
-Nothing calls this at startup: loading `org-agenda' and scanning the
-agenda files costs most of a second of every session.  Run it with
+Nothing calls this at startup: loading `org-agenda' pulls in Org, and
+scanning the agenda files takes about 400 ms.  Run it with
 \\[execute-extended-command] ms-org-appt-initialise for the current
 session, or add it to `emacs-startup-hook' from init-org.el to get
 reminders in every session.  Loading `org-agenda' is what makes
