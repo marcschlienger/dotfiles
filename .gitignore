@@ -25,7 +25,7 @@ emacs/.emacs.d/tree-sitter/
 # Where Emacs remembers how far you got in the built-in tutorial (C-h t).
 emacs/.emacs.d/tutorial/
 # Records the Emacs version that last byte-compiled the packages, so
-# early-init can spot an upgrade. Per-machine by definition: sharing one
+# init.el can spot an upgrade. Per-machine by definition: sharing one
 # value across machines would silence the check on whichever machine
 # actually upgraded.
 emacs/.emacs.d/emacs-version-stamp

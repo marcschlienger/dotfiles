@@ -25,7 +25,7 @@
                   Info-mode))
     (add-to-list 'evil-emacs-state-modes mode)))
 
-(defun ms-toggle-line-number-type ()
+(defun ms/toggle-line-number-type ()
   "Toggle absolute and relative line numbering type."
   (interactive)
   (if (eq display-line-numbers 'relative)
@@ -47,7 +47,7 @@
     :global-prefix "C-SPC")
   (ms-leader-keys
     "b" 'mode-line-other-buffer
-    "n" 'ms-toggle-line-number-type
+    "n" 'ms/toggle-line-number-type
     "w" 'kill-buffer))
 
 ;;; Exit insert mode quickly

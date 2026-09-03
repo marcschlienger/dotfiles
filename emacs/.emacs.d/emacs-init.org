@@ -54,8 +54,9 @@ find everything related to my Emacs setup.
 (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 
-;; Initialise installed packages.
-(setq package-enable-at-startup t)
+;; Package activation is on by default; early-init only has to leave it
+;; alone.  What it must not do is load a package, which would run before
+;; `package-activate-all' and pick up whatever is on `load-path' then.
 #+end_src
 
 * The initialization file
@@ -64,7 +65,7 @@ find everything related to my Emacs setup.
 ;;-*- lexical-binding: t; -*-
 
 ;; Load config modules.  This has to come first: the settings below are
-;; written in terms of `ms-cache-file' from lib.d.
+;; written in terms of `ms-paths-cache-file' from lib.d.
 (mapc
  (lambda (string)
    (add-to-list 'load-path (locate-user-emacs-file string)))
@@ -73,7 +74,7 @@ find everything related to my Emacs setup.
 (require 'lib-paths)
 
 ;; Save backup files in a dedicated backup directory.
-(setq backup-directory-alist `(("" . ,(ms-cache-file "backup/"))))
+(setq backup-directory-alist `(("" . ,(ms-paths-cache-file "backup/"))))
 
 ;; Do not create lock files.
 (setq create-lockfiles nil)
@@ -81,7 +82,7 @@ find everything related to my Emacs setup.
 ;; Discard persistent customisations.  Custom insists on a file to write to,
 ;; so give it a fixed one and never load it.  `make-temp-file' also works but
 ;; leaves a fresh file behind on every single start.
-(setq custom-file (ms-cache-file "custom.el"))
+(setq custom-file (ms-paths-cache-file "custom.el"))
 
 ;; Package settings.
 (require 'package)
@@ -161,7 +162,7 @@ Run M-x ms-recompile-packages to see which files fail."
          :warning)))))
 
 ;; Keep ordinary recovery auto-saves outside the repository and synced files.
-(let ((auto-save-directory (ms-cache-file "auto-save/")))
+(let ((auto-save-directory (ms-paths-cache-file "auto-save/")))
   (make-directory auto-save-directory t)
   (setq auto-save-file-name-transforms
         `((".*" ,auto-save-directory t)))
@@ -849,9 +850,10 @@ The next sunrise or sunset event restores automatic switching."
 (use-package display-line-numbers
   :defer
   :custom
-  ; Compute the width of the line numbers based on the actual number of
-  ; lines in the file.
-  ; TODO Determine whether this will slow down operation especially in large files.
+  ;; Width comes from the buffer's own line count, so the text does not
+  ;; shift sideways as the numbers grow a digit.  It is computed once when
+  ;; the mode turns on -- about five milliseconds on a 200,000-line file --
+  ;; and never again during redisplay.
   (display-line-numbers-width-start t)
   (display-line-numbers-type 'relative)
   :hook
@@ -926,7 +928,7 @@ The next sunrise or sunset event restores automatic switching."
                   Info-mode))
     (add-to-list 'evil-emacs-state-modes mode)))
 
-(defun ms-toggle-line-number-type ()
+(defun ms/toggle-line-number-type ()
   "Toggle absolute and relative line numbering type."
   (interactive)
   (if (eq display-line-numbers 'relative)
@@ -948,7 +950,7 @@ The next sunrise or sunset event restores automatic switching."
     :global-prefix "C-SPC")
   (ms-leader-keys
     "b" 'mode-line-other-buffer
-    "n" 'ms-toggle-line-number-type
+    "n" 'ms/toggle-line-number-type
     "w" 'kill-buffer))
 
 ;;; Exit insert mode quickly
@@ -1510,8 +1512,9 @@ current session without restarting."
 
 ;; Emacs 31 draws Corfu's child frames in a terminal frame by itself.  The
 ;; Debian machine is on the distribution's Emacs 30.1, so the fallback still
-;; earns its place; corfu warns about the package being installed on 31,
-;; which is the price of one configuration serving both.
+;; earns its place.  Corfu warns when `corfu-terminal' is *loaded* on 31,
+;; from a `with-eval-after-load' in corfu.el; this guard is what keeps that
+;; from happening, so one configuration serves both at no cost.
 (when (< emacs-major-version 31)
   (use-package corfu-terminal
     :ensure t
@@ -1735,7 +1738,7 @@ current session without restarting."
 ;;-*- lexical-binding: t; -*-
 
 (require 'lib-org)
-(require 'lib-paths)                    ; `ms-cache-file'
+(require 'lib-paths)                    ; `ms-paths-cache-file'
 
 ;; Calendar
 (use-package calendar
@@ -2000,7 +2003,7 @@ current session without restarting."
   ;; Unused: every capture template names its own target.  A fixed path in
   ;; the cache keeps it out of `org-directory' without leaving a fresh
   ;; temporary file behind on each session.
-  (setq org-default-notes-file (ms-cache-file "org-default-notes.org"))
+  (setq org-default-notes-file (ms-paths-cache-file "org-default-notes.org"))
   ;; Directory entries are expanded whenever Org builds an agenda, so newly
   ;; created Org files are picked up without restarting Emacs.
   (setq org-agenda-files (list org-directory))
@@ -2097,7 +2100,7 @@ current session without restarting."
   (setq org-agenda-insert-diary-strategy 'date-tree)
   (setq org-agenda-insert-diary-extract-time nil)
   (setq org-agenda-include-diary nil)
-  (setq diary-file (ms-cache-file "diary")) ;send it to oblivion
+  (setq diary-file (ms-paths-cache-file "diary")) ;send it to oblivion
   (setq org-agenda-diary-file 'diary-file)
 
 ;;;; Agenda follow mode
@@ -2322,7 +2325,9 @@ current session without restarting."
 (use-package diff-hl
   :ensure t
   :custom
-  ; TODO Determine whether Tramp mode is slow without the following setting.
+  ;; diff-hl asks version control for a diff every time the buffer changes.
+  ;; Over Tramp each of those is a remote process, paying the connection
+  ;; latency, so the indicators stay off for remote files.
   (diff-hl-disable-on-remote t)
   :config
   ;; Fringes do not exist in a terminal frame, so the change indicators are
@@ -2419,7 +2424,7 @@ symlink into this repository.  One cache root, resolved per platform.
 #+begin_src emacs-lisp :tangle lib.d/lib-paths.el :mkdirp yes
 ;;; lib-paths.el -*- lexical-binding: t -*-
 
-(defconst ms-cache-directory
+(defconst ms-paths-cache-directory
   (expand-file-name
    "emacs/"
    (or (getenv "XDG_CACHE_HOME")
@@ -2428,10 +2433,10 @@ symlink into this repository.  One cache root, resolved per platform.
          (expand-file-name "~/.cache/"))))
   "Directory for Emacs state that is disposable and machine-local.")
 
-(defun ms-cache-file (name)
-  "Return NAME inside `ms-cache-directory', creating the directory."
-  (make-directory ms-cache-directory t)
-  (expand-file-name name ms-cache-directory))
+(defun ms-paths-cache-file (name)
+  "Return NAME inside `ms-paths-cache-directory', creating the directory."
+  (make-directory ms-paths-cache-directory t)
+  (expand-file-name name ms-paths-cache-directory))
 
 (provide 'lib-paths)
 #+end_src

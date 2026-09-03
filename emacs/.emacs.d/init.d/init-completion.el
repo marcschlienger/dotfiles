@@ -105,8 +105,9 @@
 
 ;; Emacs 31 draws Corfu's child frames in a terminal frame by itself.  The
 ;; Debian machine is on the distribution's Emacs 30.1, so the fallback still
-;; earns its place; corfu warns about the package being installed on 31,
-;; which is the price of one configuration serving both.
+;; earns its place.  Corfu warns when `corfu-terminal' is *loaded* on 31,
+;; from a `with-eval-after-load' in corfu.el; this guard is what keeps that
+;; from happening, so one configuration serves both at no cost.
 (when (< emacs-major-version 31)
   (use-package corfu-terminal
     :ensure t
