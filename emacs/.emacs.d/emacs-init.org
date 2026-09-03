@@ -267,6 +267,14 @@ Run M-x ms-recompile-packages to see which files fail."
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
 
+;; Both of these were reachable only from the leader key, which is why they
+;; are bound here rather than beside the leader map: `ctl-x-x-map' is where
+;; Emacs already keeps its buffer toggles -- C-x x t for truncated lines,
+;; C-x x v for variable pitch, C-x x f to refresh font lock -- and a binding
+;; that lives there survives whatever happens to Evil.
+(keymap-set ctl-x-x-map "b" #'mode-line-other-buffer)
+(keymap-set ctl-x-x-map "l" #'ms/toggle-line-number-type)
+
 ;; MacOS specific settings
 (use-package emacs
   :if (eq system-type 'darwin)
