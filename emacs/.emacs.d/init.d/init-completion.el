@@ -16,8 +16,8 @@
   :custom
   ;; Formatting is *not* ignored globally.  Ruff owns it for Python and
   ;; rustfmt through Rustic for Rust, so it is switched off per buffer for
-  ;; those two below; clangd and texlab keep theirs, because nothing else
-  ;; formats C, C++ or LaTeX here.
+  ;; those two below; clangd, gopls and texlab keep theirs, because nothing
+  ;; else formats C, C++, Go or LaTeX here.
   (eglot-ignored-server-capabilities
    '(:documentHighlightProvider
      :colorProvider
@@ -27,6 +27,8 @@
   (c-ts-mode . eglot-ensure)
   (c++-mode . eglot-ensure)
   (c++-ts-mode . eglot-ensure)
+  (go-mode . eglot-ensure)
+  (go-ts-mode . eglot-ensure)
   (LaTeX-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)

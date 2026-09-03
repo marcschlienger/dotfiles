@@ -12,6 +12,7 @@ set. Install every executable on both macOS and Linux:
 | Language | Executable | Used by | Current macOS status |
 | --- | --- | --- | --- |
 | C and C++ | `clangd` | Emacs and Neovim | Installed (`21.0.0`) |
+| Go | `gopls` | Emacs | Not installed |
 | Lua | `lua-language-server` | Neovim | Installed (`3.19.1`) |
 | Python semantics and type checking | `ty` (`ty server`) | Emacs and Neovim | Installed (`0.0.74`) |
 | Python linting and formatting | `ruff` (`ruff server` in Neovim) | Emacs and Neovim | Installed (`0.16.4`) |
@@ -53,6 +54,12 @@ language server is absent, Eglot cannot start for that language. If Ruff is
 absent, Python buffers still open normally, but Ruff diagnostics are unavailable
 and formatting reports the missing executable when the buffer is saved. Keeping
 the hooks unconditional makes an incomplete development environment visible.
+
+Go's save hook is the one exception. It organizes imports and reformats through
+gopls, and both are server operations, so it checks that a server is managing
+the buffer and otherwise does nothing: a `before-save-hook` that signals would
+refuse the save outright. Nothing is hidden by that, because the unconditional
+`eglot-ensure` on the same buffer already reports a missing gopls.
 
 AUCTeX uses Skim on macOS when its `displayline` helper is installed, otherwise
 it uses the system `open` command. On Linux it prefers Zathura and falls back to
@@ -269,5 +276,6 @@ become more important than automatically picking up parser updates.
   generated files; selective hooks are an alternative.
 - Eglot ignores document highlighting, color, and folding for every server.
   Formatting is ignored only in Python and Rust buffers, where Ruff and
-  rustfmt own it; clangd and texlab keep theirs, because nothing else formats
-  C, C++, or LaTeX here.
+  rustfmt own it; clangd, gopls, and texlab keep theirs, because nothing else
+  formats C, C++, Go, or LaTeX here. Go buffers additionally organize imports
+  and reformat through gopls on save.
