@@ -1119,40 +1119,17 @@ spell checking section of emacs-init.org."
           (go "https://github.com/tree-sitter/tree-sitter-go")
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (rust "https://github.com/tree-sitter/tree-sitter-rust")))
-  ;; No `go' entry.  A remapping needs a mode to remap *from*, and `go-mode'
-  ;; is not installed; the association is Emacs's own business.  How it does
-  ;; that differs by version, which is why it is not relied on:
-  ;;
-  ;;   31  go-ts-mode.el autoloads a `go-ts-mode-maybe' dispatcher into
-  ;;       `auto-mode-alist' unconditionally.
-  ;;   30  no dispatcher exists; the association comes from an autoloaded
-  ;;       form guarded by `(treesit-ready-p 'go)', evaluated when the
-  ;;       autoloads are rather than when the grammar is built.
-  ;;
-  ;; `ms/treesit-associate-go' below settles both cases: it claims .go only
-  ;; when the grammar is present and nothing else has claimed it, so it is a
-  ;; no-op on 31 and a repair on 30.
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
+      (go go-mode go-ts-mode)
       (python python-mode python-ts-mode))
     "Tree-sitter remappings enabled when their grammar is available.")
   :config
-  (defun ms/treesit-associate-go ()
-    "Make sure .go files reach `go-ts-mode'.
-Does nothing when the grammar is missing, and nothing when something has
-already claimed the extension -- so it repairs Emacs 30 without displacing
-the dispatcher Emacs 31 installs."
-    (when (and (treesit-language-available-p 'go)
-               (not (assoc-default "x.go" auto-mode-alist #'string-match)))
-      (add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))))
-
   (defun ms/treesit-activate-remappings ()
     "Pick up every tree-sitter grammar that is available locally.
-Remaps the modes that have a traditional counterpart, and claims .go,
-which needs an association rather than a remapping because `go-mode' is
-not installed.  Run this after installing a grammar to use it in the
-current session without restarting."
+Run this after installing a grammar to use it in the current session
+without restarting."
     (interactive)
     (dolist (entry ms/treesit-major-mode-remappings)
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
@@ -1160,11 +1137,7 @@ current session without restarting."
           (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
     ;; `rust-mode' chooses its parent mode when its package is loaded.
     (setq rust-mode-treesitter-derive
-          (treesit-language-available-p 'rust))
-    ;; Go is not in the remapping list, so it has to be picked up here too --
-    ;; otherwise installing the grammar in a running session left .go
-    ;; unassociated until the next restart.
-    (ms/treesit-associate-go))
+          (treesit-language-available-p 'rust)))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -1266,6 +1239,15 @@ current session without restarting."
   :config
   (setq rustic-format-trigger 'on-save)
   (setq rustic-lsp-client 'eglot))
+
+;;; Go
+;; Installed for its `auto-mode-alist' entry and as the mode `go-ts-mode' is
+;; remapped from; the remapping in the tree-sitter block above does the rest.
+;; Nothing is configured here, and on a machine where the grammar has not
+;; been built this is what .go falls back to.
+(use-package go-mode
+  :ensure t
+  :defer t)
 
 ;;; Shell mode
 (defun ms/sh-mode-setup ()
