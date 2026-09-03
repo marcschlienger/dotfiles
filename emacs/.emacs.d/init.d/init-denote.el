@@ -7,7 +7,9 @@
   :custom
   (denote-directory (expand-file-name "~/denote-test/"))
   (denote-file-type 'markdown-yaml)
-  ;; Mirrors the `domain' values already used in the Obsidian vault.
+  ;; Seeds keyword completion.  `denote-infer-keywords' below adds
+  ;; whatever the existing notes already carry, so this list only has to
+  ;; cover the ones no note uses yet.
   (denote-known-keywords
    '("teaching" "school-it" "computing" "mathematics" "personal"))
   (denote-infer-keywords t)
@@ -39,8 +41,8 @@
   :config
   (consult-denote-mode 1))
 
-;; Converts between Denote's link syntax and plain Markdown links. This is the
-;; package that decides whether one directory can be shared with Obsidian.
+;; Converts between Denote's link syntax and plain Markdown links, which is
+;; what decides whether the notes stay readable to other Markdown editors.
 ;; Inspect the `denote-markdown-' command prefix before relying on it.
 (use-package denote-markdown
   :ensure t

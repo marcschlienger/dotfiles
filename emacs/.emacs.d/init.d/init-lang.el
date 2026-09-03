@@ -38,7 +38,7 @@
 ;;
 ;; Enchant does not check spelling itself; it dispatches to whichever provider
 ;; it was built with, and German needs that to be hunspell.  Aspell cannot
-;; decompose compounds: over eighteen everyday school words it accepted 6,
+;; decompose compounds: of eighteen everyday German compounds it accepted 6,
 ;; hunspell 18.  Homebrew's enchant ships no hunspell provider at all, which
 ;; is what the macos-bootstrap step above builds and installs.
 ;;

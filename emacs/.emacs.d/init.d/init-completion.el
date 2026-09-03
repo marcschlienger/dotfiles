@@ -254,8 +254,8 @@
   (savehist-file (locate-user-emacs-file "savehist"))
   :config
   ;; Not the kill ring.  Cross-session clipboard history is worth little
-  ;; next to the chance of a password copied out of KeePassXC surviving on
-  ;; disk in plain text.
+  ;; next to the chance of a copied password surviving on disk in plain
+  ;; text.
   ;; `corfu-history-mode' sorts candidates by history, but only savehist
   ;; carries that history across sessions.
   (add-to-list 'savehist-additional-variables 'corfu-history)

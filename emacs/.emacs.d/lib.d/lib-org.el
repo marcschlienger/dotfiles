@@ -62,8 +62,8 @@ child still being open."
 (defun ms-org-appt-initialise ()
   "Switch on Org appointment reminders and keep them up to date.
 
-Nothing calls this at startup: `org-agenda' is not loaded then, and Org
-is not used for task management in this configuration.  Run it with
+Nothing calls this at startup: loading `org-agenda' and scanning the
+agenda files costs most of a second of every session.  Run it with
 \\[execute-extended-command] ms-org-appt-initialise for the current
 session, or add it to `emacs-startup-hook' from init-org.el to get
 reminders in every session.  Loading `org-agenda' is what makes
