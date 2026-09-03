@@ -31,9 +31,9 @@
         appt-display-mode-line t
         appt-display-interval 3
         appt-audible nil)
-  ;; Reminders are NOT started at startup: `org-agenda' has to be loaded
-  ;; and every agenda file scanned before the first one can be queued,
-  ;; which costs most of a second of every session.
+  ;; Reminders are NOT started at startup: `org-agenda' has to be loaded,
+  ;; which pulls in Org itself, and every agenda file scanned before the
+  ;; first one can be queued -- measured at about 400 ms here.
   ;;
   ;; How to enable them:
   ;;   this session only  ->  M-x ms-org-appt-initialise
@@ -116,6 +116,7 @@
 ;;; refile, todo
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-refile-targets
         '(("projects.org" . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
@@ -137,6 +138,7 @@
 ;;; tags
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-tag-alist
         '(("@home" . ?h)
@@ -148,6 +150,7 @@
 ;;; log
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
@@ -158,6 +161,7 @@
 ;;; links
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-link-context-for-files t)
   (setq org-link-keep-stored-after-insertion nil)
@@ -166,6 +170,7 @@
 ;;; code blocks
 (use-package org
   :ensure nil
+  :defer t
   :config
   (setq org-confirm-babel-evaluate t)
   (setq org-src-window-setup 'current-window)
@@ -190,8 +195,9 @@
 ;;; export
 (use-package org
   :ensure nil
+  :defer t
   :init
-  ;; This variable needs to be set before org.el ist loaded.
+  ;; This variable needs to be set before org.el is loaded.
   (setq org-export-backends '(html latex md odt texinfo))
   :config
   (setq org-export-with-toc t)
