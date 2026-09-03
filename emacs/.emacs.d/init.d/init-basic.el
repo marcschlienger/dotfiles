@@ -88,6 +88,14 @@
       (setq display-line-numbers t)
     (setq display-line-numbers 'relative)))
 
+;; Both of these were reachable only from the leader key, so removing it left
+;; them with no binding at all.  `ctl-x-x-map' is where Emacs already keeps
+;; its buffer toggles -- C-x x t for truncated lines, C-x x v for variable
+;; pitch, C-x x f to refresh font lock -- so they join that family instead of
+;; claiming two more top-level keys.
+(keymap-set ctl-x-x-map "b" #'mode-line-other-buffer)
+(keymap-set ctl-x-x-map "l" #'ms/toggle-line-number-type)
+
 ;; MacOS specific settings
 (use-package emacs
   :if (eq system-type 'darwin)
