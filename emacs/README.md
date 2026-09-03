@@ -163,11 +163,11 @@ The generated `emacs/.emacs.d/tree-sitter/` directory is ignored by Git.
 On a fresh clone, the configuration first checks `treesit-available-p` to make
 sure Emacs itself has Tree-sitter support. It then checks every language with
 `treesit-language-available-p`. Only grammars that can be loaded are remapped
-to their Tree-sitter major modes; otherwise C, C++ and Python keep using their
-traditional major modes. Go has no traditional fallback -- `go-mode` is not
-installed -- so `.go` reaches `go-ts-mode` only when the grammar is present;
-the configuration claims the extension itself if Emacs has not already. A missing grammar therefore degrades
-cleanly instead of breaking file opening. Rust uses `rust-mode`'s separate
+to their Tree-sitter major modes; otherwise C, C++, Go and Python keep using
+their traditional major modes. A missing grammar therefore degrades cleanly
+instead of breaking file opening: `go-mode` claims `.go` on its own, and the
+remapping only redirects it to `go-ts-mode` once the grammar is built. Rust
+uses `rust-mode`'s separate
 Tree-sitter integration only when the Rust grammar is available at startup;
 otherwise it derives from ordinary `prog-mode`. The Emacs Lisp grammar is not
 automatically remapped.
@@ -199,10 +199,9 @@ successfully. The locally generated binaries will be `.dylib`-compatible on
 macOS and `.so` libraries on Linux, so every machine must build its own copies.
 
 After installation, `M-x ms/treesit-activate-remappings` is enough to pick up
-C, C++, Python, and Go in the current session — it remaps the first three and
-claims `.go`, which needs an association rather than a remapping because
-`go-mode` is not installed. `M-x ms/treesit-install-missing-grammars` calls it
-for you, so the two routes behave the same. Restarting is still required if
+C, C++, Go, and Python in the current session.
+`M-x ms/treesit-install-missing-grammars` calls it for you, so the two routes
+behave the same. Restarting is still required if
 `rust-mode` was already loaded, because that package chooses its parent mode
 when it loads. Confirm a buffer is
 using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, and Python should
