@@ -1243,11 +1243,29 @@ without restarting."
 ;;; Go
 ;; Installed for its `auto-mode-alist' entry and as the mode `go-ts-mode' is
 ;; remapped from; the remapping in the tree-sitter block above does the rest.
-;; Nothing is configured here, and on a machine where the grammar has not
-;; been built this is what .go falls back to.
+;; On a machine where the grammar has not been built this is what .go falls
+;; back to.
+(defun ms/go-format-on-save ()
+  "Organize imports and reformat the buffer through the language server.
+Both are server operations, so this does nothing when no server is managing
+the buffer -- saving still works where the server is not installed."
+  (when (and (fboundp 'eglot-managed-p) (eglot-managed-p))
+    ;; Organizing imports signals when the server offers no such action,
+    ;; which for a file whose imports are already correct is the ordinary
+    ;; case.  A `before-save-hook' must not refuse the save over that.
+    (ignore-errors
+      (eglot-code-action-organize-imports (point-min) (point-max)))
+    (eglot-format-buffer)))
+
+(defun ms/go-mode-setup ()
+  "Reformat Go buffers through the language server on save."
+  (add-hook 'before-save-hook #'ms/go-format-on-save nil t))
+
 (use-package go-mode
   :ensure t
-  :defer t)
+  :defer t
+  :hook ((go-mode . ms/go-mode-setup)
+         (go-ts-mode . ms/go-mode-setup)))
 
 ;;; Shell mode
 (defun ms/sh-mode-setup ()
@@ -1318,8 +1336,8 @@ without restarting."
   :custom
   ;; Formatting is *not* ignored globally.  Ruff owns it for Python and
   ;; rustfmt through Rustic for Rust, so it is switched off per buffer for
-  ;; those two below; clangd and texlab keep theirs, because nothing else
-  ;; formats C, C++ or LaTeX here.
+  ;; those two below; clangd, gopls and texlab keep theirs, because nothing
+  ;; else formats C, C++, Go or LaTeX here.
   (eglot-ignored-server-capabilities
    '(:documentHighlightProvider
      :colorProvider
@@ -1329,6 +1347,8 @@ without restarting."
   (c-ts-mode . eglot-ensure)
   (c++-mode . eglot-ensure)
   (c++-ts-mode . eglot-ensure)
+  (go-mode . eglot-ensure)
+  (go-ts-mode . eglot-ensure)
   (LaTeX-mode . eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)
