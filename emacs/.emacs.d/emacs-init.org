@@ -1250,16 +1250,32 @@ without restarting."
 Both are server operations, so this does nothing when no server is managing
 the buffer -- saving still works where the server is not installed."
   (when (and (fboundp 'eglot-managed-p) (eglot-managed-p))
-    ;; Organizing imports signals when the server offers no such action,
-    ;; which for a file whose imports are already correct is the ordinary
-    ;; case.  A `before-save-hook' must not refuse the save over that.
-    (ignore-errors
-      (eglot-code-action-organize-imports (point-min) (point-max)))
+    ;; A file whose imports are already correct offers no organizing action,
+    ;; and Eglot signals for that.  The save itself is not at risk -- Emacs
+    ;; runs `before-save-hook' inside `with-demoted-errors' -- but a signal
+    ;; here would report an error on nearly every save and skip the
+    ;; reformatting below, which is the next form in this same function.
+    ;;
+    ;; Eglot raises everything as a plain `error', so that ordinary case can
+    ;; only be told apart by its message.  Anything else -- a timeout, a
+    ;; server that died mid-request -- is worth hearing about.
+    (condition-case error-data
+        (eglot-code-action-organize-imports (point-min) (point-max))
+      (error
+       (let ((text (error-message-string error-data)))
+         (unless (string-search "No \"source.organizeImports\" code actions here"
+                                text)
+           (display-warning 'eglot
+                            (format "Organizing imports failed: %s" text)
+                            :warning)))))
     (eglot-format-buffer)))
 
 (defun ms/go-mode-setup ()
-  "Reformat Go buffers through the language server on save."
-  (add-hook 'before-save-hook #'ms/go-format-on-save nil t))
+  "Reformat Go buffers through the language server on save.
+The depth puts this ahead of Eglot's own `willSave' notification, which
+`eglot--managed-mode' adds at the default depth once it connects: the
+server should hear about the save after these edits, not before."
+  (add-hook 'before-save-hook #'ms/go-format-on-save -10 t))
 
 (use-package go-mode
   :ensure t

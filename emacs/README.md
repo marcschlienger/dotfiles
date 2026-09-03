@@ -57,9 +57,23 @@ the hooks unconditional makes an incomplete development environment visible.
 
 Go's save hook is the one exception. It organizes imports and reformats through
 gopls, and both are server operations, so it checks that a server is managing
-the buffer and otherwise does nothing: a `before-save-hook` that signals would
-refuse the save outright. Nothing is hidden by that, because the unconditional
-`eglot-ensure` on the same buffer already reports a missing gopls.
+the buffer and otherwise does nothing.
+
+Emacs runs `before-save-hook` inside `with-demoted-errors`, so a signal there
+does not lose the save: the error is reported and the remaining hooks are
+skipped. The cost of letting it signal is therefore not a refused save but an
+error on nearly every save, with the reformatting skipped along with it, since
+that is the next step in the same function. gopls answers a file whose imports
+are already correct with `No "source.organizeImports" code actions here`, and
+Eglot raises everything as a plain `error`, so that one case is recognized by
+its message and passed over while anything else -- a timeout, a server that died
+mid-request -- raises a warning. Nothing is hidden by any of it, because the
+unconditional `eglot-ensure` on the same buffer already reports a missing gopls.
+
+The hook is registered at depth -10, ahead of Eglot's own `willSave`
+notification, which `eglot--managed-mode` adds at the default depth: the server
+should hear about the save after these edits rather than before. That is the
+ordering the gopls documentation recommends.
 
 AUCTeX uses Skim on macOS when its `displayline` helper is installed, otherwise
 it uses the system `open` command. On Linux it prefers Zathura and falls back to
