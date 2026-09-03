@@ -31,9 +31,9 @@
         appt-display-mode-line t
         appt-display-interval 3
         appt-audible nil)
-  ;; Reminders are NOT started at startup.  Org is not used for task
-  ;; management here, so waking org-agenda to scan an empty `org-directory'
-  ;; would cost most of a second of every session and find nothing.
+  ;; Reminders are NOT started at startup: `org-agenda' has to be loaded
+  ;; and every agenda file scanned before the first one can be queued,
+  ;; which costs most of a second of every session.
   ;;
   ;; How to enable them:
   ;;   this session only  ->  M-x ms-org-appt-initialise
@@ -54,11 +54,10 @@
 (use-package org
   :ensure nil
   :init
-  ;; Left at Org's own default.  Where notes should live is undecided --
-  ;; if Org ever takes over note-taking it will most likely be a synced
-  ;; directory under Nextcloud or iCloud, so this gets set properly then.
-  ;; Nothing here creates the directory: an empty ~/org appearing on a
-  ;; machine that does not use Org is noise, and Org copes without it.
+  ;; Left at Org's own default, because where notes should live is still
+  ;; undecided.  Nothing here creates the directory: an empty ~/org on a
+  ;; machine that never opens an Org file is noise, and Org copes without
+  ;; it.
   (setq org-directory (expand-file-name "~/org"))
   (setq org-imenu-depth 7)
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
@@ -98,8 +97,8 @@
   (setq org-loop-over-headlines-in-active-region 'start-level)
   ;; Org's default pulls in eleven `ol-' link modules -- bbdb, gnus, irc,
   ;; mhe, rmail, w3m and the rest -- the first time any Org buffer opens,
-  ;; and this file is an Org buffer.  None of them are used: notes live in
-  ;; Obsidian, so there is nothing to store an Info or eww link into.
+  ;; and this file is an Org buffer.  Nothing here stores links of those
+  ;; kinds, so none of them are loaded.
   (setq org-modules nil)
   (setq org-use-sub-superscripts '{})
   (setq org-insert-heading-respect-content t)
@@ -322,9 +321,8 @@
            tags-todo "@home")
           ("w" "List all active tasks that have to be done @work"
            tags-todo "@work")
-          ;; This does not do what its name says, and is left as it is
-          ;; because Org is not used for task management here.  The query
-          ;; matches any level-three NEXT heading, whether or not it sits
+          ;; This does not do what its name says.  The query matches any
+          ;; level-three NEXT heading, whether or not it sits
           ;; under a project, and misses project actions at every other
           ;; depth -- it never mentions projects at all.  Since the capture
           ;; template tags projects `:project:' and Org inherits tags, the
@@ -333,8 +331,8 @@
           ;;   tags-todo "project"        ; every unfinished project action
           ;;   tags-todo "project/NEXT"   ; only the ones marked NEXT
           ;;
-          ;; Choosing between those is a workflow decision, so it waits
-          ;; until there is a workflow to decide about.
+          ;; Choosing between them is a workflow decision, so the entry
+          ;; is left untouched until that decision is made.
           ("p" "List all active project-related tasks"
            tags "+LEVEL=3+TODO=\"NEXT\"")))
   (setq org-agenda-max-entries nil)
