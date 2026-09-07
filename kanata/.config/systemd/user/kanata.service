@@ -5,7 +5,7 @@ After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/kanata --cfg %h/.config/kanata/kanata.kbd --no-wait
+ExecStart=/usr/local/bin/kanata --cfg %h/.config/kanata/kanata-linux.kbd --no-wait
 Restart=on-failure
 RestartSec=3
 

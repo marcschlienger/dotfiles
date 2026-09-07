@@ -9,6 +9,11 @@ are in `qmk/README.md` in this dotfiles checkout. Copy that file to
 Stow makes the configuration available. It does not install Kanata, grant
 device permissions, or start a service.
 
+`kanata.kbd` is the macOS entry point and `kanata-linux.kbd` is the Linux
+entry point. Both include `common.kbd` for the shared timeout and one-shot
+definitions. Separate entry points are necessary because Kanata exposes Print
+Screen as a Linux-only key name.
+
 ## Behaviour
 
 | Physical position | MacBook key | ThinkPad key | Tap and release | Hold |
@@ -19,12 +24,29 @@ device permissions, or start a service.
 | Left inner | Command | Alt | One-shot Control | Control |
 | Left Shift | Shift | Shift | One-shot left Shift | Left Shift |
 | Right Shift | Shift | Shift | One-shot right Shift | Right Shift |
-| Right Control | Control | Control | One-shot right Control | Right Control |
 
-Right Alt remains ordinary so the Linux us(altgr-intl) layout continues to
-work. Fn remains untouched at the left edge of each laptop. Other keys retain
-their normal keycodes. The timeout is 1000 ms and different one-shot modifiers
-can be combined.
+The right side reflects the laptops' different physical layouts:
+
+| Laptop | Physical key | Tap and release | Hold |
+| --- | --- | --- | --- |
+| MacBook | Right Command | One-shot right Control | Right Control |
+| MacBook | Right Option | Right Option | Right Option |
+| ThinkPad | Right Alt | One-shot right Control | Right Control |
+| ThinkPad | Print Screen | One-shot right Super | Right Super |
+| ThinkPad | Right Control | Right Alt/AltGr | Right Alt/AltGr |
+
+The logical Right Alt key remains ordinary so the Linux us(altgr-intl) layout
+continues to work; it moves to the ThinkPad key labelled Right Control. Fn
+remains untouched at the left edge of each laptop. The MacBook therefore has
+`Space | Control | Option` on the right, with Super/Command available on the
+left. The ThinkPad has `Space | Control | Super | Alt`, matching the first
+three Keychron modifiers. Other keys retain their normal keycodes. The timeout
+is 1000 ms and different one-shot modifiers can be combined.
+
+The ThinkPad's physical Print Screen key is now a modifier. Sway provides
+screenshots on Super+Control+3 (output), Super+Control+4 (area), and
+Super+Control+5 (window). Super+Shift+3/4/5 remain available for moving windows
+to workspaces.
 
 one-shot-release keeps the modifier active until the following key is
 released. Holding the one-shot key itself still behaves like a normal held
@@ -294,8 +316,8 @@ rule after identifying the internal keyboard.
 ### Validate and test in the foreground
 
 ```sh
-kanata --check --cfg "$HOME/.config/kanata/kanata.kbd"
-sudo kanata --cfg "$HOME/.config/kanata/kanata.kbd"
+kanata --check --cfg "$HOME/.config/kanata/kanata-linux.kbd"
+sudo kanata --cfg "$HOME/.config/kanata/kanata-linux.kbd"
 ```
 
 The foreground process must report that it entered its processing loop. Test
@@ -331,7 +353,7 @@ systemctl --user restart kanata.service
 After changing the configuration, validate it and restart the service:
 
 ```sh
-kanata --check --cfg "$HOME/.config/kanata/kanata.kbd" && \
+kanata --check --cfg "$HOME/.config/kanata/kanata-linux.kbd" && \
   systemctl --user restart kanata.service
 ```
 
