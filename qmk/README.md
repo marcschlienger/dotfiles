@@ -29,26 +29,51 @@ macOS:
 
 Debian 13:
 
+    sudo apt update
+    sudo apt install --no-install-recommends ca-certificates curl git ripgrep
     curl -fsSL https://install.qmk.fm -o /tmp/install-qmk.sh
     less /tmp/install-qmk.sh
     sh /tmp/install-qmk.sh
+    qmk --version
     qmk doctor
 
-The current QMK setup guide is at
-https://docs.qmk.fm/newbs_getting_started. On Debian, install QMK's udev
-rules from the firmware checkout so flashing does not require running the
-whole build as root:
+QMK's official bootstrapper installs the CLI, compiler toolchains and
+flashing utilities. The current setup guide is at
+https://docs.qmk.fm/newbs_getting_started. Do not run the whole build as root.
 
-    util/install_udev.sh
+Clone the Keychron fork's branch that contains both of these targets. The
+branch used for this setup is `2025q3`:
 
-Clone the official Keychron fork into the existing empty qmk directory, or
-choose a clearly named subdirectory if more than one branch is needed:
-
+    mkdir -p ~/Repos/qmk
     cd ~/Repos/qmk
-    git clone --recurse-submodules https://github.com/Keychron/qmk_firmware.git keychron-qmk
+    git clone --branch 2025q3 --recurse-submodules https://github.com/Keychron/qmk_firmware.git keychron-qmk
     cd keychron-qmk
-    qmk setup
+    qmk setup -H "$PWD"
     qmk doctor
+    qmk list-keyboards | rg '^keychron/(v3_max|q3)/'
+
+For an existing checkout, update the branch and submodules without discarding
+local keymaps:
+
+    cd ~/Repos/qmk/keychron-qmk
+    git status --short
+    git fetch origin 2025q3
+    git switch 2025q3
+    git pull --ff-only origin 2025q3
+    git submodule update --init --recursive
+    qmk setup -H "$PWD"
+    qmk doctor
+
+Install QMK's Debian udev rules from this checkout so flashing does not
+require running the whole build as root:
+
+    sudo util/install_udev.sh
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
+
+Reconnect the keyboard after installing the rules. Check the exact targets
+before compiling:
+
     qmk list-keyboards | rg '^keychron/(v3_max|q3)/'
 
 Sources:
