@@ -2,7 +2,7 @@
 
 This package provides one-shot modifiers for laptop keyboards on macOS and
 Debian 13 with Sway. The external Keychron V3 Max ANSI and Q3 ANSI knob
-keyboards will eventually get the same behaviour in QMK; their setup notes
+keyboards get the same behaviour from QMK; their setup notes
 are in `qmk/README.md` in this dotfiles checkout. Copy that file to
 `~/Repos/qmk/README.md` if you want the notes alongside the firmware checkout.
 
@@ -11,18 +11,20 @@ device permissions, or start a service.
 
 ## Behaviour
 
-| Physical key | Tap and release | Hold |
-| --- | --- | --- |
-| Caps Lock or left Control | One-shot left Control | Left Control |
-| Left Shift | One-shot left Shift | Left Shift |
-| Right Shift | One-shot right Shift | Right Shift |
-| Left Alt / Option | One-shot left Alt | Left Alt |
-| Left GUI / Command / Super | One-shot left GUI | Left GUI |
-| Right Control | One-shot right Control | Right Control |
+| Physical position | MacBook key | ThinkPad key | Tap and release | Hold |
+| --- | --- | --- | --- | --- |
+| Caps Lock | Caps Lock | Caps Lock | One-shot Control | Control |
+| Left outer | Control | Control | One-shot Alt | Alt |
+| Left middle | Option | Super | One-shot Super | Super |
+| Left inner | Command | Alt | One-shot Control | Control |
+| Left Shift | Shift | Shift | One-shot left Shift | Left Shift |
+| Right Shift | Shift | Shift | One-shot right Shift | Right Shift |
+| Right Control | Control | Control | One-shot right Control | Right Control |
 
 Right Alt remains ordinary so the Linux us(altgr-intl) layout continues to
-work. Other keys retain their normal keycodes. The timeout is 1000 ms and
-different one-shot modifiers can be combined.
+work. Fn remains untouched at the left edge of each laptop. Other keys retain
+their normal keycodes. The timeout is 1000 ms and different one-shot modifiers
+can be combined.
 
 one-shot-release keeps the modifier active until the following key is
 released. Holding the one-shot key itself still behaves like a normal held
@@ -277,7 +279,7 @@ getent group uinput || sudo groupadd --system uinput
 sudo usermod -aG input,uinput "$USER"
 sudo modprobe uinput
 sudo install -o root -g root -m 0644 \
-  ~/.dotfiles/udev/70-kanata-uinput.rules \
+  ~/.config/kanata/linux/70-kanata-uinput.rules \
   /etc/udev/rules.d/70-kanata-uinput.rules
 sudo udevadm control --reload-rules
 sudo udevadm trigger --subsystem-match=misc
@@ -344,27 +346,18 @@ The complete platform reference is the
 
 ## Transition to QMK
 
-Initially Kanata processes all detected keyboards. After each Keychron has
-working QMK firmware, restrict Kanata to the internal keyboard with exact
-device include lists. Get names with kanata --list on macOS and from
-Kanata's registering lines on Linux. Add both options to the same defcfg,
-replacing the examples:
-
-    (defcfg
-      process-unmapped-keys yes
-      linux-dev-names-include ("EXACT LINUX INTERNAL KEYBOARD NAME")
-      macos-dev-names-include ("EXACT MACOS INTERNAL KEYBOARD NAME")
-    )
+Kanata includes only the Apple internal keyboard on macOS and excludes the
+two Keychron product names on Linux. Confirm the Linux names from Kanata's
+registering lines after flashing; device-name matching is exact. If either
+name differs, replace it in the defcfg before enabling the Linux service.
 
 Restart Kanata after changing device filters. Live reload does not change
 which devices are grabbed.
 
-Your Sway configuration still contains
-caps:ctrl_modifier,altwin:swap_lalt_lwin. Kanata emits actual Control for
-Caps; the existing XKB setting remains a fallback when Kanata is stopped.
-The Alt/GUI swap also affects Kanata's virtual output, so verify the result
-with wev. Disable native Sticky Keys while testing so two latching systems do
-not interact.
+Sway retains only `caps:ctrl_modifier` as a fallback when Kanata is stopped.
+It must not swap Alt and Super because Kanata emits the final modifier layout.
+Disable native Sticky Keys while testing so two latching systems do not
+interact.
 
 ## Verification
 
