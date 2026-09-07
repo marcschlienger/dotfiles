@@ -277,7 +277,7 @@ getent group uinput || sudo groupadd --system uinput
 sudo usermod -aG input,uinput "$USER"
 sudo modprobe uinput
 sudo install -o root -g root -m 0644 \
-  ~/.dotfiles/kanata/udev/70-kanata-uinput.rules \
+  ~/.dotfiles/udev/70-kanata-uinput.rules \
   /etc/udev/rules.d/70-kanata-uinput.rules
 sudo udevadm control --reload-rules
 sudo udevadm trigger --subsystem-match=misc
@@ -313,11 +313,11 @@ systemctl --user enable --now kanata.service
 systemctl --user status --no-pager kanata.service
 ```
 
-The service uses `--release-grab-on-lock` so the keyboard is released while
-the screen is locked or another user owns the session. It restarts after an
-unexpected failure. It runs as the logged-in user, so the input and uinput
-group membership must be active. Keep the foreground test stopped before
-starting the service.
+The service restarts after an unexpected failure. It runs as the logged-in
+user, so the input and uinput group membership must be active. Keep the
+foreground test stopped before starting the service. Linux Kanata does not
+support the macOS-only `--release-grab-on-lock` option; screen-lock handling
+therefore follows the service/session lifecycle.
 
 Inspect failures with:
 
