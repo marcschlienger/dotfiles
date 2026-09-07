@@ -1,5 +1,9 @@
 (defcfg
   process-unmapped-keys yes
+  macos-dev-names-include (
+      "Apple Internal Keyboard / Trackpad"
+      "Keychron V3 Max"
+  )
 )
 
 (defvar

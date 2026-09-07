@@ -213,57 +213,134 @@ resources; the underlying permission is `kTCCServiceAccessibility`.
 
 ## Debian 13 and Sway
 
-Install a stable upstream Kanata release matching the machine architecture
-and verify its published SHA-256 checksum. Install the ordinary binary,
-without cmd_allowed support, as /usr/local/bin/kanata:
+The commands below assume a Debian 13 installation using systemd and Sway.
+Run them on the Debian machine, not on macOS.
 
-    sudo install -m 0755 kanata_linux_x64 /usr/local/bin/kanata
-    /usr/local/bin/kanata --version
+### Get the dotfiles branch
 
-Kanata needs read access to /dev/input and write access to /dev/uinput.
-Create the uinput group if it does not exist, add the account to both input
-and uinput, load the module, and install the udev rule described in the
-upstream Linux setup at
-https://github.com/jtroo/kanata/blob/v1.12.0/docs/setup-linux.md:
+After the `with-evil` branch has been pushed to the dotfiles remote, clone or
+update it on Debian:
 
-    getent group uinput || sudo groupadd --system uinput
-    sudo usermod -aG input,uinput "$USER"
-    sudo modprobe uinput
+```sh
+git clone --branch with-evil git@github.com:marcschlienger/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+```
 
-The udev rule is:
+For an existing checkout with local changes, preserve them before switching:
 
-    KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+```sh
+cd ~/.dotfiles
+git status --short
+git fetch origin
+git switch with-evil  # use: git switch --track -c with-evil origin/with-evil if absent
+git pull --ff-only
+```
 
-Log out and back in after changing groups. Then validate and test in the
-foreground:
+Install GNU Stow if it is not already available:
 
-    kanata --check --cfg ~/.config/kanata/kanata.kbd
-    kanata --cfg ~/.config/kanata/kanata.kbd
+```sh
+sudo apt update
+sudo apt install --no-install-recommends git stow curl ca-certificates unzip kmod udev systemd
+stow --simulate --verbose --target="$HOME" kanata
+stow --target="$HOME" kanata
+```
 
-Once that works, install a user service at ~/.config/systemd/user/kanata.service:
+Resolve an existing-file conflict before the second Stow command. Do not use
+`stow --adopt`; it would copy machine-local files into the repository.
 
-    [Unit]
-    Description=Kanata keyboard remapper
-    Documentation=https://github.com/jtroo/kanata
+### Install Kanata
 
-    [Service]
-    Type=simple
-    ExecStart=/usr/local/bin/kanata --cfg %h/.config/kanata/kanata.kbd --no-wait
-    Restart=on-failure
-    RestartSec=3
+Debian stable packages may lag behind Kanata. Download the current stable
+Linux release from the [Kanata releases page](https://github.com/jtroo/kanata/releases)
+and verify its published SHA-256 checksum before installing it. Select the
+asset matching `uname -m` (`x86_64` or `aarch64`). For a downloaded binary:
 
-    [Install]
-    WantedBy=default.target
+```sh
+uname -m
+unzip linux-binaries-*.zip
+chmod 0755 ./kanata_linux_x64  # use the arm64 filename on aarch64
+sudo install -o root -g root -m 0755 ./kanata_linux_x64 /usr/local/bin/kanata
+/usr/local/bin/kanata --version
+```
 
-Enable it with:
+Do not install the `cmd_allowed` variant. The ordinary Linux binary is the
+appropriate choice for the user service below.
 
-    systemctl --user daemon-reload
-    systemctl --user enable --now kanata.service
-    systemctl --user status kanata.service
+### Grant input-device access
 
-This starts after login, not at the graphical login screen. Access to the
-input group lets the account read keyboard input, so use a more restricted
-device-specific service if that tradeoff is unacceptable.
+Kanata reads `/dev/input` and writes `/dev/uinput`. Add the account to the
+existing `input` group and create the dedicated `uinput` group only if it is
+missing:
+
+```sh
+getent group uinput || sudo groupadd --system uinput
+sudo usermod -aG input,uinput "$USER"
+sudo modprobe uinput
+sudo install -o root -g root -m 0644 \
+  ~/.dotfiles/kanata/udev/70-kanata-uinput.rules \
+  /etc/udev/rules.d/70-kanata-uinput.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger --subsystem-match=misc
+```
+
+Log out and in again so the new group membership is active. Check it with
+`id`; a new login session is required even if `usermod` succeeds. The `input`
+group can expose keyboard events to every process run by that account. Keep
+the account trusted, or replace the broad group rule with a device-specific
+rule after identifying the internal keyboard.
+
+### Validate and test in the foreground
+
+```sh
+kanata --check --cfg "$HOME/.config/kanata/kanata.kbd"
+sudo kanata --cfg "$HOME/.config/kanata/kanata.kbd"
+```
+
+The foreground process must report that it entered its processing loop. Test
+one-shot Control, Shift, Alt, GUI, AltGr, Sway bindings and ordinary key
+repeat. Hold physical left Control + Space + Escape to exit Kanata. If the
+configuration is wrong, stop here and fix it before enabling the service.
+
+### Enable the Debian user service
+
+The package contains `.config/systemd/user/kanata.service`; Stow links it into
+the standard user-unit directory. It starts after the graphical login, not at
+the login screen:
+
+```sh
+systemctl --user daemon-reload
+systemctl --user enable --now kanata.service
+systemctl --user status --no-pager kanata.service
+```
+
+The service uses `--release-grab-on-lock` so the keyboard is released while
+the screen is locked or another user owns the session. It restarts after an
+unexpected failure. It runs as the logged-in user, so the input and uinput
+group membership must be active. Keep the foreground test stopped before
+starting the service.
+
+Inspect failures with:
+
+```sh
+journalctl --user -u kanata.service -b --no-pager
+systemctl --user restart kanata.service
+```
+
+After changing the configuration, validate it and restart the service:
+
+```sh
+kanata --check --cfg "$HOME/.config/kanata/kanata.kbd" && \
+  systemctl --user restart kanata.service
+```
+
+To disable startup while keeping the configuration:
+
+```sh
+systemctl --user disable --now kanata.service
+```
+
+The complete platform reference is the
+[Kanata Linux setup guide](https://github.com/jtroo/kanata/blob/v1.12.0/docs/setup-linux.md).
 
 ## Transition to QMK
 
