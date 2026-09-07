@@ -1,0 +1,24 @@
+(defcfg
+  process-unmapped-keys yes
+)
+
+(defvar
+  oneshot-timeout 1000
+)
+
+(defsrc
+  caps lctl lsft rsft lalt lmet rctl
+)
+
+(defalias
+  os-ctrl   (one-shot-release $oneshot-timeout lctl)
+  os-shift  (one-shot-release $oneshot-timeout lsft)
+  os-rshift (one-shot-release $oneshot-timeout rsft)
+  os-alt    (one-shot-release $oneshot-timeout lalt)
+  os-gui    (one-shot-release $oneshot-timeout lmet)
+  os-rctrl  (one-shot-release $oneshot-timeout rctl)
+)
+
+(deflayer base
+  @os-ctrl @os-ctrl @os-shift @os-rshift @os-alt @os-gui @os-rctrl
+)
