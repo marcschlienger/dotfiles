@@ -341,10 +341,11 @@ bindsym $mod+shift+e mode "$system_mode"
     # toggles that one window, unlike $mod+minus which cycles through
     # everything in there.
     bindsym $mod+p exec swaymsg '[app_id="org.keepassxc.KeePassXC"] scratchpad show'
-    # Special keys to take screenshots with grimshot
-    bindsym Print exec grimshot --notify savecopy output
-    bindsym $mod+Print exec grimshot --notify savecopy window
-    bindsym Control+Print exec grimshot --notify savecopy area
+    # Print Screen is a one-shot Super key on the ThinkPad. Control avoids the
+    # Super+Shift+number bindings used to move windows between workspaces.
+    bindsym $mod+Control+3 exec grimshot --notify savecopy output
+    bindsym $mod+Control+4 exec grimshot --notify savecopy area
+    bindsym $mod+Control+5 exec grimshot --notify savecopy window
     # Special key to manage the clipboard history with cliphist
     bindsym $mod+grave exec cliphist list | fuzzel --dmenu --with-nth 2 | cliphist decode | wl-copy
 

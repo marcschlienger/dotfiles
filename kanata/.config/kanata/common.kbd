@@ -1,0 +1,9 @@
+(defvar
+  oneshot-timeout 1000
+)
+
+(defalias
+  os-ctrl   (one-shot-release $oneshot-timeout lctl)
+  os-shift  (one-shot-release $oneshot-timeout lsft)
+  os-rshift (one-shot-release $oneshot-timeout rsft)
+)

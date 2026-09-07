@@ -3,43 +3,21 @@
   macos-dev-names-include (
     "Apple Internal Keyboard / Trackpad"
   )
-  linux-dev-names-exclude (
-    "Keychron V3 Max"
-    "Keychron Q3"
-  )
 )
 
-(defvar
-  oneshot-timeout 1000
-)
+(include common.kbd)
 
 (defsrc
-  caps lctl lsft rsft lalt lmet rctl
+  caps lctl lsft rsft lalt lmet rmet
 )
 
 (defalias
-  os-ctrl   (one-shot-release $oneshot-timeout lctl)
-  os-shift  (one-shot-release $oneshot-timeout lsft)
-  os-rshift (one-shot-release $oneshot-timeout rsft)
-  os-rctrl  (one-shot-release $oneshot-timeout rctl)
-)
-
-(platform (macos)
-  (defalias
-    os-lctrl (one-shot-release $oneshot-timeout lalt)
-    os-lalt  (one-shot-release $oneshot-timeout lmet)
-    os-lmeta (one-shot-release $oneshot-timeout lctl)
-  )
-)
-
-(platform (linux)
-  (defalias
-    os-lctrl (one-shot-release $oneshot-timeout lalt)
-    os-lalt  (one-shot-release $oneshot-timeout lctl)
-    os-lmeta (one-shot-release $oneshot-timeout lmet)
-  )
+  os-lctrl (one-shot-release $oneshot-timeout lalt)
+  os-lalt  (one-shot-release $oneshot-timeout lmet)
+  os-lmeta (one-shot-release $oneshot-timeout lctl)
+  os-rmeta (one-shot-release $oneshot-timeout rctl)
 )
 
 (deflayer base
-  @os-ctrl @os-lctrl @os-shift @os-rshift @os-lalt @os-lmeta @os-rctrl
+  @os-ctrl @os-lctrl @os-shift @os-rshift @os-lalt @os-lmeta @os-rmeta
 )
