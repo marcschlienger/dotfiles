@@ -9,7 +9,7 @@
 (include common.kbd)
 
 (defsrc
-  caps lctl lsft rsft lalt lmet ralt prtsc rctl
+  caps lctl lsft rsft lalt lmet ralt sys rctl
 )
 
 (defalias
