@@ -36,12 +36,16 @@ The right side reflects the laptops' different physical layouts:
 | ThinkPad | Right Control | Right Alt/AltGr | Right Alt/AltGr |
 
 The logical Right Alt key remains ordinary so the Linux us(altgr-intl) layout
-continues to work; it moves to the ThinkPad key labelled Right Control. Fn
-remains untouched at the left edge of each laptop. The MacBook therefore has
-`Space | Control | Option` on the right, with Super/Command available on the
-left. The ThinkPad has `Space | Control | Super | Alt`, matching the first
-three Keychron modifiers. Other keys retain their normal keycodes. The timeout
-is 1000 ms and different one-shot modifiers can be combined.
+continues to work; it moves to the ThinkPad key labelled Right Control. The
+ThinkPad Fn key remains untouched. On the MacBook, the function row explicitly
+emits the Apple brightness, system, media, and volume actions because Kanata's
+virtual keyboard otherwise turns those keys into plain F1--F12. Holding Fn and
+pressing a function-row key emits plain F1--F12; tapping Fn retains its Globe
+action. The MacBook therefore has `Space | Control | Option` on the right, with
+Super/Command available on the left. The ThinkPad has
+`Space | Control | Super | Alt`, matching the first three Keychron modifiers.
+Other keys retain their normal keycodes. The timeout is 1000 ms and different
+one-shot modifiers can be combined.
 
 The ThinkPad's physical Print Screen key is now a modifier. Sway provides
 screenshots on Super+Control+3 (output), Super+Control+4 (area), and
