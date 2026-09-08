@@ -3,7 +3,11 @@
 )
 
 (defalias
-  os-ctrl   (one-shot-release $oneshot-timeout lctl)
-  os-shift  (one-shot-release $oneshot-timeout lsft)
+  os-lctrl  (one-shot-release $oneshot-timeout lctl)
+  os-lshift (one-shot-release $oneshot-timeout lsft)
   os-rshift (one-shot-release $oneshot-timeout rsft)
+  os-lalt   (one-shot-release $oneshot-timeout lalt)
+  os-lmeta  (one-shot-release $oneshot-timeout lmet)
+  os-rctrl  (one-shot-release $oneshot-timeout rctl)
+  os-rmeta  (one-shot-release $oneshot-timeout rmet)
 )
