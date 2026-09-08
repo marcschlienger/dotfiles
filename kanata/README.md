@@ -372,10 +372,11 @@ The complete platform reference is the
 
 ## Transition to QMK
 
-Kanata includes only the Apple internal keyboard on macOS and excludes the
-two Keychron product names on Linux. Confirm the Linux names from Kanata's
-registering lines after flashing; device-name matching is exact. If either
-name differs, replace it in the defcfg before enabling the Linux service.
+Kanata includes only the internal laptop keyboard on each platform. Linux
+uses the exact device name `AT Translated Set 2 keyboard`; the separate
+`ThinkPad Extra Buttons` and `Intel HID events` devices remain ungrabbed.
+Confirm the internal keyboard name with `sudo kanata --list` on another
+machine and replace it in the defcfg if necessary.
 
 Restart Kanata after changing device filters. Live reload does not change
 which devices are grabbed.
