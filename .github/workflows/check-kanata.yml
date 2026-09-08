@@ -1,0 +1,74 @@
+name: Check Kanata
+
+on:
+  push:
+    paths:
+      - ".github/workflows/check-kanata.yml"
+      - "kanata/**"
+  pull_request:
+    paths:
+      - ".github/workflows/check-kanata.yml"
+      - "kanata/**"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux configuration
+            os: ubuntu-latest
+            config: kanata/.config/kanata/kanata-linux.kbd
+          - name: macOS configuration
+            os: macos-latest
+            config: kanata/.config/kanata/kanata.kbd
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install Kanata 1.12.0
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "${RUNNER_OS}:$(uname -m)" in
+            Linux:x86_64)
+              archive="linux-binaries-x64.zip"
+              binary="kanata_linux_x64"
+              checksum="0bedd91567c5d7c54679061baadc37e4f83fb71750003999bc1d11f2c9754f36"
+              ;;
+            macOS:arm64)
+              archive="macos-binaries-arm64.zip"
+              binary="kanata_macos_arm64"
+              checksum="839769d189911b5881e11550eaa2039705213fb725865d088f5a2e3a6c10de32"
+              ;;
+            macOS:x86_64)
+              archive="macos-binaries-x64.zip"
+              binary="kanata_macos_x64"
+              checksum="bdb8b2f7ae2a648336a2561c7c6c00a736cd76e012035df651114b304c5ffb01"
+              ;;
+            *)
+              printf 'Unsupported runner: %s %s\n' "${RUNNER_OS}" "$(uname -m)" >&2
+              exit 1
+              ;;
+          esac
+
+          url="https://github.com/jtroo/kanata/releases/download/v1.12.0/${archive}"
+          destination="${RUNNER_TEMP}/${archive}"
+          install_dir="${RUNNER_TEMP}/kanata"
+
+          curl --fail --location --retry 3 "${url}" --output "${destination}"
+          printf '%s  %s\n' "${checksum}" "${destination}" | shasum -a 256 --check
+          mkdir -p "${install_dir}"
+          unzip -q "${destination}" "${binary}" -d "${install_dir}"
+          chmod 0755 "${install_dir}/${binary}"
+          printf 'KANATA=%s\n' "${install_dir}/${binary}" >> "${GITHUB_ENV}"
+
+      - name: Validate configuration
+        run: '"${KANATA}" --check --cfg "${{ matrix.config }}"'

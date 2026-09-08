@@ -14,15 +14,11 @@
 
 (defalias
   fn-layer (tap-hold-press 200 200 fn (layer-while-held function))
-  os-lctrl (one-shot-release $oneshot-timeout lalt)
-  os-lalt  (one-shot-release $oneshot-timeout lmet)
-  os-lmeta (one-shot-release $oneshot-timeout lctl)
-  os-rmeta (one-shot-release $oneshot-timeout rctl)
 )
 
 (deflayer base
   brdn brup mctl sls dtn dnd prev pp next mute vold volu @fn-layer
-  @os-ctrl @os-lctrl @os-shift @os-rshift @os-lalt @os-lmeta @os-rmeta
+  @os-lctrl @os-lalt @os-lshift @os-rshift @os-lctrl @os-lmeta @os-rctrl
 )
 
 (deflayer function

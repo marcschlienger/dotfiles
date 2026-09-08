@@ -71,6 +71,9 @@ Validate before starting Kanata:
 
     kanata --check --cfg ~/.config/kanata/kanata.kbd
 
+The `Check Kanata` workflow validates both entry points with Kanata 1.12.0 on
+their target operating systems whenever the Kanata configuration changes.
+
 During a foreground test, hold physical left Control + Space + Escape to exit
 Kanata. The emergency chord is read before remapping.
 
@@ -142,7 +145,7 @@ copies. Stop any foreground Kanata test with physical **left Control + Space
 + Escape** before starting the service.
 
 The supplied property-list files (`.plist`) are in
-`.config/kanata/launchd/`. They target Marc's Apple Silicon Mac:
+`.config/kanata/launchd/`. They contain machine-specific absolute paths:
 `/opt/homebrew/bin/kanata` and `/Users/marc/.config/kanata/kanata.kbd`.
 On another Mac, adjust these absolute paths first. `launchd` does not expand
 `~` or `$HOME` inside a plist. The home-directory config is editable through
@@ -246,8 +249,8 @@ Run them on the Debian machine, not on macOS.
 
 ### Get the dotfiles branch
 
-After the `with-evil` branch has been pushed to the dotfiles remote, clone or
-update it on Debian:
+To use the Evil configuration on Debian, clone or update the `with-evil`
+branch:
 
 ```sh
 git clone --branch with-evil git@github.com:marcschlienger/dotfiles.git ~/.dotfiles
