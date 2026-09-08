@@ -341,6 +341,10 @@ bindsym $mod+shift+e mode "$system_mode"
     # toggles that one window, unlike $mod+minus which cycles through
     # everything in there.
     bindsym $mod+p exec swaymsg '[app_id="org.keepassxc.KeePassXC"] scratchpad show'
+    # Screenshot fallback for keyboards whose Print key is not remapped.
+    bindsym Print exec grimshot --notify savecopy output
+    bindsym $mod+Print exec grimshot --notify savecopy window
+    bindsym Control+Print exec grimshot --notify savecopy area
     # Print Screen is a one-shot Super key on the ThinkPad. Control avoids the
     # Super+Shift+number bindings used to move windows between workspaces.
     bindsym $mod+Control+3 exec grimshot --notify savecopy output

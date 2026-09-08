@@ -3,16 +3,16 @@
 This package provides one-shot modifiers for laptop keyboards on macOS and
 Debian 13 with Sway. The external Keychron V3 Max ANSI and Q3 ANSI knob
 keyboards get the same behaviour from QMK; their setup notes
-are in `qmk/README.md` in this dotfiles checkout. Copy that file to
-`~/Repos/qmk/README.md` if you want the notes alongside the firmware checkout.
+are in the [personal QMK repository](https://github.com/marcschlienger/qmk),
+normally checked out at `~/Repos/qmk`.
 
 Stow makes the configuration available. It does not install Kanata, grant
 device permissions, or start a service.
 
 `kanata.kbd` is the macOS entry point and `kanata-linux.kbd` is the Linux
 entry point. Both include `common.kbd` for the shared timeout and one-shot
-definitions. Separate entry points are necessary because Kanata exposes Print
-Screen as a Linux-only key name.
+definitions. Separate entry points are necessary because device selection,
+physical key layout, and macOS function-row handling differ.
 
 ## Behaviour
 
