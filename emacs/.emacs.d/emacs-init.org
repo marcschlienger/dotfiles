@@ -193,6 +193,7 @@ Run M-x ms-recompile-packages to see which files fail."
   :ensure t
   :if (or (memq window-system '(mac ns x pgtk)) (daemonp))
   :config
+  (add-to-list 'exec-path-from-shell-variables "TEXMFHOME")
   (exec-path-from-shell-initialize))
 
 ;; Delete the selected/highlighted text as soon as the user types something.
