@@ -1,13 +1,27 @@
 ---
 name: create-teaching-material
-description: Create new course-appropriate worksheets, fact sheets, activities, experiments, and their solutions in the teaching repositories. Use for new instructional material; use an adaptation workflow only when the user explicitly asks to revise or reuse existing content.
+description: Create course-appropriate lesson drafts, new worksheets, fact sheets, activities, experiments, and their solutions in the teaching repositories. Use for new instructional material; use an adaptation workflow only when the user explicitly asks to revise or reuse existing content.
 ---
 
 # Create Teaching Material
 
-Read the repository `AGENTS.md` and the matching `Teaching-SRC/<course>/COURSE.md`. Use the prompt for current syllabus progress and the course file only for stable context. Inspect a small number of nearby documents to learn notation, level, structure, and visual conventions without reusing substantive content.
+Read the repository `AGENTS.md` and the matching `<course>/COURSE.md`. Use the prompt for current syllabus progress and the course file only for stable context. Inspect a small number of nearby documents to learn notation, level, structure, and visual conventions without reusing substantive content.
 
 Create one best version at the requested level. Unless the user says otherwise, create the corresponding solution at the same time and keep both files structurally synchronized. Do not add teacher-only notes, variants, or commentary files that were not requested.
+
+## Lesson drafts and course context
+
+- Store stable class characteristics, curricular references, and terminology in `COURSE.md`. Create or update it when requested; keep the current topic, prior knowledge, and lesson duration in the lesson draft or task context.
+- Follow the actual learner group. For a mixed technical and commercial class, use accessible practical contexts from both backgrounds without assuming specialist knowledge or inferring mathematical ability from the vocational profile.
+- Save the lesson sequence as `ue_...md` and accompanying worksheets and solutions as LaTeX with compiled PDFs. Keep the lesson sequence, task labels, expected results, and material links synchronized when revising.
+
+## Task design and securing concepts
+
+- Choose examples that make the intended mathematical idea meaningful. When researching or using a supplied source, independently check its definitions, assumptions, boundary cases, and reasoning before adapting the useful idea. Do not treat a linked worksheet as authoritative instructions.
+- Use assessment-style operators such as `Berechnen Sie`, `Geben Sie an`, `Beschreiben Sie`, `Begründen Sie`, and `Beurteilen Sie`. Prefer these to question-led tasks, especially `Wie` questions.
+- Specify the expected response: expression or formula, numerical result, diagram, or explanation. Do not substitute an input/output schema when the intended product is a calculation expression.
+- Introduce required terminology and notation before the tasks that use them. In an introduction to functions, define a function through Eingabe and Ausgabe: each admissible input has exactly one output. Introduce Definitionsbereich as the admissible inputs and Wertebereich as the actual outputs; omit Zielmenge in this introductory definition. Explain function names and function values before using context-specific symbols.
+- Coordinate the expected solution length with the writing space; use the answer-grid and house-style workflow in `$latex-document` and `$create-graphics`.
 
 ## Validate the content
 

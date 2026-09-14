@@ -13,4 +13,12 @@ Read the applicable repository policy, course context, and nearby visual convent
 
 Keep source assets local to the relevant material and follow the established directory and naming pattern. Reuse existing packages and macros where practical; do not alter shared class/style infrastructure to accommodate one graphic.
 
+## Handwritten answer areas
+
+Use TikZ grids with 5 mm squares for responses on Marc's worksheets instead of blank vertical space or dotted lines. Inspect a nearby worksheet for the established line color and weight. If the loaded class/package already provides an appropriate grid command, prefer it; otherwise keep a small local helper or direct TikZ drawing.
+
+Place each grid directly with its task, without floating it elsewhere. Fit the width to the available line width and choose the height from the expected calculation, drawing, or explanation. Use larger areas for multi-part justifications and diagrams; compact horizontal spacing must not remove needed writing room. In the rendered PDF, check that the grid is print-legible, stays inside the margins, and is not separated from the task by a page break.
+
+## Validation
+
 Check labels, units, scales, mathematical accuracy, legibility, contrast, and consistency with the task and solution. Build the containing documents and visually inspect every affected page at a readable resolution. Fix clipping, overlap, unreadable labels, misleading geometry or scales, and poor placement. Mention notable new assets, packages, or helper scripts in the completion summary.
