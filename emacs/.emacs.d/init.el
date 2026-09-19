@@ -114,3 +114,4 @@ Run M-x ms-recompile-packages to see which files fail."
 (require 'init-latex)
 (require 'init-vc)
 (require 'init-denote)
+(require 'init-notes)
