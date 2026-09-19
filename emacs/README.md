@@ -9,15 +9,15 @@ enforced by the configuration itself. The canonical configuration remains
 The editor configurations require this shared language-server and Python-tool
 set. Install every executable on both macOS and Linux:
 
-| Language | Executable | Used by | Current macOS status |
-| --- | --- | --- | --- |
-| C and C++ | `clangd` | Emacs and Neovim | Installed (`21.0.0`) |
-| Go | `gopls` | Emacs | Installed (`0.23.0`) |
-| Lua | `lua-language-server` | Neovim | Installed (`3.19.1`) |
-| Python semantics and type checking | `ty` (`ty server`) | Emacs and Neovim | Installed (`0.0.74`) |
-| Python linting and formatting | `ruff` (`ruff server` in Neovim) | Emacs and Neovim | Installed (`0.16.4`) |
-| Rust | `rust-analyzer` | Emacs and Neovim | Installed (`1.98.0`) |
-| LaTeX | `texlab` | Emacs and Neovim | Installed (`5.26.0`) |
+| Language | Executable | Used by |
+| --- | --- | --- |
+| C and C++ | `clangd` | Emacs and Neovim |
+| Go | `gopls` | Emacs |
+| Lua | `lua-language-server` | Neovim |
+| Python semantics and type checking | `ty` (`ty server`) | Emacs and Neovim |
+| Python linting and formatting | `ruff` (`ruff server` in Neovim) | Emacs and Neovim |
+| Rust | `rust-analyzer` | Emacs and Neovim |
+| LaTeX | `texlab` | Emacs and Neovim |
 
 Python deliberately uses two complementary Astral tools: ty owns completion,
 navigation, and type analysis, while Ruff owns lint diagnostics and formatting.
@@ -30,24 +30,24 @@ Neovim 0.11.3 or newer is required by the current `nvim-lspconfig` and for the
 native `vim.lsp.config` and `vim.lsp.enable` APIs used by this configuration.
 Debian 13's standard package is Neovim 0.10.4, so it needs a newer Neovim build
 from another trusted package source. Version 0.12 or newer is recommended for
-automatic terminal appearance detection; the current Mac has Neovim `0.12.5`.
+automatic terminal appearance detection.
 
 Other configured features need these executables:
 
-| Feature | Executable | Current macOS status |
-| --- | --- | --- |
-| Rust build, Clippy, and format on save | `cargo`, Clippy, `rustfmt`, and `rust-src` | Installed (Rust `1.98.0`; all components present) |
-| LaTeX compilation | A TeX distribution providing `latexmk` or `pdflatex` | Missing |
-| Markdown export | `multimarkdown` | Installed (`6.8.0`) |
-| Org Babel Python | `python3` | Installed (`3.9.6`) |
-| Org Babel R | `R` | Installed (`4.6.1`) |
-| Spell checking | Enchant plus `en_US` and `de_DE` Hunspell dictionaries | Installed; Jinx is used where its module builds, Flyspell otherwise |
+| Feature | Executable |
+| --- | --- |
+| Rust build, Clippy, and format on save | `cargo`, Clippy, `rustfmt`, and `rust-src` |
+| LaTeX compilation | A TeX distribution providing `latexmk` or `pdflatex` |
+| Markdown export | `multimarkdown` |
+| Org Babel Python | `python3` |
+| Org Babel R | `R` |
+| Spell checking (Jinx where its module builds, Flyspell otherwise) | Enchant plus `en_US` and `de_DE` Hunspell dictionaries |
 
 Swift development intentionally belongs to Xcode. Emacs retains `swift-mode`
 for lightweight syntax highlighting, but has no Swift Eglot hook or Tree-sitter
 grammar. `sourcekit-lsp` is therefore not a dotfiles dependency, including on
-Linux. The current Mac has Apple Command Line Tools but not the full Xcode
-application; install Xcode before resuming Apple-platform Swift development.
+Linux. Apple-platform Swift development needs the full Xcode application, not
+only the Command Line Tools.
 
 The Eglot hooks and Ruff formatting hook are intentionally unconditional. If a
 language server is absent, Eglot cannot start for that language. If Ruff is
@@ -77,7 +77,7 @@ ordering the gopls documentation recommends.
 
 AUCTeX uses Skim on macOS when its `displayline` helper is installed, otherwise
 it uses the system `open` command. On Linux it prefers Zathura and falls back to
-`xdg-open`. Skim and `pdf-tools` are optional and are not installed or required.
+`xdg-open`. Skim and `pdf-tools` are optional.
 The deferred PDF Tools configuration is retained and activates after the
 package is installed explicitly and Emacs is restarted. A TeX distribution is
 still required to compile PDFs.
