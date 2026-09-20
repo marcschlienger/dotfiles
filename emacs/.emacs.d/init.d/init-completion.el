@@ -1,6 +1,13 @@
 ;;; init-completion.el -*- lexical-binding: t -*-
 
 ;; Eglot mode
+(defun ms/markdown-eglot-ensure ()
+  "Start the Markdown language server, but only inside a project.
+A Markdown file outside one would otherwise get a server of its own,
+rooted at whatever directory it happens to sit in."
+  (when (project-current)
+    (eglot-ensure)))
+
 (use-package eglot
   :ensure nil
   :config
@@ -30,6 +37,7 @@
   (go-mode . eglot-ensure)
   (go-ts-mode . eglot-ensure)
   (LaTeX-mode . eglot-ensure)
+  (markdown-mode . ms/markdown-eglot-ensure)
   (python-mode . eglot-ensure)
   (python-ts-mode . eglot-ensure)
   (rust-mode . eglot-ensure)

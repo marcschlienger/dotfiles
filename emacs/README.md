@@ -18,6 +18,7 @@ set. Install every executable on both macOS and Linux:
 | Python linting and formatting | `ruff` (`ruff server` in Neovim) | Emacs and Neovim |
 | Rust | `rust-analyzer` | Emacs and Neovim |
 | LaTeX | `texlab` | Emacs and Neovim |
+| Markdown | `marksman` | Emacs |
 
 Python deliberately uses two complementary Astral tools: ty owns completion,
 navigation, and type analysis, while Ruff owns lint diagnostics and formatting.
