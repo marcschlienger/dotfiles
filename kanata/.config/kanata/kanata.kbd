@@ -18,7 +18,7 @@
 
 (deflayer base
   brdn brup mctl sls dtn dnd prev pp next mute vold volu @fn-layer
-  @os-lctrl @os-lalt @os-lshift @os-rshift @os-lctrl @os-lmeta @os-rctrl
+  @os-lctrl @os-lalt @os-lshift @os-rshift @os-lmeta @os-lctrl @os-rctrl
 )
 
 (deflayer function
