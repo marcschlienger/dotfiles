@@ -8,6 +8,7 @@
   :ensure t
   :if (or (memq window-system '(mac ns x pgtk)) (daemonp))
   :config
+  (add-to-list 'exec-path-from-shell-variables "TEXMFHOME")
   (exec-path-from-shell-initialize))
 
 ;; Delete the selected/highlighted text as soon as the user types something.
@@ -81,11 +82,17 @@
 (global-set-key (kbd "M-<down>") #'ms/move-line-down)
 (global-set-key (kbd "M-<up>") #'ms/move-line-up)
 
-;; Both of these were reachable only from the leader key, which is why they
-;; are bound here rather than beside the leader map: `ctl-x-x-map' is where
-;; Emacs already keeps its buffer toggles -- C-x x t for truncated lines,
-;; C-x x v for variable pitch, C-x x f to refresh font lock -- and a binding
-;; that lives there survives whatever happens to Evil.
+(defun ms/toggle-line-number-type ()
+  "Toggle absolute and relative line numbering type."
+  (interactive)
+  (if (eq display-line-numbers 'relative)
+      (setq display-line-numbers t)
+    (setq display-line-numbers 'relative)))
+
+;; `ctl-x-x-map' is where Emacs already keeps its buffer toggles -- C-x x t
+;; for truncated lines, C-x x v for variable pitch, C-x x f to refresh font
+;; lock -- so these two join that family instead of claiming two more
+;; top-level keys.
 (keymap-set ctl-x-x-map "b" #'mode-line-other-buffer)
 (keymap-set ctl-x-x-map "l" #'ms/toggle-line-number-type)
 

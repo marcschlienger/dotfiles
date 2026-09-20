@@ -25,13 +25,6 @@
                   Info-mode))
     (add-to-list 'evil-emacs-state-modes mode)))
 
-(defun ms/toggle-line-number-type ()
-  "Toggle absolute and relative line numbering type."
-  (interactive)
-  (if (eq display-line-numbers 'relative)
-      (setq display-line-numbers t)
-    (setq display-line-numbers 'relative)))
-
 ;;; Define leader key and bindings using general.el
 ;; `ms-leader-keys' is a macro that `general-create-definer' defines at load
 ;; time, so the bindings have to follow it.  Called at top level instead, a
