@@ -200,6 +200,10 @@ spell checking section of emacs-init.org."
           (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
           (elisp "https://github.com/Wilfred/tree-sitter-elisp")
           (go "https://github.com/tree-sitter/tree-sitter-go")
+          (markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                    nil "tree-sitter-markdown/src")
+          (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                           nil "tree-sitter-markdown-inline/src")
           (python "https://github.com/tree-sitter/tree-sitter-python")
           (rust "https://github.com/tree-sitter/tree-sitter-rust")))
   (defconst ms/treesit-major-mode-remappings
@@ -297,7 +301,11 @@ without restarting."
 (use-package markdown-mode
   :ensure t
   :mode ("README\\.md\\'" . gfm-mode)
-  :init (setq markdown-command "multimarkdown")
+  ;; The tree-sitter mode carries no autoload cookie, and it stays opt-in: it is
+  ;; experimental by its own account, and it has neither wiki links nor the
+  ;; language server, which attaches to `markdown-mode'.
+  :init (autoload 'markdown-ts-mode "markdown-ts-mode" "Major mode for Markdown, using tree-sitter." t)
+  (setq markdown-command "multimarkdown")
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do)))
 
