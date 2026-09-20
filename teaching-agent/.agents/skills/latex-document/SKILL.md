@@ -29,6 +29,7 @@ When exposed in the workspace, inspect the current sources and examples in `/Use
 ## Worksheet structure and layout
 
 - Name worksheet sources and their containing folders `ab_...`; each worksheet has its own folder with its PDF and local supporting files. Shared solutions/graphics may stay with the main worksheet if references identify that location. Use `ue_...md` for lesson drafts. Do not normalize unrelated existing material.
+- Align the bottom of the class designation with the bottom of the right-hand logo so both have the same distance from the header rule. Verify this visually on a continuation page.
 - Put the class only in the page header; do not add a name-entry field. For `msheet`, use `\class{...}` (or `\msheetsetup{class=...}`), which fills the inner page header and defaults to empty; do not replace it with a document-local `\ihead` for ordinary class metadata. If the requested command is absent, report that limitation before treating a header override as the completed implementation; do not invent an unsupported command.
 - For handwritten responses, use TikZ grids with 5 mm squares, following nearby worksheets. Keep grids with their tasks and provide enough room for the complete expected response. Apply `$create-graphics` for their implementation and visual checks.
 - Keep margins, indents, and horizontal gaps compact while preserving legibility and writing space. Do not reduce answer space merely to reduce the page count.
