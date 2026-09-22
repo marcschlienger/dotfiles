@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Supervises one Emacs server. --fg-daemon keeps the process in the
+     foreground so launchd tracks the process it started, rather than a
+     backgrounded child it cannot see.
+
+     KeepAlive restarts the server when it dies unexpectedly, but leaves it
+     stopped after a clean exit, so stopping it on purpose stays stopped.
+
+     The binary is given by absolute path because launchd starts services
+     without a PATH. Add StandardOutPath and StandardErrorPath here if the
+     server ever needs to be traced. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>gnu.emacs.daemon</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/emacs</string>
+    <string>--fg-daemon</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>ProcessType</key>
+  <string>Interactive</string>
+</dict>
+</plist>
