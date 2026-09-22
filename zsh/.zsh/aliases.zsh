@@ -81,8 +81,67 @@ tmp () {
     pushd -- "$temp_dir"
 }
 
-# emacsclient
-alias ec='emacsclient -c -n -a ""'
+# emacs
+#
+# One supervised server per machine: launchd here, systemd elsewhere, started
+# at login and restarted after a crash. The clients only connect. A daemon a
+# client starts is not the one the supervisor owns, and while it holds the
+# socket the service cannot start: each attempt exits and is respawned, every
+# few seconds, until that daemon is killed.
+alias ec='emacsclient -c -n'
+alias et='emacsclient -t'
+
+# Save every file-visiting buffer, then stop the server. confirm-kill-processes
+# is bound because a server without frames cannot show the prompt that live
+# subprocesses would otherwise raise, and the shutdown would wait for an answer
+# that cannot come.
+ek()
+{
+    emacsclient -e '(progn (save-some-buffers t)
+                           (let ((confirm-kill-processes nil)) (kill-emacs)))' \
+        >/dev/null 2>&1 || print -r -- "no emacs server to stop"
+}
+
+case "$OSTYPE" in
+    darwin*)
+        ed()
+        {
+            launchctl kickstart "gui/$(id -u)/gnu.emacs.daemon"
+        }
+
+        er()
+        {
+            ek
+            launchctl kickstart -k "gui/$(id -u)/gnu.emacs.daemon"
+        }
+
+        # runs climbing with a non-zero exit code is the symptom of a daemon
+        # the supervisor does not own holding the socket.
+        es()
+        {
+            launchctl print "gui/$(id -u)/gnu.emacs.daemon" 2>/dev/null |
+                grep -E '^\t(state|pid|runs|last exit code) = ' ||
+                print -r -- "not loaded: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/gnu.emacs.daemon.plist"
+        }
+        ;;
+    *)
+        ed()
+        {
+            systemctl --user start emacs.service
+        }
+
+        er()
+        {
+            ek
+            systemctl --user restart emacs.service
+        }
+
+        es()
+        {
+            systemctl --user status --no-pager emacs.service
+        }
+        ;;
+esac
 
 # ranger
 alias rr=ranger_cd
