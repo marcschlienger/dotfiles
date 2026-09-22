@@ -94,20 +94,37 @@ alias et='emacsclient -t -a ""'
 # Save buffers before ek or er: service shutdown has no interactive save prompt.
 case "$OSTYPE" in
     darwin*)
+        # launchctl reports success it has not achieved: bootstrap fails with the
+        # same error whether the service is already loaded or still unloading,
+        # and kickstart exits zero for a service that does not exist. Both
+        # commands therefore ask launchd for the state afterwards, and wait
+        # while it catches up.
         ed()
         {
-            local domain="gui/$UID"
-            if ! launchctl print "$domain/gnu.emacs.daemon" >/dev/null 2>&1; then
+            local domain="gui/$UID" i
+            for i in {1..20}; do
                 launchctl bootstrap "$domain" \
-                    "$HOME/Library/LaunchAgents/gnu.emacs.daemon.plist" || return
-            fi
-            launchctl kickstart "$domain/gnu.emacs.daemon"
+                    "$HOME/Library/LaunchAgents/gnu.emacs.daemon.plist" 2>/dev/null
+                launchctl kickstart "$domain/gnu.emacs.daemon" >/dev/null 2>&1
+                launchctl print "$domain/gnu.emacs.daemon" 2>/dev/null |
+                    grep -q 'state = running' && return 0
+                sleep 0.5
+            done
+            print -u2 -r -- "emacs service did not start; see es"
+            return 1
         }
 
         ek()
         {
+            local i
             print -u2 -r -- "Stopping Emacs; buffers must already be saved (no save prompt)."
-            launchctl bootout "gui/$UID/gnu.emacs.daemon"
+            launchctl bootout "gui/$UID/gnu.emacs.daemon" 2>/dev/null
+            for i in {1..20}; do
+                launchctl print "gui/$UID/gnu.emacs.daemon" >/dev/null 2>&1 || return 0
+                sleep 0.5
+            done
+            print -u2 -r -- "emacs service is still loaded; see es"
+            return 1
         }
 
         er()
