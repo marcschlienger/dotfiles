@@ -14,7 +14,6 @@ export HISTFILE=${HOME}/.zsh/histfile
 export SAVEHIST=1024
 
 # editor
-export ALTERNATE_EDITOR=""
 #export EDITOR='emacsclient -t'
 export EDITOR='nvim'
 #export VISUAL='emacsclient -c -n'
