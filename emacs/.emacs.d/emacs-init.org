@@ -76,6 +76,12 @@ find everything related to my Emacs setup.
 ;; Save backup files in a dedicated backup directory.
 (setq backup-directory-alist `(("" . ,(ms-paths-cache-file "backup/"))))
 
+;; Back up version-controlled files too. Emacs skips them by default, on the
+;; assumption that the repository holds the previous content -- but it holds
+;; only what was committed, and the edit most worth recovering is the one that
+;; was never committed.
+(setq vc-make-backup-files t)
+
 ;; Do not create lock files.
 (setq create-lockfiles nil)
 
