@@ -50,10 +50,12 @@ recommendations.
 - The Mac currently runs a GNU Emacs 31.1 development build with native
   compilation, Tree-sitter, SQLite, GnuTLS, SVG, native macOS (NS), and module
   support.
-- `/Applications/Emacs Client.app` already handles Finder/Dock opening and the
-  `org-protocol://` URL scheme. Its launcher uses `emacsclient -c -a '' -n`, so
-  it starts a daemon on demand when none exists.
-- Zsh already defines `ec='emacsclient -c -n -a ""'`.
+- `/Applications/Emacs Client.app` handles Finder/Dock opening and the
+  `org-protocol://` URL scheme. It ships with the cask, which regenerates its
+  launcher script on every install, so it is used as delivered.
+- Zsh defines `ec='emacsclient -c -n -a ""'` and `et='emacsclient -t -a ""'`
+  for the clients, and `ed`, `ek`, `er` and `es` to start, stop, restart and
+  inspect the service.
 - Yazi opens files through the Emacs client by default, with Neovim as a
   fallback.
 - The graphical frame and theme setup already accounts for daemon-created
@@ -112,10 +114,20 @@ does not list approaches that should simply be avoided.
 This is the most important usability improvement because a server-based Emacs
 is excellent only when every entry point reaches the same process.
 
-The current `ec` alias and Emacs Client application use the documented
-`--alternate-editor=""` behavior: if no server exists, `emacsclient` starts a
-daemon and connects to it. GNU Emacs explicitly documents this as an on-demand
-server strategy, alongside daemon startup and systemd activation in the
+One process serves every entry point. A service manager owns it — launchd on
+macOS, systemd on Linux — so it starts at login and returns after a crash
+without anyone typing anything.
+
+The clients keep `--alternate-editor=""`, which starts a server when they
+cannot reach one. This covers the gaps the service manager does not: the first
+client of the day if the service failed to load, or a machine where the unit
+is not installed. The cost is precise and worth knowing: the test is whether
+the client can **connect**, not whether a server exists. While the service is
+deliberately stopped, a client therefore starts a daemon the supervisor does
+not own, that daemon takes the socket, and the service cannot start until it is
+killed. `pgrep -fl 'Emacs --.*daemon'` shows what is really running when
+something looks wrong. The manual describes the alternatives — `server-start`
+in a running Emacs, a daemon, and systemd activation — in the
 [Emacs Server manual](https://www.gnu.org/software/emacs/manual/html_node/emacs/Emacs-Server.html).
 
 There is no `server-start` in the current configuration. Therefore, launching
@@ -126,20 +138,21 @@ processes.
 
 ### Recommended macOS policy
 
-Use the existing **Emacs Client.app** and `ec` as the normal entry points. Let
-them start the daemon on first use. Pin Emacs Client to the Dock if a Dock icon
-is wanted, and use it for Finder associations. Do not routinely launch the
-ordinary Emacs application.
+A LaunchAgent, `gnu.emacs.daemon`, starts the server at login and restarts it
+if it dies. It runs `emacs --fg-daemon`, so launchd supervises the process it
+started rather than a backgrounded child it cannot see, and `KeepAlive` is
+limited to unsuccessful exits, so a deliberate stop stays stopped.
 
-This is simpler than a LaunchAgent because it consumes nothing before first
-use, remains compatible with Homebrew upgrades, and is already installed. A
-login LaunchAgent is worthwhile only if the first frame is noticeably slow or
-scheduled background work must run before the first client connects.
+**Emacs Client.app** and `ec` are the normal entry points. Pin Emacs Client to
+the Dock if a Dock icon is wanted, and use it for Finder associations. It is
+used exactly as the cask delivers it, because the cask rewrites its launcher
+script on every install. Do not launch the ordinary Emacs application: it
+creates a second, independent editor that shares nothing with the server.
 
-An alternative is to use ordinary `Emacs.app` and add `server-start`. That is
-valid, but it is less natural for a machine where terminal and Finder requests
-must also work before the GUI app has been launched. Choose one model rather
-than combining the two.
+An alternative is ordinary `Emacs.app` with `server-start` in the init file.
+That is valid, but the server then dies whenever that Emacs is quit, and
+`C-x C-c` in its frame quits it. Choose one model rather than combining the
+two.
 
 ### Recommended Linux policy
 
@@ -155,7 +168,7 @@ installed, copy the unit into `~/.config/systemd/user/`, adjust `ExecStart`, run
 documents socket activation, but a normal user service is easier to inspect and
 restart.
 
-A desktop launcher should call `emacsclient -c -a ''`, not start a second
+A desktop launcher should call `emacsclient -c -n -a ""`, not start a second
 `emacs` process. Freedesktop-compatible installations commonly provide an
 **Emacs (Client)** entry already.
 
@@ -173,9 +186,9 @@ For a terminal frame, use the client directly:
 emacsclient -t -a ""
 ```
 
-This is a command, not an Emacs configuration change. If the daemon is known
-to be running, the command is simply `emacsclient -t`; `-a ""` only tells the
-client to start a daemon when none is available. The existing `ec` alias is
+This is a command, not an Emacs configuration change. If the daemon is known to
+be running, `-a ""` changes nothing; it only decides what happens when the
+client cannot connect. The `ec` alias is
 GUI-specific because it already supplies `-c -n`, so adding `-t` to that alias
 would mix incompatible frame options. A separate `ect` alias would be optional
 shell shorthand, not a required part of the setup.
@@ -859,7 +872,9 @@ For long sessions on a development server, install Emacs there and run:
 ssh -t host 'emacsclient -t -a ""'
 ```
 
-This starts or reuses an Emacs daemon **on that server**. It survives a dropped
+This starts or reuses an Emacs daemon **on that server**, which is where the
+fallback earns its place: a remote host usually has no service manager to start
+one for you. It survives a dropped
 terminal, retains buffers and processes, and avoids transferring every file
 operation through TRAMP. Run it inside tmux if preserving the terminal layout
 also matters.
@@ -1148,14 +1163,20 @@ tangle would undo it.
 # Existing graphical client; asynchronous
 ec file
 
-# Explicit terminal client, starting a daemon on demand
-emacsclient -t -a "" file
+# Explicit terminal client
+et file
 
 # Blocking edit for Git or another caller; finish in Emacs with C-x #
 emacsclient -t -a "" file
 
 # Graphical client without the alias
 emacsclient -c -n -a "" file
+
+# Service lifecycle on macOS: start, stop with a save, restart, inspect
+ed ; ek ; er ; es
+
+# What is really running, when something looks wrong
+pgrep -fl 'Emacs --.*daemon'
 
 # Remote daemon and terminal client on the remote host
 ssh -t host 'emacsclient -t -a ""'

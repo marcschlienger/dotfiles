@@ -82,57 +82,62 @@ tmp () {
 }
 
 # emacs
-#
-# One supervised server per machine: launchd here, systemd elsewhere, started
-# at login and restarted after a crash. The clients only connect. A daemon a
-# client starts is not the one the supervisor owns, and while it holds the
-# socket the service cannot start: each attempt exits and is respawned, every
-# few seconds, until that daemon is killed.
-alias ec='emacsclient -c -n'
-alias et='emacsclient -t'
+# The clients carry -a '' as Emacs Client.app's launcher does, so every entry
+# point behaves alike: connect to the server, and start one when none answers.
+# A server started that way is not the one the service owns; while it holds the
+# socket the service cannot start, and launchd respawns it every few seconds
+# with a non-zero exit code until that server is killed. es shows that, and
+# pgrep -fl 'Emacs --.*daemon' shows what is really running.
+alias ec='emacsclient -c -n -a ""'
+alias et='emacsclient -t -a ""'
 
-# Save every file-visiting buffer, then stop the server. confirm-kill-processes
-# is bound because a server without frames cannot show the prompt that live
-# subprocesses would otherwise raise, and the shutdown would wait for an answer
-# that cannot come.
-ek()
-{
-    emacsclient -e '(progn (save-some-buffers t)
-                           (let ((confirm-kill-processes nil)) (kill-emacs)))' \
-        >/dev/null 2>&1 || print -r -- "no emacs server to stop"
-}
-
+# Save buffers before ek or er: service shutdown has no interactive save prompt.
 case "$OSTYPE" in
     darwin*)
         ed()
         {
-            launchctl kickstart "gui/$(id -u)/gnu.emacs.daemon"
+            local domain="gui/$UID"
+            if ! launchctl print "$domain/gnu.emacs.daemon" >/dev/null 2>&1; then
+                launchctl bootstrap "$domain" \
+                    "$HOME/Library/LaunchAgents/gnu.emacs.daemon.plist" || return
+            fi
+            launchctl kickstart "$domain/gnu.emacs.daemon"
+        }
+
+        ek()
+        {
+            print -u2 -r -- "Stopping Emacs; buffers must already be saved (no save prompt)."
+            launchctl bootout "gui/$UID/gnu.emacs.daemon"
         }
 
         er()
         {
-            ek
-            launchctl kickstart -k "gui/$(id -u)/gnu.emacs.daemon"
+            if launchctl print "gui/$UID/gnu.emacs.daemon" >/dev/null 2>&1; then
+                ek || return
+            fi
+            ed
         }
 
-        # runs climbing with a non-zero exit code is the symptom of a daemon
-        # the supervisor does not own holding the socket.
         es()
         {
-            launchctl print "gui/$(id -u)/gnu.emacs.daemon" 2>/dev/null |
-                grep -E '^\t(state|pid|runs|last exit code) = ' ||
-                print -r -- "not loaded: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/gnu.emacs.daemon.plist"
+            launchctl print "gui/$UID/gnu.emacs.daemon"
         }
         ;;
-    *)
+    linux*)
         ed()
         {
             systemctl --user start emacs.service
         }
 
+        ek()
+        {
+            print -u2 -r -- "Stopping Emacs; buffers must already be saved (no save prompt)."
+            systemctl --user stop emacs.service
+        }
+
         er()
         {
-            ek
+            print -u2 -r -- "Restarting Emacs; buffers must already be saved (no save prompt)."
             systemctl --user restart emacs.service
         }
 
