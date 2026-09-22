@@ -28,9 +28,10 @@ the parent shell to Yazi's last directory, while `Q` leaves it unchanged.
 
 The `ec` command is a Zsh alias, which is not available to the non-interactive
 shell Yazi uses for openers. `yazi.toml` therefore calls its underlying command,
-`emacsclient -c -n -a ""`, directly. The `-a ""` option starts an Emacs daemon
-if no server is running, `-c` creates a graphical frame, and `-n` returns without
-making Yazi wait for that frame to close.
+`emacsclient -c -n -a ""`, directly: `-c` creates a graphical frame, `-n` returns
+without making Yazi wait for that frame to close, and `-a ""` starts a server
+when none answers, so opening a file works even before the first client of the
+day.
 
 To make Neovim the default instead, put its entry first in `[opener].edit` (and
 optionally remove the Emacs entry):
