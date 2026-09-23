@@ -40,7 +40,7 @@ actually installed, so a machine without them still starts correctly and
 simply looks different.
 
 - **Aporetic Sans Mono** — the `default` and `fixed-pitch` faces in Emacs
-- **Aporetic Serif** — the `variable-pitch` face, used in Org and Denote
+- **Aporetic Serif** — the `variable-pitch` face, used in Org and Markdown
   buffers
 - **FiraCode Nerd Font Mono** — the terminal font in kitty
 - **Symbols Nerd Font Mono** — the icon font, set explicitly as
@@ -54,7 +54,7 @@ and IBM Plex, though wide enough, has the smallest x-height of the wide fonts
 
 Fira Code is the widest measured and the easiest to scan, so it takes the
 terminal. Aporetic keeps Emacs, where its matched sans, serif, and mono
-faces make `variable-pitch-mode` in Org and Denote buffers read as one
+faces make `variable-pitch-mode` in Org and Markdown buffers read as one
 typeface, and where prose at a comfortable size is far more forgiving of
 narrow letterforms than dense code is.
 

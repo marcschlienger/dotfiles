@@ -183,7 +183,6 @@ Run M-x ms-recompile-packages to see which files fail."
 (require 'init-org)
 (require 'init-latex)
 (require 'init-vc)
-(require 'init-denote)
 (require 'init-notes)
 #+end_src
 
@@ -2313,70 +2312,6 @@ rooted at whatever directory it happens to sit in."
   (vc-checkin . diff-hl-update))
 
 (provide 'init-vc)
-#+end_src
-
-* Denote
-
-Denote is being evaluated as a possible replacement for Obsidian. This is a
-trial only: =denote-directory= points at a scratch silo rather than =~/Notes=,
-so the existing vault is untouched while the workflow is assessed.
-
-The file type is Markdown with YAML front matter rather than Org, so every
-note remains readable by Obsidian on iOS -- which has no Emacs and therefore
-remains the mobile half of any eventual setup.
-
-#+begin_src emacs-lisp :tangle init.d/init-denote.el :mkdirp yes
-;;; init-denote.el -*- lexical-binding: t -*-
-
-;; Trial silo. Point this at ~/Notes only once the link interoperability
-;; question below has been settled.
-(use-package denote
-  :ensure t
-  :custom
-  (denote-directory (expand-file-name "~/denote-test/"))
-  (denote-file-type 'markdown-yaml)
-  ;; Seeds keyword completion.  `denote-infer-keywords' below adds
-  ;; whatever the existing notes already carry, so this list only has to
-  ;; cover the ones no note uses yet.
-  (denote-known-keywords
-   '("teaching" "school-it" "computing" "mathematics" "personal"))
-  (denote-infer-keywords t)
-  (denote-sort-keywords t)
-  (denote-prompts '(title keywords))
-  (denote-date-prompt-use-org-read-date nil)
-  :bind
-  (("C-c n n" . denote)
-   ("C-c n o" . denote-open-or-create)
-   ("C-c n l" . denote-link)
-   ("C-c n b" . denote-backlinks)
-   ("C-c n r" . denote-rename-file)
-   ("C-c n g" . denote-grep))
-  :commands (denote denote-open-or-create denote-link
-             denote-backlinks denote-rename-file denote-grep))
-
-;; Surfaces Denote through the consult/vertico/embark stack configured in
-;; init-completion.el rather than adding a parallel set of commands.
-;; No `:after' here.  It would hold the two bindings back until consult and
-;; denote had both been loaded by some other route -- which makes them
-;; useless as the way in, since pressing the key is meant to be what loads
-;; Denote.  consult-denote.el requires consult and denote itself, so :bind
-;; can autoload it directly, exactly as the denote bindings above do.
-(use-package consult-denote
-  :ensure t
-  :bind
-  (("C-c n f" . consult-denote-find)
-   ("C-c n s" . consult-denote-grep))
-  :config
-  (consult-denote-mode 1))
-
-;; Converts between Denote's link syntax and plain Markdown links, which is
-;; what decides whether the notes stay readable to other Markdown editors.
-;; Inspect the `denote-markdown-' command prefix before relying on it.
-(use-package denote-markdown
-  :ensure t
-  :after denote)
-
-(provide 'init-denote)
 #+end_src
 
 * Notes
