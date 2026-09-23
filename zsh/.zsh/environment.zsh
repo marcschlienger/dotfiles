@@ -14,9 +14,6 @@ export HISTFILE=${HOME}/.zsh/histfile
 export SAVEHIST=1024
 
 # editor
-# ALTERNATE_EDITOR stays unset: the clients pass -a '' themselves, as Emacs
-# Client.app's launcher does, so the behaviour lives with each caller rather
-# than in the environment of every process.
 #export EDITOR='emacsclient -t'
 export EDITOR='nvim'
 #export VISUAL='emacsclient -c -n'

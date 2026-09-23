@@ -275,6 +275,48 @@ become more important than automatically picking up parser updates.
   Consider limiting it to selected programming modes or using a dedicated
   whitespace-cleanup mode.
 
+## Running the server
+
+One server per machine, supervised: the launch agent in `Library/LaunchAgents/`
+on macOS, a user service elsewhere. It starts at login and is restarted after an
+unexpected exit, while a deliberate stop stays stopped.
+
+Clients connect to it. `emacsclient -c -n` opens a graphical frame,
+`emacsclient -t` a terminal one, and `-a ""` starts a server when none answers.
+
+Managing the service by hand:
+
+```bash
+# macOS
+launchctl print gui/$(id -u)/gnu.emacs.daemon              # state, pid, run count
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/gnu.emacs.daemon.plist
+launchctl kickstart gui/$(id -u)/gnu.emacs.daemon          # start
+launchctl kickstart -k gui/$(id -u)/gnu.emacs.daemon       # restart in place
+launchctl bootout gui/$(id -u)/gnu.emacs.daemon            # stop and unload
+
+# Linux
+systemctl --user status --no-pager emacs.service
+systemctl --user start emacs.service
+systemctl --user restart emacs.service
+systemctl --user stop emacs.service
+```
+
+Three things are worth knowing before relying on the output:
+
+- Stopping through the service manager gives no save prompt. Save first, or use
+  `emacsclient -e '(save-some-buffers t)'`. Unsaved buffers are auto-saved as
+  the server goes down and can be recovered with `M-x recover-this-file`.
+- `launchctl` reports success it has not achieved: `bootstrap` fails with the
+  same error whether the service is already loaded or still unloading, and
+  `kickstart` exits zero for a service that does not exist. Read the state from
+  `launchctl print` rather than from an exit code, and give launchd a moment
+  after `bootout` before loading the service again.
+- A client that starts its own server produces one the service does not own.
+  While it holds the socket the service cannot start: each attempt exits
+  non-zero and is respawned seconds later, which shows up as a climbing run
+  count. `pgrep -fl 'Emacs --.*daemon'` names the process holding it; killing it
+  lets the service take over.
+
 ## Interface and integrations
 
 - Fonts are selected from platform-aware candidate lists for each graphical

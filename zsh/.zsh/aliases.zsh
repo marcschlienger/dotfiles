@@ -81,89 +81,9 @@ tmp () {
     pushd -- "$temp_dir"
 }
 
-# emacs
-# The clients carry -a '' as Emacs Client.app's launcher does, so every entry
-# point behaves alike: connect to the server, and start one when none answers.
-# A server started that way is not the one the service owns; while it holds the
-# socket the service cannot start, and launchd respawns it every few seconds
-# with a non-zero exit code until that server is killed. es shows that, and
-# pgrep -fl 'Emacs --.*daemon' shows what is really running.
+# emacsclient
 alias ec='emacsclient -c -n -a ""'
-alias et='emacsclient -t -a ""'
-
-# Save buffers before ek or er: service shutdown has no interactive save prompt.
-case "$OSTYPE" in
-    darwin*)
-        # launchctl reports success it has not achieved: bootstrap fails with the
-        # same error whether the service is already loaded or still unloading,
-        # and kickstart exits zero for a service that does not exist. Both
-        # commands therefore ask launchd for the state afterwards, and wait
-        # while it catches up.
-        ed()
-        {
-            local domain="gui/$UID" i
-            for i in {1..20}; do
-                launchctl bootstrap "$domain" \
-                    "$HOME/Library/LaunchAgents/gnu.emacs.daemon.plist" 2>/dev/null
-                launchctl kickstart "$domain/gnu.emacs.daemon" >/dev/null 2>&1
-                launchctl print "$domain/gnu.emacs.daemon" 2>/dev/null |
-                    grep -q 'state = running' && return 0
-                sleep 0.5
-            done
-            print -u2 -r -- "emacs service did not start; see es"
-            return 1
-        }
-
-        ek()
-        {
-            local i
-            print -u2 -r -- "Stopping Emacs; buffers must already be saved (no save prompt)."
-            launchctl bootout "gui/$UID/gnu.emacs.daemon" 2>/dev/null
-            for i in {1..20}; do
-                launchctl print "gui/$UID/gnu.emacs.daemon" >/dev/null 2>&1 || return 0
-                sleep 0.5
-            done
-            print -u2 -r -- "emacs service is still loaded; see es"
-            return 1
-        }
-
-        er()
-        {
-            if launchctl print "gui/$UID/gnu.emacs.daemon" >/dev/null 2>&1; then
-                ek || return
-            fi
-            ed
-        }
-
-        es()
-        {
-            launchctl print "gui/$UID/gnu.emacs.daemon"
-        }
-        ;;
-    linux*)
-        ed()
-        {
-            systemctl --user start emacs.service
-        }
-
-        ek()
-        {
-            print -u2 -r -- "Stopping Emacs; buffers must already be saved (no save prompt)."
-            systemctl --user stop emacs.service
-        }
-
-        er()
-        {
-            print -u2 -r -- "Restarting Emacs; buffers must already be saved (no save prompt)."
-            systemctl --user restart emacs.service
-        }
-
-        es()
-        {
-            systemctl --user status --no-pager emacs.service
-        }
-        ;;
-esac
+alias ect='emacsclient -t -a ""'
 
 # ranger
 alias rr=ranger_cd

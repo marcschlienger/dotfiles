@@ -53,9 +53,9 @@ recommendations.
 - `/Applications/Emacs Client.app` handles Finder/Dock opening and the
   `org-protocol://` URL scheme. It ships with the cask, which regenerates its
   launcher script on every install, so it is used as delivered.
-- Zsh defines `ec='emacsclient -c -n -a ""'` and `et='emacsclient -t -a ""'`
-  for the clients, and `ed`, `ek`, `er` and `es` to start, stop, restart and
-  inspect the service.
+- Zsh defines `ec='emacsclient -c -n -a ""'` and `ect='emacsclient -t -a ""'`
+  for the clients. The service itself is managed with `launchctl`; the commands
+  are in the Emacs README.
 - Yazi opens files through the Emacs client by default, with Neovim as a
   fallback.
 - The graphical frame and theme setup already accounts for daemon-created
@@ -1164,7 +1164,7 @@ tangle would undo it.
 ec file
 
 # Explicit terminal client
-et file
+ect file
 
 # Blocking edit for Git or another caller; finish in Emacs with C-x #
 emacsclient -t -a "" file
@@ -1172,8 +1172,9 @@ emacsclient -t -a "" file
 # Graphical client without the alias
 emacsclient -c -n -a "" file
 
-# Service lifecycle on macOS: start, stop with a save, restart, inspect
-ed ; ek ; er ; es
+# Service state, and a restart in place
+launchctl print gui/$(id -u)/gnu.emacs.daemon
+launchctl kickstart -k gui/$(id -u)/gnu.emacs.daemon
 
 # What is really running, when something looks wrong
 pgrep -fl 'Emacs --.*daemon'
