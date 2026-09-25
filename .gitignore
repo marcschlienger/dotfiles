@@ -21,6 +21,7 @@ emacs/.emacs.d/recentf
 emacs/.emacs.d/recentf.eld
 emacs/.emacs.d/savehist
 emacs/.emacs.d/transient/
+emacs/.emacs.d/tramp
 emacs/.emacs.d/tree-sitter/
 # Where Emacs remembers how far you got in the built-in tutorial (C-h t).
 emacs/.emacs.d/tutorial/

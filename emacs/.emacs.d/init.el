@@ -112,6 +112,7 @@ Run M-x ms-recompile-packages to see which files fail."
         (expand-file-name ".saves-" auto-save-directory)))
 
 (require 'init-basic)
+(require 'init-terminal)
 (require 'init-dired)
 (require 'init-theme)
 (require 'init-evil)
