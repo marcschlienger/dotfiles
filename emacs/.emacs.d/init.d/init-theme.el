@@ -432,7 +432,7 @@ The next sunrise or sunset event restores automatic switching."
   (hl-line-sticky-flag nil)
   (global-hl-line-mode t)
   :hook
-  ((comint-mode eshell-mode term-mode) . ms/disable-global-hl-line))
+  ((comint-mode eshell-mode term-mode ghostel-mode) . ms/disable-global-hl-line))
 
 ;;; Icons
 (use-package nerd-icons

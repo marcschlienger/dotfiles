@@ -176,6 +176,7 @@ Run M-x ms-recompile-packages to see which files fail."
         (expand-file-name ".saves-" auto-save-directory)))
 
 (require 'init-basic)
+(require 'init-terminal)
 (require 'init-dired)
 (require 'init-theme)
 (require 'init-lang)
@@ -298,6 +299,19 @@ Run M-x ms-recompile-packages to see which files fail."
 )
 
 (provide 'init-basic)
+#+end_src
+
+
+* Terminal
+
+#+begin_src emacs-lisp :tangle init.d/init-terminal.el :mkdirp yes
+;;; init-terminal.el -*- lexical-binding: t -*-
+
+(use-package ghostel
+  :ensure t
+  :commands ghostel)
+
+(provide 'init-terminal)
 #+end_src
 
 
@@ -902,7 +916,7 @@ The next sunrise or sunset event restores automatic switching."
   (hl-line-sticky-flag nil)
   (global-hl-line-mode t)
   :hook
-  ((comint-mode eshell-mode term-mode) . ms/disable-global-hl-line))
+  ((comint-mode eshell-mode term-mode ghostel-mode) . ms/disable-global-hl-line))
 
 ;;; Icons
 (use-package nerd-icons
