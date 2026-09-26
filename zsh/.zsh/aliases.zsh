@@ -47,9 +47,15 @@ if [[ -n ${KITTY_WINDOW_ID-} && ${${INSIDE_EMACS-}%%,*} != ghostel ]]; then
     alias ssh='kitten ssh'
 fi
 
-# Open Magit for the current directory from a Ghostel shell.
 if [[ ${${INSIDE_EMACS-}%%,*} == ghostel ]]; then
-    magit() { ghostel_cmd magit-status-setup-buffer "$PWD"; }
+    # Open a file in Emacs from the terminal.
+    e() { ghostel_cmd find-file-other-window "$@"; }
+
+    # Open Dired in another window.
+    dow() { ghostel_cmd dired-other-window "$@"; }
+
+    # Open Magit for the current directory.
+    gst() { ghostel_cmd magit-status-setup-buffer "$(pwd)"; }
 fi
 
 # make a directory and cd into it
