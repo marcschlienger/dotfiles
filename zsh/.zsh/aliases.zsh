@@ -31,7 +31,10 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 alias d='dirs -v'
-for index ({1..9}) alias "$index"="cd +${index}"; unset index
+for index in {1..9}; do
+    alias "$index"="cd +${index}"
+done
+unset index
 
 # diff
 if diff --color=auto /dev/null /dev/null >/dev/null 2>&1; then
