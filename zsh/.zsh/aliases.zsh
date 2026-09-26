@@ -43,7 +43,14 @@ alias more='more -R'
 alias less='less -R'
 
 # kitty
-alias s="kitten ssh"
+if [[ -n ${KITTY_WINDOW_ID-} && ${${INSIDE_EMACS-}%%,*} != ghostel ]]; then
+    alias ssh='kitten ssh'
+fi
+
+# Open Magit for the current directory from a Ghostel shell.
+if [[ ${${INSIDE_EMACS-}%%,*} == ghostel ]]; then
+    magit() { ghostel_cmd magit-status-setup-buffer "$PWD"; }
+fi
 
 # make a directory and cd into it
 take () {
