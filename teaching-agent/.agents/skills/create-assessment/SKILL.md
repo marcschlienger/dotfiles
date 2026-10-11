@@ -9,6 +9,9 @@ Read `Teaching-Private/AGENTS.md`, the matching canonical `Teaching-SRC/<course>
 
 Use `mtest` for written assessments and `mexam` for oral examinations. Create one best version and its solution unless the user explicitly requests otherwise. Do not add teacher commentary, grading notes, hints, alternate versions, or rubrics unless requested.
 
+For a written Klassenarbeit, inspect a few of Marc's earlier exams for the same subject and level before choosing the page structure. TG mathematics exams use the `mtest` title block followed directly by `Teil 1 --- Ohne Hilfsmittel`, then `Teil 2 --- Mit Hilfsmittel`; use `\msectionr[]` for tasks, `\mscore` at the relevant task or subtask, and the existing total-score and closing commands. Do not invent a separate header for time, total points, aids, name, paper use, or hand-in procedure unless the user asks for it. Preserve a different established structure when the matching earlier exams show one.
+Put the specified exam date in the `mtest` title block below `Klassenarbeit <number>`; if no date is supplied, use the current date. Put the intended class and subject in the page header, and visually align its bottom with the bottom of the school logo above the title table.
+
 ## Validate conservatively
 
 - Verify task wording, givens, notation, and solution correspondence.
