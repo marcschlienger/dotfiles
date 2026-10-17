@@ -16,6 +16,8 @@ Read the applicable `AGENTS.md` and the matching canonical `COURSE.md` before ed
 - Use `mstuff` and `msheet.sty` where the document convention calls for them.
 
 Inspect nearby material for the exact preamble, macros, filenames, and layout conventions. Confirm uncertain class or package resolution with `kpsewhich`. Do not edit shared classes, styles, common macros, templates, or build infrastructure unless the user explicitly requests that work.
+For written exams, compare earlier exams from the same subject and level before adding document-local header text or changing the `mtest` task structure. Follow the assessment-specific guidance in `$create-assessment`.
+In a rendered `mtest` exam, check that the class-and-subject label and school logo end at the same height and leave the compact gap to the title table seen in recent `msheet` worksheets. Use a document-local header or title adjustment if needed; do not change the shared class for one exam.
 
 ## Use the public class and package interface
 
