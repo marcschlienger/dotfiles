@@ -839,8 +839,8 @@ The next sunrise or sunset event restores automatic switching."
 (use-package solar
   :ensure nil
   :config
-  (setq calendar-latitude 48.96
-        calendar-longitude 8.58))
+  (setq calendar-latitude 49.0
+        calendar-longitude 9.0))
 
 (use-package circadian
   :ensure t
