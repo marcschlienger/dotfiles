@@ -13,7 +13,8 @@ Create one best version at the requested level. Unless the user says otherwise, 
 
 - Store stable class characteristics, curricular references, and terminology in `COURSE.md`. Create or update it when requested; keep the current topic, prior knowledge, and lesson duration in the lesson draft or task context.
 - Follow the actual learner group. For a mixed technical and commercial class, use accessible practical contexts from both backgrounds without assuming specialist knowledge or inferring mathematical ability from the vocational profile.
-- Save the lesson sequence as `ue_...md` and accompanying worksheets and solutions as LaTeX with compiled PDFs. Keep the lesson sequence, task labels, expected results, and material links synchronized when revising.
+- Save the lesson sequence as `ue_...md` and accompanying worksheets (`ab_<name>`) and solutions (`lsg_<name>`) as LaTeX with compiled PDFs, each in its own folder. Keep the lesson sequence, task labels, expected results, and material links synchronized when revising.
+- Write mathematics in `ue_...md` with `$...$` (inline) and `$$...$$` (display, on their own lines, indented under a list item when inside one), never `\(...\)` or `\[...\]`, so the formulas render after export (Obsidian, Pandoc). Inside table cells avoid a bare `|` in a formula; write `\lvert x\rvert` instead.
 
 ## Task design and securing concepts
 
