@@ -16,7 +16,9 @@ URL for it. `MARGIN_URL` must be set to the instance's base address, and
 `MARGIN_TOKEN` is sent as a bearer header when set — in a header rather than
 the query string, because a URL is logged by proxies and kept in history. The
 notes directory comes from the argument, else from `NOTES`, else the iCloud
-default.
+default. Both variables are set outside this repository — in `~/.zprofile` on
+a Mac — because an instance's address and its token have no business in a
+public one.
 
 It writes the note, and files the PDF into `attachments/` under an identifier
 of its own, linked from the note with `denote:`. `--archive` moves the item
