@@ -14,46 +14,14 @@ Prints the path of the note it wrote.
 """
 
 import html
-import os
 import re
 import subprocess
 import sys
-import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
-# Transliterations worth spelling out, because dropping the diacritic alone
-# turns "für" into "fr" and "Größe" into "Groe".
-TRANSLITERATE = {
-    "ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss",
-    "Ä": "ae", "Ö": "oe", "Ü": "ue",
-    "æ": "ae", "ø": "oe", "å": "aa", "œ": "oe", "þ": "th", "ð": "d",
-}
-
-IDENTIFIER = re.compile(r"\d{8}T\d{6}")
-
-
-def slugify(text):
-    """Reduce text to the lowercase hyphenated form Denote uses in file names."""
-    for char, replacement in TRANSLITERATE.items():
-        text = text.replace(char, replacement)
-    text = unicodedata.normalize("NFKD", text.lower())
-    text = "".join(c for c in text if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
-
-
-def first_line(text):
-    """The first non-empty line, whitespace collapsed.
-
-    A share-sheet variable holding several items interpolates as one line per
-    item, so a doubled title or address arrives as a multi-line string.  The
-    first line is the one that was wanted.
-    """
-    for line in text.strip().splitlines():
-        line = re.sub(r"\s+", " ", line).strip()
-        if line:
-            return line
-    return ""
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import denotefile as dn
 
 
 def strip_tags(fragment):
@@ -76,50 +44,41 @@ def parse(raw):
     title = ""
     match = heading.search(preamble)
     if match:
-        title = first_line(strip_tags(match.group(1)))
+        title = dn.first_line(strip_tags(match.group(1)))
     else:
         # No preamble: take the title from the page and drop that heading, so
         # it does not appear both as #+title and as the first headline.
         match = heading.search(body)
         if match:
-            title = first_line(strip_tags(match.group(1)))
+            title = dn.first_line(strip_tags(match.group(1)))
             body = body[: match.start()] + body[match.end():]
 
     if not title:
         match = re.search(r"<title[^>]*>(.*?)</title>", raw, re.I | re.S)
         if match:
-            title = first_line(strip_tags(match.group(1)))
+            title = dn.first_line(strip_tags(match.group(1)))
 
     url = ""
     match = re.search(r'href=["\']([^"\']*)["\']', preamble, re.I)
     if match:
-        url = first_line(html.unescape(match.group(1)))
+        url = dn.first_line(html.unescape(match.group(1)))
 
     return title, url, body
 
 
-def identifier_for(path, notes):
-    """A Denote identifier that no note in the directory is using yet."""
-    match = IDENTIFIER.search(path.name)
-    if match:
-        stamp = datetime.strptime(match.group(0), "%Y%m%dT%H%M%S")
-    else:
+def stamp_for(path, notes):
+    """The clipping's own identifier when it has one, else its creation time."""
+    stamp = dn.stamp_from_name(path.name)
+    if stamp is None:
         info = path.stat()
-        stamp = datetime.fromtimestamp(getattr(info, "st_birthtime", info.st_mtime))
-    taken = {name[:15] for name in os.listdir(notes)}
-    while stamp.strftime("%Y%m%dT%H%M%S") in taken:
-        stamp += timedelta(seconds=1)
-    return stamp
+        stamp = datetime.fromtimestamp(
+            getattr(info, "st_birthtime", info.st_mtime))
+    return dn.free_identifier(notes, stamp)
 
 
 def keywords_for(path):
     stem = path.stem
-    if "__" in stem:
-        found = [slugify(k) for k in stem.split("__", 1)[1].split("_")]
-        found = [k for k in found if k]
-        if found:
-            return found
-    return ["clip"]
+    return dn.keywords_from(stem.split("__", 1)[1] if "__" in stem else "")
 
 
 def main():
@@ -129,14 +88,11 @@ def main():
 
     raw = source.read_text(encoding="utf-8", errors="replace")
     title, url, body = parse(raw)
-    stamp = identifier_for(source, notes)
-    identifier = stamp.strftime("%Y%m%dT%H%M%S")
+    stamp = stamp_for(source, notes)
     keywords = keywords_for(source)
+    slug = dn.slugify(title) or "clipping"
 
-    slug = slugify(title) or "clipping"
-    # Long titles make unwieldy file names; the identifier is what links use.
-    slug = slug[:80].rstrip("-")
-    target = notes / f"{identifier}--{slug}__{'_'.join(keywords)}.org"
+    target = notes / dn.note_name(stamp, slug, keywords)
     if target.exists():
         sys.exit(f"{target.name} exists")
 
@@ -153,19 +109,11 @@ def main():
     # image link beside them, so drop them.
     converted = re.sub(r"\[\[[^]\[]*\]\[\]\]", "", converted)
 
-    front = [
-        f"#+title:      {title or slug}",
-        f"#+date:       [{stamp.strftime('%Y-%m-%d %a %H:%M')}]",
-        f"#+filetags:   :{':'.join(keywords)}:",
-        f"#+identifier: {identifier}",
-        "",
-    ]
+    lines = dn.front_matter(title or slug, stamp, keywords)
     if url:
-        front += [f"Source: [[{url}]]", ""]
+        lines += [f"Source: [[{url}]]", ""]
 
-    partial = target.with_suffix(".org.part")
-    partial.write_text("\n".join(front) + converted, encoding="utf-8")
-    partial.replace(target)
+    dn.write_atomically(target, "\n".join(lines) + converted)
     print(target)
 
 
