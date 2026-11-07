@@ -23,7 +23,40 @@
   (require-final-newline t)
   :config
   (global-auto-revert-mode 1)
-  (setq auto-revert-verbose t))
+  (setq auto-revert-verbose t)
+  ;; AUCTeX reverts the PDF itself when a compilation finishes, so Auto
+  ;; Revert reverting it as well is a second revert of the same buffer.
+  (setq global-auto-revert-ignore-modes '(pdf-view-mode)))
+
+;; Scrolling.  By default point leaving the window recentres it, which throws
+;; away the lines I was reading; above 100 `scroll-conservatively' never
+;; recentres and Emacs scrolls just far enough instead.
+(use-package emacs
+  :custom
+  (scroll-conservatively 101)
+  (scroll-margin 3)
+  (scroll-preserve-screen-position 1)
+  ;; Redisplay may use stale font-lock while input is pending; both are
+  ;; about scrolling long files, and neither changes what is displayed once
+  ;; typing stops.
+  (fast-but-imprecise-scrolling t)
+  (redisplay-skip-fontification-on-input t))
+
+;; Faces travel with killed text, so a yank from an Org or Markdown buffer
+;; can arrive in a code buffer still wearing the source buffer's colours.
+(use-package emacs
+  :config
+  (add-to-list 'yank-excluded-properties 'face))
+
+;; Minified JavaScript, SQL dumps and large JSON have lines long enough to
+;; make redisplay crawl.  `so-long' detects them and turns the expensive
+;; minor modes off; keeping `font-lock-mode' out of that list leaves
+;; syntax highlighting, which is the part worth the cost.
+(use-package so-long
+  :ensure nil
+  :config
+  (setq so-long-minor-modes (delq 'font-lock-mode so-long-minor-modes))
+  (global-so-long-mode 1))
 
 ;; Restore point when reopening files.
 (use-package saveplace

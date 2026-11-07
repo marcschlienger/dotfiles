@@ -25,7 +25,18 @@
   :init
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 50)
-  (setq git-commit-style-convention-checks '(non-empty-second-line)))
+  (setq git-commit-style-convention-checks '(non-empty-second-line))
+  :config
+  ;; C-<up> and C-<down> are how I move through a diff, but a hunk's lines
+  ;; carry a leading + or -, so a blank line reads as " " and paragraph
+  ;; motion runs to the end of the hunk.  Allowing the marker in both
+  ;; patterns makes a blank context line a paragraph break again.
+  (add-hook 'magit-diff-mode-hook
+            (lambda ()
+              (setq-local paragraph-separate
+                          (format "[+-]?\\(?:%s\\)" paragraph-separate))
+              (setq-local paragraph-start
+                          (format "[+-]?\\(?:%s\\)" paragraph-start)))))
 
 ;; diff-hl-mode (https://github.com/dgutov/diff-hl) to highlight lines with uncommitted changes
 (use-package diff-hl

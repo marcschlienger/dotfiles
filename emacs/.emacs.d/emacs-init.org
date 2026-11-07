@@ -215,7 +215,40 @@ Run M-x ms-recompile-packages to see which files fail."
   (require-final-newline t)
   :config
   (global-auto-revert-mode 1)
-  (setq auto-revert-verbose t))
+  (setq auto-revert-verbose t)
+  ;; AUCTeX reverts the PDF itself when a compilation finishes, so Auto
+  ;; Revert reverting it as well is a second revert of the same buffer.
+  (setq global-auto-revert-ignore-modes '(pdf-view-mode)))
+
+;; Scrolling.  By default point leaving the window recentres it, which throws
+;; away the lines I was reading; above 100 `scroll-conservatively' never
+;; recentres and Emacs scrolls just far enough instead.
+(use-package emacs
+  :custom
+  (scroll-conservatively 101)
+  (scroll-margin 3)
+  (scroll-preserve-screen-position 1)
+  ;; Redisplay may use stale font-lock while input is pending; both are
+  ;; about scrolling long files, and neither changes what is displayed once
+  ;; typing stops.
+  (fast-but-imprecise-scrolling t)
+  (redisplay-skip-fontification-on-input t))
+
+;; Faces travel with killed text, so a yank from an Org or Markdown buffer
+;; can arrive in a code buffer still wearing the source buffer's colours.
+(use-package emacs
+  :config
+  (add-to-list 'yank-excluded-properties 'face))
+
+;; Minified JavaScript, SQL dumps and large JSON have lines long enough to
+;; make redisplay crawl.  `so-long' detects them and turns the expensive
+;; minor modes off; keeping `font-lock-mode' out of that list leaves
+;; syntax highlighting, which is the part worth the cost.
+(use-package so-long
+  :ensure nil
+  :config
+  (setq so-long-minor-modes (delq 'font-lock-mode so-long-minor-modes))
+  (global-so-long-mode 1))
 
 ;; Restore point when reopening files.
 (use-package saveplace
@@ -1440,6 +1473,18 @@ rooted at whatever directory it happens to sit in."
 ;; `python-mode-hook', and a function added to a hook while that hook is
 ;; running is not seen until the next buffer -- so the first Python file of
 ;; the session opened without any Ruff diagnostics.
+;; Latency, in the order it is paid: the events buffer records every
+;; message in both directions and costs the most; progress reports and
+;; code-action probing redraw while typing; a server left running after its
+;; last buffer is gone keeps a process per project.
+(use-package eglot
+  :ensure nil
+  :custom
+  (eglot-events-buffer-config '(:size 0 :format full))
+  (eglot-report-progress nil)
+  (eglot-autoshutdown t)
+  (eglot-sync-connect nil))
+
 (use-package flymake-ruff
   :ensure t
   :hook ((python-mode python-ts-mode) . flymake-ruff-load))
@@ -1550,8 +1595,15 @@ rooted at whatever directory it happens to sit in."
   (which-key-mode 1))
 
 ;;; Consult
+;; The async defaults wait long enough after a keystroke to feel like a
+;; pause; these are the values at which `consult-ripgrep' keeps up with
+;; typing on this machine.
 (use-package consult
   :ensure t
+  :custom
+  (consult-async-input-debounce 0.05)
+  (consult-async-input-throttle 0.1)
+  (consult-async-refresh-delay 0.05)
   :bind (([remap Info-search] . consult-info)
          ([remap bookmark-jump] . consult-bookmark)
          ([remap goto-line] . consult-goto-line)
@@ -1916,6 +1968,10 @@ rooted at whatever directory it happens to sit in."
   ;; This variable needs to be set before org.el is loaded.
   (setq org-export-backends '(html latex md odt texinfo))
   :config
+  ;; latexmk runs LaTeX as often as the references need instead of a fixed
+  ;; number of passes, and writes the auxiliary files beside the output.
+  (setq org-latex-pdf-process
+        '("latexmk -pdf -interaction=nonstopmode -output-directory=%o %f"))
   (setq org-export-with-toc t)
   (setq org-export-headline-levels 8)
   (setq org-export-dispatch-use-expert-ui nil)
@@ -1952,6 +2008,15 @@ rooted at whatever directory it happens to sit in."
                     ":CAPTURED: %U\n"
                     ":END:\n"
                     "%?"))
+          ("l" "Lab notebook" entry
+           (file+olp+datetree ,(expand-file-name "lab.org" ms-paths-notes-directory))
+           "* %?\n%U\n")
+          ("L" "Lesson that worked" entry
+           (file+olp+datetree ,(expand-file-name "lab.org" ms-paths-notes-directory))
+           "* Lesson: %?  :lesson:\n%U\nGoodNotes: \n")
+          ("c" "Note inbox" entry
+           (file ,(expand-file-name "inbox.org" ms-paths-notes-directory))
+           "* %?\n%U\n")
           ("p" "Project" entry (file "projects.org")
            ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"
@@ -2304,7 +2369,18 @@ rooted at whatever directory it happens to sit in."
   :init
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 50)
-  (setq git-commit-style-convention-checks '(non-empty-second-line)))
+  (setq git-commit-style-convention-checks '(non-empty-second-line))
+  :config
+  ;; C-<up> and C-<down> are how I move through a diff, but a hunk's lines
+  ;; carry a leading + or -, so a blank line reads as " " and paragraph
+  ;; motion runs to the end of the hunk.  Allowing the marker in both
+  ;; patterns makes a blank context line a paragraph break again.
+  (add-hook 'magit-diff-mode-hook
+            (lambda ()
+              (setq-local paragraph-separate
+                          (format "[+-]?\\(?:%s\\)" paragraph-separate))
+              (setq-local paragraph-start
+                          (format "[+-]?\\(?:%s\\)" paragraph-start)))))
 
 ;; diff-hl-mode (https://github.com/dgutov/diff-hl) to highlight lines with uncommitted changes
 (use-package diff-hl
@@ -2337,30 +2413,56 @@ rooted at whatever directory it happens to sit in."
 
 * Notes
 
-Wiki links are resolved while a buffer is fontified: markdown-mode looks up the target
-file of every =[[link]]= it draws, by searching the whole project. Outside a version
-controlled directory that search asks for a project root in the middle of redisplay, so
-the settings apply only to buffers visiting a file inside the vault. The vault must stay
-a git repository for the same reason. The commands themselves live in
-=lib.d/lib-notes.el=.
+The notes are Org files in one directory, named by the Denote convention:
+=20261107T120000--some-title__keyword1_keyword2.org=. The identifier is the
+filename's first field and never changes, so a link keeps working after a
+rename -- which is the whole reason for the scheme. Keywords carry what folders
+used to: =teaching=, =school=, =personal=, =computing=, =research=, =clip=,
+=project=, =meeting=.
+
+The directory is =ms-paths-notes-directory=. On macOS that is inside iCloud
+Drive, so the same files open on the phone and the tablet in an Org reader,
+which is why notes are Org and not Markdown and why nothing in a note depends
+on an editor plugin.
 
 #+begin_src emacs-lisp :tangle init.d/init-notes.el :mkdirp yes
 ;;; init-notes.el -*- lexical-binding: t -*-
 
-(require 'lib-notes)
+(require 'lib-paths)
 
-(defvar markdown-enable-wiki-links)
-(defvar markdown-wiki-link-alias-first)
-(defvar markdown-wiki-link-search-type)
+(use-package denote
+  :ensure t
+  :bind (("C-c n n" . denote)
+         ("C-c n l" . denote-link)
+         ("C-c n b" . denote-backlinks)
+         ("C-c n r" . denote-rename-file)
+         ("C-c n d" . denote-sort-dired))
+  :hook (dired-mode . denote-dired-mode)
+  :custom
+  (denote-directory ms-paths-notes-directory)
+  (denote-file-type 'org)
+  (denote-known-keywords '("reference" "exercise" "worksheet" "lesson"
+                           "meeting" "project" "clip" "teaching" "school"
+                           "ipad" "personal" "computing" "research" "emacs"
+                           "math" "physics"))
+  (denote-infer-keywords t)
+  (denote-sort-keywords t)
+  ;; Backdating a note through the Org date prompt rather than typing an
+  ;; identifier by hand; the prompt accepts "-1d" and the like.
+  (denote-date-prompt-use-org-read-date t)
+  :config
+  ;; A buffer named after the identifier tells me nothing in the buffer
+  ;; list; this names it after the title.  It is a mode, so it is called
+  ;; here rather than set as a variable.
+  (denote-rename-buffer-mode 1))
 
-(defun ms/notes-markdown-setup ()
-  "Resolve [[target|alias]] wiki links anywhere in the vault."
-  (when (ms-notes-file-p)
-    (setq-local markdown-enable-wiki-links t
-                markdown-wiki-link-alias-first nil
-                markdown-wiki-link-search-type '(project))))
-
-(add-hook 'markdown-mode-hook #'ms/notes-markdown-setup)
+;; Search and find restricted to the notes, with Consult's preview.
+(use-package consult-denote
+  :ensure t
+  :bind (("C-c n f" . consult-denote-find)
+         ("C-c n g" . consult-denote-grep))
+  :config
+  (consult-denote-mode 1))
 
 (provide 'init-notes)
 #+end_src
@@ -2388,6 +2490,16 @@ symlink into this repository.  One cache root, resolved per platform.
   "Return NAME inside `ms-paths-cache-directory', creating the directory."
   (make-directory ms-paths-cache-directory t)
   (expand-file-name name ms-paths-cache-directory))
+
+(defconst ms-paths-notes-directory
+  (if (eq system-type 'darwin)
+      (expand-file-name
+       "Notes/" "~/Library/Mobile Documents/com~apple~CloudDocs/")
+    (expand-file-name "~/Notes/"))
+  "Directory holding the notes: Org files named by the Denote convention.
+On macOS this is iCloud Drive, which the phone and tablet can reach.  There
+is no iCloud client for other systems, so they fall back to a plain home
+directory and need their own way of getting the files there.")
 
 (provide 'lib-paths)
 #+end_src
@@ -2500,208 +2612,4 @@ See also `org-save-all-org-buffers'"
 (advice-add 'org-refile :after #'ms-org--save-org-agenda-file-buffers)
 
 (provide 'lib-org)
-#+end_src
-
-** The `lib-notes.el' library
-
-The notes vault in =~/Notes= is a directory of Markdown files shared with other Markdown
-editors. Filenames are lowercase ASCII in kebab case, living notes sit in a domain folder,
-dated records in =70_journal/YYYY/=, and every note starts with YAML front matter. These
-commands create notes that follow those rules, so a note made in Emacs is
-indistinguishable from one made elsewhere.
-
-A note captured elsewhere lands in =00_inbox/= under a timestamp name. =ms-notes-file=
-files it: it takes the title from the note's heading, or from its filename when that is
-not a timestamp, renames it to the slug and moves it into its domain's folder, or into
-the journal for a meeting. Emacs does not rewrite links to a renamed file, so the command
-refuses to rename a note that another note already links to.
-
-#+begin_src emacs-lisp :tangle lib.d/lib-notes.el :mkdirp yes
-;;; lib-notes.el -*- lexical-binding: t -*-
-
-(require 'ucs-normalize)
-
-(defvar ms-notes-directory (expand-file-name "~/Notes/")
-  "Root of the notes vault.")
-
-(defconst ms-notes-folders
-  '(("teaching"  . "20_school/teaching")
-    ("ipad-team" . "20_school/ipad-team")
-    ("personal"  . "30_personal")
-    ("research"  . "40_research")
-    ("computing" . "50_computing"))
-  "Domain value and the folder its living notes live in.")
-
-(defun ms-notes-file-p ()
-  "Return non-nil when the current buffer visits a file inside the vault."
-  (and buffer-file-name
-       (file-in-directory-p buffer-file-name ms-notes-directory)))
-
-(defun ms-notes-slug (title)
-  "Turn TITLE into the vault's filename description: lowercase ASCII kebab case.
-German umlauts and ß are transliterated; other accents are dropped from their
-letter, so é becomes e."
-  (let ((s (downcase title)))
-    (dolist (pair '(("ä" . "ae") ("ö" . "oe") ("ü" . "ue") ("ß" . "ss")))
-      (setq s (string-replace (car pair) (cdr pair) s)))
-    (setq s (seq-remove (lambda (c) (eq (get-char-code-property c 'general-category) 'Mn))
-                        (ucs-normalize-NFD-string s)))
-    (setq s (replace-regexp-in-string "[^a-z0-9]+" "-" (apply #'string s)))
-    (replace-regexp-in-string "\\`-+\\|-+\\'" "" s)))
-
-(defun ms-notes-new (title domain type)
-  "Create a note TITLE of TYPE in DOMAIN, named and filed by the vault's rules.
-Meetings go to the journal as YYYY-MM-DD_mem_description; every other type
-goes to the domain's folder as description."
-  (interactive
-   (list (read-string "Title: ")
-         (completing-read "Domain: " (mapcar #'car ms-notes-folders) nil t)
-         (completing-read "Type (default note): "
-                          '("note" "reference" "literature" "moc" "project" "meeting")
-                          nil t nil nil "note")))
-  (let* ((today (format-time-string "%F"))
-         (slug (ms-notes-slug title))
-         (file (if (string= type "meeting")
-                   (expand-file-name (format "70_journal/%s/%s_mem_%s.md"
-                                             (substring today 0 4) today slug)
-                                     ms-notes-directory)
-                 (expand-file-name (concat slug ".md")
-                                   (expand-file-name (cdr (assoc domain ms-notes-folders))
-                                                     ms-notes-directory)))))
-    (when (string-empty-p slug) (user-error "Title has no usable characters"))
-    (when (file-exists-p file) (user-error "Already exists: %s" file))
-    (make-directory (file-name-directory file) t)
-    (find-file file)
-    (insert (format "---\ntype: %s\ndomain: %s\ncreated: %s\nlang: de\n---\n\n# %s\n\n"
-                    type domain today title))))
-
-(defun ms-notes-today ()
-  "Open today's daily note, creating it from the vault's daily template.
-The template's {{date}} and {{title}} placeholders become today's date."
-  (interactive)
-  (let* ((today (format-time-string "%F"))
-         (template (expand-file-name "99_meta/templates/daily.md" ms-notes-directory))
-         (file (expand-file-name (format "70_journal/%s/%s.md" (substring today 0 4) today)
-                                 ms-notes-directory)))
-    (unless (or (file-exists-p file) (file-readable-p template))
-      (user-error "Daily template not found: %s" template))
-    (make-directory (file-name-directory file) t)
-    (find-file file)
-    (when (= (buffer-size) 0)
-      (insert-file-contents template)
-      (goto-char (point-min))
-      (while (re-search-forward "{{\\(date\\|title\\)}}" nil t)
-        (replace-match today t t)))))
-
-(defun ms-notes--front-matter-bounds ()
-  "Return (BEG . END) of the current buffer's YAML front matter, or nil."
-  (save-excursion
-    (goto-char (point-min))
-    (when (looking-at "---[ \t]*\n")
-      (let ((beg (match-end 0)))
-        (goto-char beg)
-        (when (re-search-forward "^---[ \t]*$" nil t)
-          (cons beg (match-beginning 0)))))))
-
-(defun ms-notes--front-matter-get (key)
-  "Return the non-empty value of KEY in the front matter, or nil."
-  (let ((bounds (ms-notes--front-matter-bounds)))
-    (when bounds
-      (save-excursion
-        (goto-char (car bounds))
-        (when (re-search-forward (format "^%s:[ \t]*\\(.*?\\)[ \t]*$" (regexp-quote key))
-                                 (cdr bounds) t)
-          (let ((value (string-trim (match-string-no-properties 1) "[\"']" "[\"']")))
-            (unless (string-empty-p value) value)))))))
-
-(defun ms-notes--front-matter-set (key value)
-  "Set KEY to VALUE in the front matter, adding the key if it is missing."
-  (let ((bounds (or (ms-notes--front-matter-bounds)
-                    (user-error "This note has no front matter"))))
-    (save-excursion
-      (goto-char (car bounds))
-      (if (re-search-forward (format "^%s:.*$" (regexp-quote key)) (cdr bounds) t)
-          (replace-match (format "%s: %s" key value) t t)
-        (goto-char (cdr bounds))
-        (insert (format "%s: %s\n" key value))))))
-
-(defun ms-notes--heading ()
-  "Return the text of the first level-one heading after the front matter, or nil."
-  (save-excursion
-    (goto-char (or (cdr (ms-notes--front-matter-bounds)) (point-min)))
-    (when (re-search-forward "^# \\(.+\\)$" nil t)
-      (string-trim (match-string-no-properties 1)))))
-
-(defun ms-notes--default-title ()
-  "Return the note's title: its heading, else its filename unless a timestamp."
-  (or (ms-notes--heading)
-      (let ((stem (file-name-base buffer-file-name)))
-        (unless (string-match-p "\\`[0-9]+\\'" stem) stem))))
-
-(defun ms-notes--linked-from (stem)
-  "Return the vault files, other than the current one, containing a link to STEM."
-  (let ((link (concat "[[" stem)) (hits nil))
-    (dolist (file (directory-files-recursively ms-notes-directory "\\.md\\'") hits)
-      (unless (file-equal-p file buffer-file-name)
-        (with-temp-buffer
-          (insert-file-contents file)
-          (goto-char (point-min))
-          (while (and (search-forward link nil t)
-                      (not (member file hits)))
-            (when (memq (char-after) '(?\] ?| ?#))
-              (push file hits))))))))
-
-(defun ms-notes-file (title domain)
-  "File the current note under TITLE in the folder of DOMAIN.
-A meeting goes to the journal as YYYY-MM-DD_mem_description, dated by its
-created: value; every other note goes to the domain folder as description.
-Refuses when another note links to this one, because the rename would break
-that link; rename such a note in an editor that rewrites links instead."
-  (interactive
-   (progn
-     (unless (and buffer-file-name
-                  (file-in-directory-p buffer-file-name ms-notes-directory))
-       (user-error "Not a note in %s" ms-notes-directory))
-     (let ((heading (ms-notes--default-title)))
-       (list (read-string (format-prompt "Title" heading) nil nil heading)
-             (or (ms-notes--front-matter-get "domain")
-                 (completing-read "Domain: " (mapcar #'car ms-notes-folders) nil t))))))
-  (let* ((type (or (ms-notes--front-matter-get "type") "note"))
-         (created (or (ms-notes--front-matter-get "created") (format-time-string "%F")))
-         (folder (cdr (assoc domain ms-notes-folders)))
-         (slug (ms-notes-slug (or title "")))
-         (old buffer-file-name)
-         (stem (file-name-base old))
-         (new (cond ((member type '("clipping" "log"))
-                     (user-error "A %s is named when it is captured, not filed" type))
-                    ((null folder) (user-error "Unknown domain: %s" domain))
-                    ((string-empty-p slug) (user-error "Title has no usable characters"))
-                    ((string= type "meeting")
-                     (expand-file-name (format "70_journal/%s/%s_mem_%s.md"
-                                               (substring created 0 4) created slug)
-                                       ms-notes-directory))
-                    (t (expand-file-name (concat slug ".md")
-                                         (expand-file-name folder ms-notes-directory)))))
-         (linked (ms-notes--linked-from stem)))
-    (when (file-equal-p old new) (user-error "Already filed as %s" (file-name-nondirectory new)))
-    (when (file-exists-p new) (user-error "Already exists: %s" new))
-    (when linked
-      (user-error "%d note(s) link to [[%s]], e.g. %s; rename it in Obsidian instead"
-                  (length linked) stem (file-relative-name (car linked) ms-notes-directory)))
-    (unless (ms-notes--front-matter-get "domain")
-      (ms-notes--front-matter-set "domain" domain))
-    (unless (ms-notes--heading)
-      (goto-char (or (cdr (ms-notes--front-matter-bounds)) (point-min)))
-      (forward-line 1)
-      (insert (format "\n# %s\n" title))
-      (unless (looking-at "\n") (insert "\n")))
-    (save-buffer)
-    (make-directory (file-name-directory new) t)
-    (if (vc-backend old)
-        (vc-rename-file old new)
-      (rename-file old new)
-      (set-visited-file-name new t t))
-    (message "Filed as %s" (file-relative-name new ms-notes-directory))))
-
-(provide 'lib-notes)
 #+end_src
