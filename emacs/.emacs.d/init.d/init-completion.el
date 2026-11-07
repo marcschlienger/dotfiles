@@ -69,6 +69,18 @@ rooted at whatever directory it happens to sit in."
 ;; `python-mode-hook', and a function added to a hook while that hook is
 ;; running is not seen until the next buffer -- so the first Python file of
 ;; the session opened without any Ruff diagnostics.
+;; Latency, in the order it is paid: the events buffer records every
+;; message in both directions and costs the most; progress reports and
+;; code-action probing redraw while typing; a server left running after its
+;; last buffer is gone keeps a process per project.
+(use-package eglot
+  :ensure nil
+  :custom
+  (eglot-events-buffer-config '(:size 0 :format full))
+  (eglot-report-progress nil)
+  (eglot-autoshutdown t)
+  (eglot-sync-connect nil))
+
 (use-package flymake-ruff
   :ensure t
   :hook ((python-mode python-ts-mode) . flymake-ruff-load))
@@ -179,8 +191,15 @@ rooted at whatever directory it happens to sit in."
   (which-key-mode 1))
 
 ;;; Consult
+;; The async defaults wait long enough after a keystroke to feel like a
+;; pause; these are the values at which `consult-ripgrep' keeps up with
+;; typing on this machine.
 (use-package consult
   :ensure t
+  :custom
+  (consult-async-input-debounce 0.05)
+  (consult-async-input-throttle 0.1)
+  (consult-async-refresh-delay 0.05)
   :bind (([remap Info-search] . consult-info)
          ([remap bookmark-jump] . consult-bookmark)
          ([remap goto-line] . consult-goto-line)

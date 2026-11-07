@@ -200,6 +200,10 @@
   ;; This variable needs to be set before org.el is loaded.
   (setq org-export-backends '(html latex md odt texinfo))
   :config
+  ;; latexmk runs LaTeX as often as the references need instead of a fixed
+  ;; number of passes, and writes the auxiliary files beside the output.
+  (setq org-latex-pdf-process
+        '("latexmk -pdf -interaction=nonstopmode -output-directory=%o %f"))
   (setq org-export-with-toc t)
   (setq org-export-headline-levels 8)
   (setq org-export-dispatch-use-expert-ui nil)
@@ -236,6 +240,15 @@
                     ":CAPTURED: %U\n"
                     ":END:\n"
                     "%?"))
+          ("l" "Lab notebook" entry
+           (file+olp+datetree ,(expand-file-name "lab.org" ms-paths-notes-directory))
+           "* %?\n%U\n")
+          ("L" "Lesson that worked" entry
+           (file+olp+datetree ,(expand-file-name "lab.org" ms-paths-notes-directory))
+           "* Lesson: %?  :lesson:\n%U\nGoodNotes: \n")
+          ("c" "Note inbox" entry
+           (file ,(expand-file-name "inbox.org" ms-paths-notes-directory))
+           "* %?\n%U\n")
           ("p" "Project" entry (file "projects.org")
            ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"

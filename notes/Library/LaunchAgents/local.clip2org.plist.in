@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Runs clip2org.sh whenever a file appears in the notes inbox.
+
+     WatchPaths takes literal absolute paths: launchd expands neither ~ nor
+     $HOME there, so this file is a template and __HOME__ is substituted at
+     install time.  That is also why it is not stowed like the rest of the
+     repository -- see README.md.
+
+     The script itself derives every path from $HOME, which launchd does set
+     for a user agent, so ProgramArguments needs no substitution. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.clip2org</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-c</string>
+    <string>exec "$HOME/bin/clip2org.sh"</string>
+  </array>
+  <key>WatchPaths</key>
+  <array>
+    <string>__HOME__/Library/Mobile Documents/com~apple~CloudDocs/Notes/inbox</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>StandardErrorPath</key>
+  <string>/tmp/clip2org.log</string>
+</dict>
+</plist>
