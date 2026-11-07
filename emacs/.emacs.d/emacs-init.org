@@ -2444,6 +2444,10 @@ on an editor plugin.
                            "math" "physics"))
   (denote-infer-keywords t)
   (denote-sort-keywords t)
+  ;; Clipped HTML waits in inbox/ until the conversion script turns it into
+  ;; a note.  Denote lists every file under its directory, so without this
+  ;; the half-finished clipping is offered as a link target.
+  (denote-excluded-directories-regexp "inbox")
   ;; Backdating a note through the Org date prompt rather than typing an
   ;; identifier by hand; the prompt accepts "-1d" and the like.
   (denote-date-prompt-use-org-read-date t)
