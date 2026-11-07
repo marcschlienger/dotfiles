@@ -140,7 +140,10 @@ from its in-memory representation and may not preserve non-semantic whitespace.
   remote terminal.
 - Deleted files go to the Trash.
 - Credentials come from `auth-source`, never from the configuration. Emacs 31
-  includes Keychain backends, which makes Keychain the natural store here.
+  includes Keychain backends, which makes Keychain the natural store here. A
+  shell command that needs one wants it in the environment instead, so the
+  read-later instance's address and token are exported from `~/.zprofile`,
+  which is a local file — the zsh configuration is in a public repository.
 - The notes live in iCloud Drive, so iCloud's storage optimisation has to stay
   off: an evicted note is an `.icloud` stub, which Emacs cannot read and which
   Git, rsync and Time Machine all mishandle. `find` for `*.icloud` under the
