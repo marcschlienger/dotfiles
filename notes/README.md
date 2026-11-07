@@ -1,13 +1,13 @@
 # notes
 
 Brings outside material into the Denote directory: saved articles from Margin,
-and pages clipped by a share-sheet shortcut. `bin/denotefile.py` holds the
-rules both paths share — the slug, the front matter, and an identifier no
-other file in the directory has taken.
+and pages clipped by a share-sheet shortcut. `.local/bin/denotefile.py`
+holds the rules both paths share — the slug, the front matter, and an
+identifier no other file in the directory has taken.
 
 ## Promoting a saved article
 
-`bin/margin2org.py` turns one item from a Margin instance into a note:
+`.local/bin/margin2org.py` turns one item from a Margin instance into a note:
 
 ```sh
 margin2org.py [-k clip,physics] [--no-pdf] [--archive] <stem|url> [notes-dir]
@@ -44,9 +44,10 @@ watcher.
 
 ## Clipping a page
 
-`bin/clip2org.sh` processes every `.html` and `.txt` file in `Notes/inbox/`.
-For each one, `bin/clip2org.py` reads the title from the first `<h1>` (falling
-back to `<title>`), the address from the first link beside it, and the
+`.local/bin/clip2org.sh` processes every `.html` and `.txt` file in
+`Notes/inbox/`. For each one, `.local/bin/clip2org.py` reads the title from
+the first `<h1>` (falling back to `<title>`), the address from the first
+link beside it, and the
 identifier from the file name when it already carries one, otherwise from the
 file's creation time. It then writes the note beside the others, with the
 Denote front matter and a `Source:` link, and the clipping is removed once its
@@ -71,8 +72,10 @@ and friends are spelled out rather than stripped, so `Größe` becomes `groesse`
 and not `groe`. A slug is cut at 80 characters; links resolve by identifier, so
 the length of the name carries no meaning.
 
-`stow notes` links the scripts into `~/bin`; each resolves its own path, so the
-shared module and the converter are found through the symlink.
+`stow notes` links the scripts into `~/.local/bin`, which is on PATH; each
+script resolves its own path, so the shared module and the converter are
+found through the symlink. `Library/` is left out by `.stow-local-ignore`,
+because the LaunchAgent is installed as a template rather than symlinked.
 
 `NOTES` and `INBOX` can be set in the environment to point the scripts
 somewhere else, which is how to try a change without touching the real notes.
