@@ -1,18 +1,21 @@
 #!/bin/zsh
-# Turn clipped HTML in the notes inbox into Denote-named Org notes.
+# Turn clipped pages in the notes inbox into Denote-named Org notes.
 #
-# A share-sheet shortcut writes <identifier>--<slug>__clip.html into
-# Notes/inbox/.  This converts each one with Pandoc, prepends the Denote front
-# matter, and moves the result into the notes directory.  The HTML is removed
-# only when the conversion succeeded.
+# A share-sheet shortcut saves a page as HTML into Notes/inbox/ under whatever
+# name it manages to compose.  clip2org.py reads the title, address and
+# identifier out of the file itself and names the note, so this only has to
+# decide when a clipping is complete enough to convert.  The clipping is
+# removed when its note has been written.
 set -u
 
-NOTES="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Notes"
-INBOX="$NOTES/inbox"
+: ${NOTES:="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Notes"}
+: ${INBOX:="$NOTES/inbox"}
+convert=${0:A:h}/clip2org.py
 log() { print -r -- "clip2org: $*" >&2 }
 
 command -v pandoc >/dev/null || { log "pandoc not found in PATH"; exit 1 }
 [[ -d $INBOX ]] || { log "no inbox at $INBOX"; exit 1 }
+[[ -r $convert ]] || { log "no converter at $convert"; exit 1 }
 
 # A clipping arrives over sync, so the file may still be growing when the
 # trigger fires -- and Pandoc exits 0 on a truncated document, which would
@@ -39,36 +42,17 @@ settled() {
 : ${SETTLE_TRIES:=30}
 
 setopt null_glob
-for f in "$INBOX"/*.html; do
-  base="${f:t:r}"
-  id="${base%%--*}"
-  # The identifier has to be a Denote one; anything else is not ours.
-  [[ $id == <->T<-> ]] || { log "skipping $base: no identifier"; continue }
-  # The shortcut writes the page title into an <h1>; take it from there and
-  # turn HTML entities back into characters.
-  title="$(sed -n 's/.*<h1>\([^<]*\)<\/h1>.*/\1/p' "$f" | head -1 |
-           python3 -c 'import html,sys; print(html.unescape(sys.stdin.read().strip()))')"
-  [[ -n $title ]] || title="${${base#*--}%%__*}"
-  keywords="${base##*__}"
-  [[ $keywords == $base ]] && keywords="clip"
-  out="$NOTES/$base.org"
-  if [[ -e $out ]]; then log "skipping $base: $out exists"; continue; fi
+# .txt as well as .html: a shortcut that hands text to its save action gets a
+# text file regardless of the extension in the name it asked for.
+for f in "$INBOX"/*.html "$INBOX"/*.txt; do
   if ! settled "$f"; then
-    log "skipping $base: still being written"
+    log "skipping ${f:t}: still being written"
     continue
   fi
-  {
-    print -r -- "#+title:      $title"
-    print -r -- "#+date:       [$(date '+%Y-%m-%d %a %H:%M')]"
-    print -r -- "#+filetags:   :${keywords//_/:}:"
-    print -r -- "#+identifier: $id"
-    print -r --
-    # The <h1> carries the title, which is already in #+title, so it is
-    # dropped rather than repeated as a heading.  Without
-    # -auto_identifiers every heading would also get a :CUSTOM_ID:.
-    sed 's|<h1>[^<]*</h1>||' "$f" |
-      pandoc -f html-auto_identifiers -t org --wrap=preserve \
-             --shift-heading-level-by=-1
-  } > "$out.part" && mv -f "$out.part" "$out" && rm -f "$f" \
-    || { log "conversion failed for $base"; rm -f "$out.part" }
+  if note=$(python3 "$convert" "$f" "$NOTES"); then
+    rm -f "$f"
+    log "${f:t} -> ${note:t}"
+  else
+    log "conversion failed for ${f:t}"
+  fi
 done
