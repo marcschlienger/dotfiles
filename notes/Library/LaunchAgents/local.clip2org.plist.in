@@ -17,7 +17,7 @@
   <array>
     <string>/bin/zsh</string>
     <string>-c</string>
-    <string>exec "$HOME/bin/clip2org.sh"</string>
+    <string>exec "$HOME/.local/bin/clip2org.sh"</string>
   </array>
   <key>WatchPaths</key>
   <array>

@@ -1,0 +1,7 @@
+# A local ignore list replaces Stow's built-in defaults rather than adding to
+# them, so the files Stow would have skipped on its own are named again here.
+\.DS_Store
+README\.md
+# The LaunchAgent is a template: WatchPaths needs literal absolute paths, so
+# it is installed with __HOME__ substituted instead of symlinked.
+Library
