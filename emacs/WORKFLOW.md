@@ -42,42 +42,74 @@ sharing, location and notifications matter more to me than Org Agenda's
 programmability, and they work on the devices I actually have with me. Nothing
 mirrors those tasks into Org: a second inbox would have to preserve completion,
 dates, recurrence, list membership, subtasks and edits on both sides, and
-anything less leaves it ambiguous which copy is current.
+anything less leaves it ambiguous which copy is current. The Org GTD agenda and
+capture configuration stays in working order and pointed at the notes
+directory, ready for the day I change my mind.
 
-**Org owns documents that execute.** The literate configuration, Babel
-notebooks and reproducible calculations, structured outlines, tables, export and
-teaching material. The GTD agenda, capture and refile configuration stays in
-working order but dormant while Reminders owns tasks; `org-directory` is
-`~/org`. Babel security still matters, because literate configuration and
-notebooks run code.
+**Org owns notes as well as documents that execute** — the literate
+configuration, Babel notebooks and reproducible calculations, structured
+outlines, tables, export and teaching material. Babel security still matters,
+because literate configuration and notebooks run code. The languages loaded are
+C, Python, R and shell, with `python3` as the Python command, and PDF export
+runs through latexmk so LaTeX is re-run as often as the references need.
 
-**Obsidian owns notes**, over a directory of Markdown files that Emacs edits
-directly. The deciding constraint is the phone and the iPad: a note has to be
-readable and editable there, so the collection stays plain Markdown with no
-editor-specific naming or linking scheme. The vault documents its own
-conventions — folders, filenames, front matter — and the Emacs commands that
-follow them are in `lib.d/lib-notes.el`. Wiki links are the linking format:
-Obsidian resolves them everywhere, and markdown-mode resolves them once
-`markdown-wiki-link-search-type` includes `project`.
+**Denote names the notes.** It is a convention, not an application: the
+identifier, slug and keywords live in the file name, so a note is a plain Org
+file that any editor can open and the identifier survives a retitling. One note
+per file, which is what makes a link stable and a conflict small.
 
-## Capture on the phone and iPad
+- `C-c n n` new note, `C-c n l` link, `C-c n b` backlinks, `C-c n r` rename,
+  `C-c n d` sorted Dired.
+- `C-c n f` and `C-c n g` find and grep, restricted to the notes, with
+  Consult's preview.
+- Keywords are both declared and inferred, so a keyword used once is offered
+  the next time.
 
-Obsidian Mobile captures into the vault's inbox through its widgets, Siri and
-the Share Sheet, and I file those captures on the Mac. It is a note inbox, not a
-second task inbox: anything that starts with a verb goes to Reminders during
-triage.
+`org-directory` is the notes directory, but `org-agenda-files` names the three
+task files inside it rather than the directory itself: a directory entry would
+expand to every note, and the notes are not agenda material. Capture has a
+fourth target, `lab.org`, a datetree for the lab notebook that the agenda does
+not read. `C-c c` reaches all four.
 
-The vault stays under exactly one sync mechanism. Obsidian Sync covers Debian as
-well, which iCloud does not, and Obsidian
-[warns against combining sync services](https://obsidian.md/help/sync-notes).
-Sync only moves files while Obsidian is running, so after Emacs has edited the
-vault I leave the application running long enough to upload the change. On the
-phone I let sync finish before editing a note that may also have changed on a
-computer, and let the upload finish before closing it — mobile operating
-systems do not give applications unlimited background time.
+The lab notebook is the habit worth keeping: one line when something worked,
+when I decided something, or when a search took longer than it should have.
 
-Sync is not backup. The vault is backed up independently of it, and Git history
-is not a substitute for mobile synchronization either.
+**A read-later server owns saved articles.** A page is given to a self-hosted
+service that renders it in a real browser engine and waits for the maths to
+typeset before capturing it, which is what mainstream read-later services get
+wrong. Articles stay there and are read there. Only the ones worth keeping
+become notes, with `margin2org.py` from the `notes` package, which writes the
+Denote front matter, records the source, and files the PDF as an attachment
+with an identifier of its own.
+
+That division is the point: capture is cheap everywhere, and a note earns its
+identifier only when I decide to keep it.
+
+## Reading and capture away from the Mac
+
+Notes are read and edited on the phone and the iPad in
+[Orgro](https://orgro.org/), which renders LaTeX, follows `denote:` links, and
+captures into a file I pick. It needs directory permission granted once before
+links between files resolve, and only some storage providers can grant it —
+iCloud Drive, local storage and a git client's folder among them. It has no
+folder browser and no search across files, so a note is reached by link or
+through its recent files.
+
+Saved articles are read in the read-later service's own interface, which can be
+added to the home screen. Offline reading there needs HTTPS: on a plain
+`http://` address that is not `localhost` the browser withholds service
+workers entirely, so nothing is cached and the queue is unavailable without a
+signal.
+
+Denote naming happens only on the Mac. Neither the read-later service nor
+Orgro knows the convention, which is deliberate — it keeps capture free of
+rules that are easy to get wrong on a phone.
+
+Sync is not backup. A synchronised folder propagates a deletion and a mangled
+save to every device, so the notes need history kept independently of it;
+`tmutil destinationinfo` says whether a Time Machine destination exists, and
+Orgro's own documentation recommends keeping backups because it rewrites a file
+from its in-memory representation and may not preserve non-semantic whitespace.
 
 ## Persistence and recovery
 
@@ -96,8 +128,8 @@ is not a substitute for mobile synchronization either.
 - `save-place-mode`, `recentf-mode`, `winner-mode`, `repeat-mode` and
   `savehist-mode` are on.
 - One writer per file. I do not edit the same canonical file on two machines,
-  and mobile capture creates uniquely named files rather than appending to a
-  shared one.
+  and capture creates uniquely named files rather than appending to a shared
+  one.
 
 ## macOS
 
@@ -109,6 +141,10 @@ is not a substitute for mobile synchronization either.
 - Deleted files go to the Trash.
 - Credentials come from `auth-source`, never from the configuration. Emacs 31
   includes Keychain backends, which makes Keychain the natural store here.
+- The notes live in iCloud Drive, so iCloud's storage optimisation has to stay
+  off: an evicted note is an `.icloud` stub, which Emacs cannot read and which
+  Git, rsync and Time Machine all mishandle. `find` for `*.icloud` under the
+  notes directory finds any that have been evicted.
 
 ## Debian
 
@@ -121,6 +157,8 @@ is not a substitute for mobile synchronization either.
   its first frame in a TTY where those glyphs do not exist.
 - There is no Reminders client. I capture through iCloud.com or a nearby Apple
   device rather than rebuilding a Linux-only task list.
+- There is no iCloud client either, so the notes directory is a plain
+  directory in the home directory and needs its own way of being filled.
 - Platform differences stay behind `system-type`, `window-system` and per-frame
   checks. Small adapters, not parallel configurations.
 
@@ -168,6 +206,16 @@ launchctl kickstart -k gui/$(id -u)/gnu.emacs.daemon
 # What is really running, when something looks wrong
 pgrep -fl 'Emacs --.*daemon'
 
+# Promote a saved article into a note; MARGIN_URL names the instance.
+# The argument is the item's stem, one of its file names, or any URL for it.
+margin2org.py -k clip,physics --archive 2026-11-07-article-slug
+
+# Notes that iCloud has evicted, which Emacs cannot read
+find "$(emacsclient -e 'denote-directory' | tr -d '"')" -name '*.icloud'
+
+# Whether anything is keeping history of the notes
+tmutil destinationinfo
+
 # Remote daemon and terminal client on the remote host
 ssh -t host 'emacsclient -t -a ""'
 
@@ -189,6 +237,8 @@ systemctl --user restart emacs.service
 - [GNU Emacs authentication](https://www.gnu.org/software/emacs/manual/html_node/emacs/Authentication.html)
 - [Org code-evaluation security](https://orgmode.org/manual/Code-Evaluation-Security.html)
 - [Org external protocols](https://orgmode.org/manual/Protocols.html)
-- [Obsidian for iOS and iPadOS](https://obsidian.md/help/ios)
-- [Obsidian note synchronization](https://obsidian.md/help/sync-notes)
-- [Obsidian internal links](https://obsidian.md/help/links)
+- [Org exporting to LaTeX](https://orgmode.org/manual/LaTeX-Export.html)
+- [Denote manual](https://protesilaos.com/emacs/denote)
+- [Orgro](https://orgro.org/)
+- [Orgro FAQ](https://orgro.org/faq/)
+- [Pandoc manual](https://pandoc.org/MANUAL.html)
