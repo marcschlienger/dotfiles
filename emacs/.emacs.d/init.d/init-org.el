@@ -54,11 +54,10 @@
 (use-package org
   :ensure nil
   :init
-  ;; Left at Org's own default, because where notes should live is still
-  ;; undecided.  Nothing here creates the directory: an empty ~/org on a
-  ;; machine that never opens an Org file is noise, and Org copes without
-  ;; it.
-  (setq org-directory (expand-file-name "~/org"))
+  ;; The notes directory: the task files and the lab notebook sit beside
+  ;; the notes, so a relative capture target resolves there and so does
+  ;; the agenda command that reads inbox.org.
+  (setq org-directory ms-paths-notes-directory)
   (setq org-imenu-depth 7)
   (add-to-list 'safe-local-variable-values '(org-hide-leading-stars . t))
   (add-to-list 'safe-local-variable-values '(org-hide-macro-markers . t))
@@ -240,15 +239,10 @@
                     ":CAPTURED: %U\n"
                     ":END:\n"
                     "%?"))
-          ("l" "Lab notebook" entry
-           (file+olp+datetree ,(expand-file-name "lab.org" ms-paths-notes-directory))
+          ("l" "Lab notebook" entry (file+olp+datetree "lab.org")
            "* %?\n%U\n")
-          ("L" "Lesson that worked" entry
-           (file+olp+datetree ,(expand-file-name "lab.org" ms-paths-notes-directory))
+          ("L" "Lesson that worked" entry (file+olp+datetree "lab.org")
            "* Lesson: %?  :lesson:\n%U\nGoodNotes: \n")
-          ("c" "Note inbox" entry
-           (file ,(expand-file-name "inbox.org" ms-paths-notes-directory))
-           "* %?\n%U\n")
           ("p" "Project" entry (file "projects.org")
            ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"
@@ -286,9 +280,12 @@
   ;; the cache keeps it out of `org-directory' without leaving a fresh
   ;; temporary file behind on each session.
   (setq org-default-notes-file (ms-paths-cache-file "org-default-notes.org"))
-  ;; Directory entries are expanded whenever Org builds an agenda, so newly
-  ;; created Org files are picked up without restarting Emacs.
-  (setq org-agenda-files (list org-directory))
+  ;; A directory entry would expand to every note in `org-directory', so
+  ;; the task files are named instead.  They are the capture targets; the
+  ;; notes themselves are not agenda material.
+  (setq org-agenda-files
+        (mapcar (lambda (name) (expand-file-name name org-directory))
+                '("inbox.org" "notes.org" "projects.org")))
   (setq org-agenda-span 'week)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
