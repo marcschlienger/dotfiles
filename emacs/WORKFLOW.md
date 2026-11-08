@@ -74,13 +74,20 @@ not read. `C-c c` reaches all four.
 The lab notebook is the habit worth keeping: one line when something worked,
 when I decided something, or when a search took longer than it should have.
 
-**A read-later server owns saved articles.** A page is given to a self-hosted
-service that renders it in a real browser engine and waits for the maths to
-typeset before capturing it, which is what mainstream read-later services get
-wrong. Articles stay there and are read there. Only the ones worth keeping
-become notes, with `margin2org.py` from the `notes` package, which writes the
-Denote front matter, records the source, and files the PDF as an attachment
-with an identifier of its own.
+**Saved articles are two jobs, not one.** The queue — anything from the
+browser or a feed reader, read once and mostly discarded — belongs to a
+read-later app on the device, which parses and stores locally and so works
+with no network and no server. Promotion out of it is deliberate and manual:
+copy the article as Markdown, `C-c n t`, yank. No pipeline, no inbox folder,
+nothing to watch. Every failure I had building one came from the intermediate
+file, and this has none.
+
+Archiving a page verbatim is the other job, and only maths-heavy pages need
+it. A self-hosted service renders the page in a real browser engine and waits
+for the typesetting to finish before capturing it, which is what mainstream
+read-later services get wrong. For those, `margin2org.py` from the `notes`
+package writes the note, records the source, and files the PDF as an
+attachment with an identifier of its own.
 
 That division is the point: capture is cheap everywhere, and a note earns its
 identifier only when I decide to keep it.
@@ -95,11 +102,11 @@ iCloud Drive, local storage and a git client's folder among them. It has no
 folder browser and no search across files, so a note is reached by link or
 through its recent files.
 
-Saved articles are read in the read-later service's own interface, which can be
-added to the home screen. Offline reading there needs HTTPS: on a plain
-`http://` address that is not `localhost` the browser withholds service
-workers entirely, so nothing is cached and the queue is unavailable without a
-signal.
+The reading queue is local to its app, so it works on a plane. The archive
+service is reached in its own interface, which can be added to the home
+screen, and offline reading *there* needs HTTPS: on a plain `http://` address
+that is not `localhost` the browser withholds service workers entirely, so
+nothing is cached and it is unavailable without a signal.
 
 Denote naming happens only on the Mac. Neither the read-later service nor
 Orgro knows the convention, which is deliberate — it keeps capture free of
@@ -144,10 +151,12 @@ from its in-memory representation and may not preserve non-semantic whitespace.
   shell command that needs one wants it in the environment instead, so the
   read-later instance's address and token are exported from `~/.zprofile`,
   which is a local file — the zsh configuration is in a public repository.
-- The notes live in iCloud Drive, so iCloud's storage optimisation has to stay
-  off: an evicted note is an `.icloud` stub, which Emacs cannot read and which
-  Git, rsync and Time Machine all mishandle. `find` for `*.icloud` under the
-  notes directory finds any that have been evicted.
+- The notes live in iCloud Drive because it is one of the few providers an
+  Org editor on the phone or tablet can be granted directory permission on.
+  That makes iCloud's storage optimisation something that has to stay off: an
+  evicted note is an `.icloud` stub, which Emacs cannot read and which Git,
+  rsync and Time Machine all mishandle. `find` for `*.icloud` under the notes
+  directory finds any that have been evicted.
 
 ## Debian
 
@@ -161,7 +170,12 @@ from its in-memory representation and may not preserve non-semantic whitespace.
 - There is no Reminders client. I capture through iCloud.com or a nearby Apple
   device rather than rebuilding a Linux-only task list.
 - There is no iCloud client either, so the notes directory is a plain
-  directory in the home directory and needs its own way of being filled.
+  directory in the home directory and nothing fills it. Only the Mac has both
+  iCloud and a route here, so if these notes are wanted on this machine the
+  Mac pushes them — one way, one writer, no second sync system over the same
+  folder. rclone has an iCloud Drive backend, but it wants an Apple ID
+  password and 2FA, refuses app-specific passwords, and holds a trust token
+  that expires: not something to put in an unattended job.
 - Platform differences stay behind `system-type`, `window-system` and per-frame
   checks. Small adapters, not parallel configurations.
 

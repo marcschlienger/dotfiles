@@ -19,9 +19,7 @@
       (expand-file-name
        "Notes/" "~/Library/Mobile Documents/com~apple~CloudDocs/")
     (expand-file-name "~/Notes/"))
-  "Directory holding the notes: Org files named by the Denote convention.
-On macOS this is iCloud Drive, which the phone and tablet can reach.  There
-is no iCloud client for other systems, so they fall back to a plain home
-directory and need their own way of getting the files there.")
+  "Directory holding the notes, named by the Denote convention.
+WORKFLOW.md describes how the notes reach each machine.")
 
 (provide 'lib-paths)
