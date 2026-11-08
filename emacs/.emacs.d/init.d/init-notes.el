@@ -5,6 +5,13 @@
 (use-package denote
   :ensure t
   :bind (("C-c n n" . denote)
+         ;; `denote' takes the file type from `denote-file-type'; this one
+         ;; asks.  The directory holds both extensions quite happily --
+         ;; `denote-filetype-heuristics' reads each file's type from its
+         ;; name, and links resolve by identifier either way -- so the
+         ;; format is a per-note decision: Org where a note runs code or
+         ;; assembles a worksheet, Markdown where it is read on a phone.
+         ("C-c n t" . denote-type)
          ("C-c n l" . denote-link)
          ("C-c n b" . denote-backlinks)
          ("C-c n r" . denote-rename-file)
