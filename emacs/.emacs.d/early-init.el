@@ -23,8 +23,8 @@
 ;; honours it when init.el contains a setq of that one variable followed by
 ;; the login name as a literal string and an immediate close paren -- it
 ;; greps the file for exactly that.  A variable reference, a multi-variable
-;; setq, or living in early-init.el all defeat it, and hardcoding the account
-;; name would break on the other machine anyway.
+;; setq, or living in early-init.el all defeat it, and a hardcoded account
+;; name ties the file to one login.
 (advice-add 'display-startup-echo-area-message :override #'ignore)
 
 ;; Disable GUI elements.  loadup.el preloads menu-bar unconditionally, but

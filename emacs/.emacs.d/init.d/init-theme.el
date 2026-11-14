@@ -124,26 +124,6 @@
   :ensure t
   :demand t)
 
-;; Provides three things this configuration uses: `string-trim' and
-;; `string-empty-p' below, and `when-let*' both below and in lib-org.el.
-;;
-;; On Emacs 31 all three are preloaded -- string-trim and when-let* from
-;; subr.el, string-empty-p from simple.el -- and subr-x.el does not define
-;; any of them any more, so this line is a no-op there.  It stays because
-;; Debian's Emacs 30.1 is unverified and the asymmetry favours keeping it:
-;; subr-x is built in, so the require cannot fail, whereas removing it
-;; would break the other machine if 30.1 still keeps those symbols here.
-;;
-;; Settle it on the ThinkPad with:
-;;
-;;   emacs -Q --batch --eval \
-;;     '(princ (list (fboundp (quote string-empty-p)) (fboundp (quote when-let*))))'
-;;
-;; If that prints (t t) this line can go -- and lib-org.el, which uses
-;; `when-let*' while requiring nothing itself, stops depending on the order
-;; init.el happens to load the modules in.
-(require 'subr-x)
-
 (defconst ms/theme-families
   '((ef-maris
      :label "Ef Maris"
@@ -419,9 +399,9 @@ The next sunrise or sunset event restores automatic switching."
 ;; `hl-line-mode', so `(hl-line-mode -1)' in a shell buffer did nothing.
 ;; What that overlay function does test, on Emacs 30 and 31 alike, is the
 ;; value of `global-hl-line-mode' itself -- so shadow it buffer-locally.
-;; `global-hl-line-buffers' would be tidier but is Emacs 31 only, and the
-;; Debian machine runs 30.  `comint-mode' covers shell-mode and every other
-;; REPL derived from it.
+;; `global-hl-line-buffers' would be tidier but is Emacs 31 only, and this
+;; file has to load on 30 as well.  `comint-mode' covers shell-mode and every
+;; other REPL derived from it.
 (defun ms/disable-global-hl-line ()
   "Suppress the global current-line highlight in this buffer."
   (setq-local global-hl-line-mode nil))

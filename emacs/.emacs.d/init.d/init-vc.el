@@ -1,20 +1,14 @@
-;;-*- lexical-binding: t; -*-
-
 ;;; init-vc.el -*- lexical-binding: t -*-
 
-;; Version control framework
+;; Version control framework.  Nothing is required by hand: `vc-annotate',
+;; `vc-dir', the log modes and the Git backend are all autoloaded by the
+;; commands that need them.
 (use-package vc
   :ensure nil
   :init
   (setq vc-follow-symlinks t)
   :config
-  (setq vc-handled-backends '(Git))
-  (require 'vc-annotate)
-  (require 'vc-dir)
-  (require 'vc-git)
-  (require 'add-log)
-  (require 'log-view)
-  (require 'log-edit))
+  (setq vc-handled-backends '(Git)))
 
 ;; Magit
 (use-package magit

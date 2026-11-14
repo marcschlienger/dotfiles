@@ -125,9 +125,8 @@ rooted at whatever directory it happens to sit in."
   (corfu-history-mode 1)
   (corfu-popupinfo-mode 1))
 
-;; Emacs 31 draws Corfu's child frames in a terminal frame by itself.  The
-;; Debian machine is on the distribution's Emacs 30.1, so the fallback still
-;; earns its place.  Corfu warns when `corfu-terminal' is *loaded* on 31,
+;; Emacs 31 draws Corfu's child frames in a terminal frame by itself.  Emacs
+;; 30 does not, so the fallback still earns its place there.  Corfu warns when `corfu-terminal' is *loaded* on 31,
 ;; from a `with-eval-after-load' in corfu.el, and this guard does prevent
 ;; that: a normal session on 31 loads neither the package nor the warning.
 ;;
@@ -192,8 +191,7 @@ rooted at whatever directory it happens to sit in."
 
 ;;; Consult
 ;; The async defaults wait long enough after a keystroke to feel like a
-;; pause; these are the values at which `consult-ripgrep' keeps up with
-;; typing on this machine.
+;; pause; these are low enough that `consult-ripgrep' keeps up with typing.
 (use-package consult
   :ensure t
   :custom
