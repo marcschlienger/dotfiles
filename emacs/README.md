@@ -58,6 +58,11 @@ absent, Python buffers still open normally, but Ruff diagnostics are unavailable
 and formatting reports the missing executable when the buffer is saved. Keeping
 the hooks unconditional makes an incomplete development environment visible.
 
+Locality is the one condition on the Eglot hooks. A file opened over TRAMP
+does not start a server by itself, because that server would have to be
+installed on the remote host and every request to it pays the connection's
+latency. `M-x eglot` starts one there deliberately.
+
 Go's save hook is the one exception. It organizes imports and reformats through
 gopls, and both are server operations, so it checks that a server is managing
 the buffer and otherwise does nothing.
@@ -345,3 +350,10 @@ Three things are worth knowing before relying on the output:
   rustfmt own it; clangd, gopls, and texlab keep theirs, because nothing else
   formats C, C++, Go, or LaTeX here. Go buffers additionally organize imports
   and reformat through gopls on save.
+- Eglot binds no keys of its own. In a buffer a server manages, `C-c r`
+  renames, `C-c x` offers the code actions, `C-c q` applies a quick fix, and
+  `C-c f` formats the buffer. The bindings live in `eglot-mode-map`, so the
+  four letters are free everywhere else.
+- `eglot-extend-to-xref` is on: a definition reached outside the project, in
+  a library for instance, stays with the server it was reached from, so
+  cross references keep working there.

@@ -265,6 +265,17 @@
            "* %?\n%U\n")
           ("L" "Lesson that worked" entry (file+olp+datetree "lab.org")
            "* Lesson: %?  :lesson:\n%U\nGoodNotes: \n")
+          ;; One investigation of how something in Emacs works.  The
+          ;; prediction is written before the experiment, which is what
+          ;; makes the corrected explanation worth having.
+          ("e" "Experiment" entry (file+olp+datetree "lab.org")
+           ,(concat "* Experiment: %?  :experiment:\n%U\n"
+                    "- Question :: \n"
+                    "- Prediction :: \n"
+                    "- Experiment :: \n"
+                    "- Result :: \n"
+                    "- Source read :: \n"
+                    "- Corrected explanation :: \n"))
           ("p" "Project" entry (file "projects.org")
            ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"

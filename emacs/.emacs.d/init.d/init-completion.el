@@ -1,12 +1,23 @@
 ;;; init-completion.el -*- lexical-binding: t -*-
 
 ;; Eglot mode
+;; Defined at top level so the :hook entries below find a real function;
+;; use-package would otherwise autoload the name from eglot.el, which does
+;; not define it.
+(defun ms/eglot-ensure ()
+  "Start a language server for this buffer, unless its file is remote.
+A server for a remote file runs on the remote host, where it may not be
+installed, and every request to it pays the connection's latency.  Starting
+one there is a decision, made with \\[eglot]."
+  (unless (file-remote-p default-directory)
+    (eglot-ensure)))
+
 (defun ms/markdown-eglot-ensure ()
   "Start the Markdown language server, but only inside a project.
 A Markdown file outside one would otherwise get a server of its own,
 rooted at whatever directory it happens to sit in."
   (when (project-current)
-    (eglot-ensure)))
+    (ms/eglot-ensure)))
 
 (use-package eglot
   :ensure nil
@@ -29,19 +40,26 @@ rooted at whatever directory it happens to sit in."
    '(:documentHighlightProvider
      :colorProvider
      :foldingRangeProvider))
+  ;; Eglot binds nothing of its own.  The map is only active in a buffer a
+  ;; server manages, so these four letters stay free everywhere else.
+  :bind ( :map eglot-mode-map
+          ("C-c r" . eglot-rename)
+          ("C-c x" . eglot-code-actions)
+          ("C-c q" . eglot-code-action-quickfix)
+          ("C-c f" . eglot-format-buffer))
   :hook
-  (c-mode . eglot-ensure)
-  (c-ts-mode . eglot-ensure)
-  (c++-mode . eglot-ensure)
-  (c++-ts-mode . eglot-ensure)
-  (go-mode . eglot-ensure)
-  (go-ts-mode . eglot-ensure)
-  (LaTeX-mode . eglot-ensure)
+  (c-mode . ms/eglot-ensure)
+  (c-ts-mode . ms/eglot-ensure)
+  (c++-mode . ms/eglot-ensure)
+  (c++-ts-mode . ms/eglot-ensure)
+  (go-mode . ms/eglot-ensure)
+  (go-ts-mode . ms/eglot-ensure)
+  (LaTeX-mode . ms/eglot-ensure)
   (markdown-mode . ms/markdown-eglot-ensure)
-  (python-mode . eglot-ensure)
-  (python-ts-mode . eglot-ensure)
-  (rust-mode . eglot-ensure)
-  (rust-ts-mode . eglot-ensure))
+  (python-mode . ms/eglot-ensure)
+  (python-ts-mode . ms/eglot-ensure)
+  (rust-mode . ms/eglot-ensure)
+  (rust-ts-mode . ms/eglot-ensure))
 
 ;; `eglot-server-capable' reads `eglot-ignored-server-capabilities' as a
 ;; plain variable in the current buffer, so a buffer-local value scopes the
@@ -79,7 +97,13 @@ rooted at whatever directory it happens to sit in."
   (eglot-events-buffer-config '(:size 0 :format full))
   (eglot-report-progress nil)
   (eglot-autoshutdown t)
-  (eglot-sync-connect nil))
+  (eglot-sync-connect nil)
+  ;; Jumping to a definition outside the project -- a library, the standard
+  ;; library -- lands in a buffer no server manages, where the next jump
+  ;; fails.  This keeps such a buffer with the server it was reached from,
+  ;; so cross references keep working there and M-? finds the uses back in
+  ;; the project.
+  (eglot-extend-to-xref t))
 
 (use-package flymake-ruff
   :ensure t

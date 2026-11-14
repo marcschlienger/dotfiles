@@ -80,7 +80,9 @@ per file, which is what makes a link stable and a conflict small.
 task files inside it rather than the directory itself: a directory entry would
 expand to every note, and the notes are not agenda material. Capture has a
 fourth target, `lab.org`, a datetree for the lab notebook that the agenda does
-not read. `C-c c` reaches all four.
+not read. `C-c c` reaches all four. `C-c c e` files an experiment there: a
+question about how something in Emacs works, with the prediction written down
+before the experiment and the corrected explanation after it.
 
 The lab notebook is the habit worth keeping: one line when something worked,
 when I decided something, or when a search took longer than it should have.
@@ -204,7 +206,8 @@ makes remote files and Dired behave like local ones and runs processes on the
 host when `default-directory` is remote, so I keep local fonts, clipboard,
 packages and one kill ring, and the host needs no Emacs or dotfiles. Language
 servers need explicit remote configuration, large trees and high latency feel
-slow, and noisy shell startup confuses TRAMP.
+slow, and noisy shell startup confuses TRAMP. So a remote file does not start
+a language server by itself; `M-x eglot` does, when the host has one.
 
 For a long session on a machine that has its own Emacs, I run a daemon there and
 attach with `emacsclient -t`, inside tmux when the terminal layout matters as

@@ -332,6 +332,12 @@ without restarting."
 (use-package rustic
   :ensure t
   :after (rust-mode)
+  :init
+  ;; Rustic otherwise calls `eglot-ensure' itself from `rustic-mode-hook',
+  ;; around the remote-file check in `ms/eglot-ensure'.  It reads this when
+  ;; it loads, hence :init.  The server still starts: `rustic-mode' derives
+  ;; from `rust-mode', whose hook is in the Eglot block.
+  (setq rustic-lsp-setup-p nil)
   :config
   (setq rustic-format-trigger 'on-save)
   (setq rustic-lsp-client 'eglot))
