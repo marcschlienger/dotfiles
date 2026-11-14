@@ -52,6 +52,9 @@ outlines, tables, export and teaching material. Babel security still matters,
 because literate configuration and notebooks run code. The languages loaded are
 C, Python, R and shell, with `python3` as the Python command, and PDF export
 runs through latexmk so LaTeX is re-run as often as the references need.
+`C-c C-x C-l` previews LaTeX fragments in the buffer as vector images, which
+needs `dvisvgm` from the TeX distribution. In a LaTeX buffer `<f6>` is
+AUCTeX's preview prefix, so `<f6> C-p` previews at point.
 
 **Denote names the notes.** It is a convention, not an application: the
 identifier, slug and keywords live in the file name, so a note is a plain Org
@@ -64,6 +67,14 @@ per file, which is what makes a link stable and a conflict small.
   Consult's preview.
 - Keywords are both declared and inferred, so a keyword used once is offered
   the next time.
+- `M-x denote-template` starts a note from a skeleton: `exercise`, with the
+  solution under a heading tagged `:solution:`, or `worksheet`, with the
+  export header that leaves such headings out.
+- `M-x denote-org-extract-org-subtree` turns the heading at point into a note
+  of its own, taking the title, tags and date from the heading. That is how an
+  entry leaves `inbox.org`.
+- `M-x org-web-tools-read-url-as-org` shows a page as Org in a buffer, through
+  Pandoc, without saving anything.
 
 `org-directory` is the notes directory, but `org-agenda-files` names the three
 task files inside it rather than the directory itself: a directory entry would

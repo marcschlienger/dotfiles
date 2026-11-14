@@ -391,7 +391,8 @@ The next sunrise or sunset event restores automatic switching."
   (markdown-mode . display-line-numbers-mode)
   (prog-mode . display-line-numbers-mode)
   (sh-mode . display-line-numbers-mode)
-  (TeX-mode . display-line-numbers-mode))
+  (TeX-mode . display-line-numbers-mode)
+  (yaml-ts-mode . display-line-numbers-mode))
 
 ;;; Highlight the current line only in the active window and not in the shell.
 ;; `global-hl-line-mode' is not a globalized minor mode.  It draws its own

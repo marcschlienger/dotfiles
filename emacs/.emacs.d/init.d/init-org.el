@@ -103,6 +103,10 @@
   (setq org-insert-heading-respect-content t)
   (setq org-read-date-prefer-future 'time)
   (setq org-highlight-latex-and-related nil) ; other options affect elisp regexp in src blocks
+  ;; Previews of LaTeX fragments (C-c C-x C-l) as vector images.  The
+  ;; default renders a bitmap at a fixed resolution, which is soft on a
+  ;; high-density display and does not follow the text scale.
+  (setq org-preview-latex-default-process 'dvisvgm)
   (setq org-fontify-quote-and-verse-blocks t)
   (setq org-track-ordered-property-with-tag t)
   (setq org-highest-priority ?A)

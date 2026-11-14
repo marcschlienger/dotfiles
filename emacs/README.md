@@ -42,6 +42,8 @@ Other configured features need these executables:
 | Markdown export | `multimarkdown` |
 | Org Babel Python | `python3` |
 | Org Babel R | `R` |
+| Org LaTeX fragment previews | `latex` and `dvisvgm` |
+| Reading a web page as Org | `pandoc` |
 | Spell checking (Jinx where its module builds, Flyspell otherwise) | Enchant plus `en_US` and `de_DE` Hunspell dictionaries |
 
 Swift development intentionally belongs to Xcode. Emacs retains `swift-mode`
@@ -193,7 +195,11 @@ is not part of this: `rust-mode` can be told to derive from `rust-ts-mode`, but
 Emacs declares the opposite relationship itself, and the two together make a
 cycle that every Rust buffer reports as an inconsistent hierarchy. Rust
 buffers use `rust-mode`'s own highlighting. The Emacs Lisp grammar is not
-automatically remapped.
+automatically remapped. YAML is the opposite case: Emacs has no classic YAML
+mode to remap from, so `yaml-ts-mode` claims `.yaml` and `.yml` itself once
+its grammar loads, and without the grammar such a file opens in
+`fundamental-mode`. `yaml-ts-mode` descends from `text-mode`, so it is
+excluded by name from the proportional font and from automatic line breaking.
 
 Install these prerequisites before building grammars:
 
@@ -205,7 +211,7 @@ Install these prerequisites before building grammars:
 
 Evaluate `M-: (treesit-available-p) RET` first; it must return non-nil. The
 standalone `tree-sitter` command-line program is not required for the C, C++,
-Emacs Lisp, Go, or Python recipes. Emacs must be able to find Git and the
+Emacs Lisp, Go, Python, or YAML recipes. Emacs must be able to find Git and the
 compilers through `exec-path`.
 
 On each macOS or Linux machine, run once after cloning:
@@ -215,18 +221,18 @@ M-x ms/treesit-install-missing-grammars
 ```
 
 This attempts to download and build the configured C, C++, Emacs Lisp, Go,
-Markdown, and Python grammars under the local Emacs directory. The command
+Markdown, Python, and YAML grammars under the local Emacs directory. The command
 reports an individual warning for a grammar that fails and continues with the
 others. It then enables remapping only for the grammars that loaded
 successfully. The locally generated binaries will be `.dylib`-compatible on
 macOS and `.so` libraries on Linux, so every machine must build its own copies.
 
 After installation, `M-x ms/treesit-activate-remappings` is enough to pick up
-C, C++, Go, and Python in the current session.
+C, C++, Go, Python, and YAML in the current session.
 `M-x ms/treesit-install-missing-grammars` calls it for you, so the two routes
 behave the same. Confirm a buffer is
-using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, and Python should
-have a `-ts-mode` name.
+using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, Python, and YAML
+should have a `-ts-mode` name.
 
 The grammar recipes currently follow each repository's default branch. Pin
 revisions in `treesit-language-source-alist` if reproducible grammar builds

@@ -34,8 +34,8 @@
   (LaTeX-mode . flymake-mode)
   (LaTeX-mode . LaTeX-math-mode)
   (LaTeX-mode . turn-on-reftex)
-  ;; No `turn-on-auto-fill' here: LaTeX-mode descends from `text-mode',
-  ;; whose hook already turns it on.
+  ;; No auto-fill hook here: LaTeX-mode descends from `text-mode', whose
+  ;; hook already turns it on.
   (LaTeX-mode . outline-minor-mode)
   :config
   (add-hook 'TeX-after-compilation-finished-functions
@@ -66,6 +66,14 @@
       (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
             TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))
   (setq TeX-source-correlate-start-server t))
+
+;; AUCTeX keeps its in-buffer previews behind C-c C-p, so the most common
+;; one, preview at point, is C-c C-p C-p.  The same keymap on a single key
+;; leaves every binding inside it as it was: <f6> C-p, <f6> C-b and so on.
+;; Loading preview.el is what defines the keymap, and it loads latex.el
+;; first, so `LaTeX-mode-map' exists by then.
+(with-eval-after-load 'preview
+  (keymap-set LaTeX-mode-map "<f6>" preview-map))
 
 ;; `cdlatex-tab-hook' is a global defcustom, so putting `LaTeX-indent-line'
 ;; in its default value had two faults.  It fired in Org buffers as well,

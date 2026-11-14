@@ -202,7 +202,8 @@ spell checking section of emacs-init.org."
                     nil "tree-sitter-markdown/src")
           (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
                            nil "tree-sitter-markdown-inline/src")
-          (python "https://github.com/tree-sitter/tree-sitter-python")))
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (yaml "https://github.com/tree-sitter-grammars/tree-sitter-yaml")))
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
@@ -218,7 +219,12 @@ without restarting."
     (dolist (entry ms/treesit-major-mode-remappings)
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
         (when (treesit-language-available-p language)
-          (setf (alist-get source-mode major-mode-remap-alist) target-mode)))))
+          (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
+    ;; YAML has no classic mode in Emacs to remap from, so the tree-sitter
+    ;; mode claims the extension itself.  Without the grammar the entry is
+    ;; not added and a YAML file opens in `fundamental-mode'.
+    (when (treesit-language-available-p 'yaml)
+      (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -402,6 +408,13 @@ server should hear about the save after these edits, not before."
   "Require two spaces after a sentence in code, as Emacs Lisp does."
   (setq-local sentence-end-double-space t))
 
+(defun ms/text-mode-auto-fill ()
+  "Break long lines automatically, in prose only.
+YAML descends from `text-mode' without being prose: a line broken there is
+a different document."
+  (unless (derived-mode-p 'yaml-ts-mode)
+    (auto-fill-mode 1)))
+
 (use-package text-mode
   :ensure nil
   ;; `auto-mode-alist' is matched against the whole path, so a regexp
@@ -409,7 +422,7 @@ server should hear about the save after these edits, not before."
   ;; -- which is every file you actually open.  Anchor on the separator.
   :mode "\\(?:\\`\\|/\\)\\(README\\|CHANGELOG\\|COPYING\\|LICENSE\\)\\'"
   :hook
-  ((text-mode . turn-on-auto-fill)
+  ((text-mode . ms/text-mode-auto-fill)
    (prog-mode . ms/prog-mode-sentence-spacing))
   :config
   (setq sentence-end-double-space nil)

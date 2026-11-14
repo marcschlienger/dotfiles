@@ -29,6 +29,18 @@
   ;; Backdating a note through the Org date prompt rather than typing an
   ;; identifier by hand; the prompt accepts "-1d" and the like.
   (denote-date-prompt-use-org-read-date t)
+  ;; Offered by `denote-template', which asks for one before creating the
+  ;; note.  An exercise keeps its solution under a tagged heading, so a
+  ;; worksheet that includes it can leave the solution out with
+  ;; #+exclude_tags; the worksheet entry is the header such a file needs.
+  (denote-templates
+   `((exercise . "* Exercise\n\n* Solution :solution:\n")
+     (worksheet
+      . ,(concat "#+options: toc:nil num:t\n"
+                 "#+latex_class: article\n"
+                 "#+latex_header: \\usepackage{amsmath,amssymb,siunitx}\n"
+                 "#+latex_header: \\usepackage[margin=2cm]{geometry}\n"
+                 "#+exclude_tags: solution\n"))))
   :config
   ;; A buffer named after the identifier tells me nothing in the buffer
   ;; list; this names it after the title.  It is a mode, so it is called
@@ -50,5 +62,22 @@
   ;; loads this package.
   (with-eval-after-load 'denote
     (consult-denote-mode 1)))
+
+;; The Org-specific commands Denote keeps in a package of their own.
+;; `denote-org-extract-org-subtree' moves the heading at point into a note
+;; of its own -- title, tags and date taken from the heading -- which is how
+;; an entry leaves inbox.org.  The dynamic blocks list links and backlinks
+;; inside a note.  Every command is autoloaded, so nothing loads until one
+;; is called.
+(use-package denote-org
+  :ensure t
+  :defer t)
+
+;; `org-web-tools-read-url-as-org' fetches a page and shows it as Org,
+;; converted by Pandoc, for a page worth reading here before deciding
+;; whether it becomes a note.
+(use-package org-web-tools
+  :ensure t
+  :defer t)
 
 (provide 'init-notes)

@@ -916,7 +916,8 @@ The next sunrise or sunset event restores automatic switching."
   (markdown-mode . display-line-numbers-mode)
   (prog-mode . display-line-numbers-mode)
   (sh-mode . display-line-numbers-mode)
-  (TeX-mode . display-line-numbers-mode))
+  (TeX-mode . display-line-numbers-mode)
+  (yaml-ts-mode . display-line-numbers-mode))
 
 ;;; Highlight the current line only in the active window and not in the shell.
 ;; `global-hl-line-mode' is not a globalized minor mode.  It draws its own
@@ -1160,7 +1161,8 @@ spell checking section of emacs-init.org."
                     nil "tree-sitter-markdown/src")
           (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
                            nil "tree-sitter-markdown-inline/src")
-          (python "https://github.com/tree-sitter/tree-sitter-python")))
+          (python "https://github.com/tree-sitter/tree-sitter-python")
+          (yaml "https://github.com/tree-sitter-grammars/tree-sitter-yaml")))
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
@@ -1176,7 +1178,12 @@ without restarting."
     (dolist (entry ms/treesit-major-mode-remappings)
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
         (when (treesit-language-available-p language)
-          (setf (alist-get source-mode major-mode-remap-alist) target-mode)))))
+          (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
+    ;; YAML has no classic mode in Emacs to remap from, so the tree-sitter
+    ;; mode claims the extension itself.  Without the grammar the entry is
+    ;; not added and a YAML file opens in `fundamental-mode'.
+    (when (treesit-language-available-p 'yaml)
+      (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -1360,6 +1367,13 @@ server should hear about the save after these edits, not before."
   "Require two spaces after a sentence in code, as Emacs Lisp does."
   (setq-local sentence-end-double-space t))
 
+(defun ms/text-mode-auto-fill ()
+  "Break long lines automatically, in prose only.
+YAML descends from `text-mode' without being prose: a line broken there is
+a different document."
+  (unless (derived-mode-p 'yaml-ts-mode)
+    (auto-fill-mode 1)))
+
 (use-package text-mode
   :ensure nil
   ;; `auto-mode-alist' is matched against the whole path, so a regexp
@@ -1367,7 +1381,7 @@ server should hear about the save after these edits, not before."
   ;; -- which is every file you actually open.  Anchor on the separator.
   :mode "\\(?:\\`\\|/\\)\\(README\\|CHANGELOG\\|COPYING\\|LICENSE\\)\\'"
   :hook
-  ((text-mode . turn-on-auto-fill)
+  ((text-mode . ms/text-mode-auto-fill)
    (prog-mode . ms/prog-mode-sentence-spacing))
   :config
   (setq sentence-end-double-space nil)
@@ -1849,6 +1863,10 @@ rooted at whatever directory it happens to sit in."
   (setq org-insert-heading-respect-content t)
   (setq org-read-date-prefer-future 'time)
   (setq org-highlight-latex-and-related nil) ; other options affect elisp regexp in src blocks
+  ;; Previews of LaTeX fragments (C-c C-x C-l) as vector images.  The
+  ;; default renders a bitmap at a fixed resolution, which is soft on a
+  ;; high-density display and does not follow the text scale.
+  (setq org-preview-latex-default-process 'dvisvgm)
   (setq org-fontify-quote-and-verse-blocks t)
   (setq org-track-ordered-property-with-tag t)
   (setq org-highest-priority ?A)
@@ -2252,8 +2270,8 @@ rooted at whatever directory it happens to sit in."
   (LaTeX-mode . flymake-mode)
   (LaTeX-mode . LaTeX-math-mode)
   (LaTeX-mode . turn-on-reftex)
-  ;; No `turn-on-auto-fill' here: LaTeX-mode descends from `text-mode',
-  ;; whose hook already turns it on.
+  ;; No auto-fill hook here: LaTeX-mode descends from `text-mode', whose
+  ;; hook already turns it on.
   (LaTeX-mode . outline-minor-mode)
   :config
   (add-hook 'TeX-after-compilation-finished-functions
@@ -2284,6 +2302,14 @@ rooted at whatever directory it happens to sit in."
       (setq TeX-view-program-selection '((output-pdf "System PDF viewer"))
             TeX-view-program-list '(("System PDF viewer" "xdg-open %o"))))))
   (setq TeX-source-correlate-start-server t))
+
+;; AUCTeX keeps its in-buffer previews behind C-c C-p, so the most common
+;; one, preview at point, is C-c C-p C-p.  The same keymap on a single key
+;; leaves every binding inside it as it was: <f6> C-p, <f6> C-b and so on.
+;; Loading preview.el is what defines the keymap, and it loads latex.el
+;; first, so `LaTeX-mode-map' exists by then.
+(with-eval-after-load 'preview
+  (keymap-set LaTeX-mode-map "<f6>" preview-map))
 
 ;; `cdlatex-tab-hook' is a global defcustom, so putting `LaTeX-indent-line'
 ;; in its default value had two faults.  It fired in Org buffers as well,
@@ -2439,6 +2465,18 @@ on an editor plugin.
   ;; Backdating a note through the Org date prompt rather than typing an
   ;; identifier by hand; the prompt accepts "-1d" and the like.
   (denote-date-prompt-use-org-read-date t)
+  ;; Offered by `denote-template', which asks for one before creating the
+  ;; note.  An exercise keeps its solution under a tagged heading, so a
+  ;; worksheet that includes it can leave the solution out with
+  ;; #+exclude_tags; the worksheet entry is the header such a file needs.
+  (denote-templates
+   `((exercise . "* Exercise\n\n* Solution :solution:\n")
+     (worksheet
+      . ,(concat "#+options: toc:nil num:t\n"
+                 "#+latex_class: article\n"
+                 "#+latex_header: \\usepackage{amsmath,amssymb,siunitx}\n"
+                 "#+latex_header: \\usepackage[margin=2cm]{geometry}\n"
+                 "#+exclude_tags: solution\n"))))
   :config
   ;; A buffer named after the identifier tells me nothing in the buffer
   ;; list; this names it after the title.  It is a mode, so it is called
@@ -2460,6 +2498,23 @@ on an editor plugin.
   ;; loads this package.
   (with-eval-after-load 'denote
     (consult-denote-mode 1)))
+
+;; The Org-specific commands Denote keeps in a package of their own.
+;; `denote-org-extract-org-subtree' moves the heading at point into a note
+;; of its own -- title, tags and date taken from the heading -- which is how
+;; an entry leaves inbox.org.  The dynamic blocks list links and backlinks
+;; inside a note.  Every command is autoloaded, so nothing loads until one
+;; is called.
+(use-package denote-org
+  :ensure t
+  :defer t)
+
+;; `org-web-tools-read-url-as-org' fetches a page and shows it as Org,
+;; converted by Pandoc, for a page worth reading here before deciding
+;; whether it becomes a note.
+(use-package org-web-tools
+  :ensure t
+  :defer t)
 
 (provide 'init-notes)
 #+end_src
