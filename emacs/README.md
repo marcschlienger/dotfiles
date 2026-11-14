@@ -44,6 +44,8 @@ Other configured features need these executables:
 | Org Babel R | `R` |
 | Org LaTeX fragment previews | `latex` and `dvisvgm` |
 | Reading a web page as Org | `pandoc` |
+| Building the PDF Tools server | a C compiler, `autoconf`, `automake`, `pkg-config`, and the Poppler and libpng development files |
+| Org export through the `msheet`, `mtest`, and `mexam` classes | those classes and the `mstuff` package on the TeX search path |
 | Spell checking (Jinx where its module builds, Flyspell otherwise) | Enchant plus `en_US` and `de_DE` Hunspell dictionaries |
 
 Swift development intentionally belongs to Xcode. Emacs retains `swift-mode`
@@ -83,12 +85,17 @@ notification, which `eglot--managed-mode` adds at the default depth: the server
 should hear about the save after these edits rather than before. That is the
 ordering the gopls documentation recommends.
 
-AUCTeX uses Skim on macOS when its `displayline` helper is installed, otherwise
-it uses the system `open` command. On Linux it prefers Zathura and falls back to
-`xdg-open`. Skim and `pdf-tools` are optional.
-The deferred PDF Tools configuration is retained and activates after the
-package is installed explicitly and Emacs is restarted. A TeX distribution is
-still required to compile PDFs.
+AUCTeX shows a compiled PDF inside Emacs, in PDF Tools, with SyncTeX in both
+directions. The choice is made per view rather than at startup: on a graphical
+frame it is PDF Tools, and on a terminal frame, which cannot draw a page, it is
+an external viewer -- Skim on macOS when its `displayline` helper is installed,
+otherwise the system `open` command; on Linux Zathura, falling back to
+`xdg-open`. PDF Tools is installed with the other packages but not loaded
+until a PDF is opened. On a machine that has not built its `epdfinfo` server
+yet, the first PDF asks whether to build it; the build uses the prerequisites
+listed above and never calls the system's package manager itself. AUCTeX reverts the PDF buffer when a
+compilation finishes; Auto Revert leaves PDF buffers alone. A TeX distribution
+is still required to compile PDFs.
 
 ## Theme families and automatic switching
 
@@ -253,6 +260,14 @@ become more important than automatically picking up parser updates.
   refiling and saving read it too.
 - Refile targets are absolute paths. Org resolves a relative target against
   the current buffer's directory, not against `org-directory`.
+- `#+latex_class:` accepts `msheet`, `mtest`, and `mexam` besides Org's own
+  classes. They are registered without Org's default package list, which
+  loads `amssymb` and `capt-of`: the classes' maths font already defines
+  `\circledS` and their KOMA base class already defines `\captionof`, so both
+  packages fail with "already defined", and under `nonstopmode` LaTeX writes
+  a PDF anyway. Headings map to the standard sectioning commands.
+- A `zotero:` link type hands `zotero://` links to the system, which opens
+  the item in the reference manager.
 - `org-confirm-babel-evaluate` is enabled, so source blocks in cloned or
   downloaded Org files prompt before running.
 - The default-notes and diary files point into the cache directory rather
@@ -354,6 +369,9 @@ Three things are worth knowing before relying on the output:
   renames, `C-c x` offers the code actions, `C-c q` applies a quick fix, and
   `C-c f` formats the buffer. The bindings live in `eglot-mode-map`, so the
   four letters are free everywhere else.
+- `C-x F`, `C-x V`, and `C-x K` jump to the source of a function, a variable,
+  or the command behind a key (`find-function-mode`, or its older setup
+  function on Emacs 30).
 - `eglot-extend-to-xref` is on: a definition reached outside the project, in
   a library for instance, stays with the server it was reached from, so
   cross references keep working there.

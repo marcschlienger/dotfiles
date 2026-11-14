@@ -186,7 +186,14 @@
   :config
   (setq org-link-context-for-files t)
   (setq org-link-keep-stored-after-insertion nil)
-  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id))
+  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+  ;; A reference manager's item links look like zotero://select/...  Org
+  ;; only follows a scheme it has a link type for; without one it reads the
+  ;; link as a search in the current file and fails.  The URL is handed to
+  ;; the system, which starts the application registered for the scheme.
+  (org-link-set-parameters
+   "zotero"
+   :follow (lambda (path _prefix) (browse-url (concat "zotero:" path)))))
 
 ;;; code blocks
 (use-package org
@@ -225,6 +232,32 @@
   ;; number of passes, and writes the auxiliary files beside the output.
   (setq org-latex-pdf-process
         '("latexmk -pdf -interaction=nonstopmode -output-directory=%o %f"))
+  ;; Document classes of my own, so `#+latex_class: msheet' is a class Org
+  ;; knows.  [NO-DEFAULT-PACKAGES] is load-bearing.  These classes load
+  ;; mathdesign, which defines \circledS, and sit on a KOMA class, which
+  ;; defines \captionof; Org's default list then loads amssymb and capt-of,
+  ;; which define the same two commands again.  LaTeX reports both as
+  ;; errors, and under nonstopmode still writes a PDF, so the export looks
+  ;; as if it had worked.  ulem stays because Org's underline and
+  ;; strike-through markup compile to its commands.  Headings map to the
+  ;; standard sectioning of the KOMA class underneath.
+  (with-eval-after-load 'ox-latex
+    (dolist (class '("msheet" "mtest" "mexam"))
+      (add-to-list
+       'org-latex-classes
+       (list class
+             (concat "\\documentclass{" class "}\n"
+                     "[NO-DEFAULT-PACKAGES]\n"
+                     "\\usepackage{mstuff}\n"
+                     "\\usepackage{msheet}\n"
+                     "\\usepackage[normalem]{ulem}\n"
+                     "[PACKAGES]\n"
+                     "[EXTRA]")
+             '("\\section{%s}" . "\\section*{%s}")
+             '("\\subsection{%s}" . "\\subsection*{%s}")
+             '("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+             '("\\paragraph{%s}" . "\\paragraph*{%s}")
+             '("\\subparagraph{%s}" . "\\subparagraph*{%s}")))))
   (setq org-export-with-toc t)
   (setq org-export-headline-levels 8)
   (setq org-export-dispatch-use-expert-ui nil)

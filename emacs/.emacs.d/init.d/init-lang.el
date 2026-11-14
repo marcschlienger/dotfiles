@@ -274,6 +274,14 @@ without restarting."
   :ensure nil
   :hook (emacs-lisp-mode . flymake-mode))
 
+;; C-x F, C-x V and C-x K jump to the source of a function, a variable, or
+;; the command behind a key, with C-x 4 and C-x 5 variants for another
+;; window or frame.  Emacs 31 made this a mode and marked the older function
+;; obsolete; Emacs 30 has only the function.
+(if (fboundp 'find-function-mode)
+    (find-function-mode 1)
+  (find-function-setup-keys))
+
 ;; Expand a macro in place, one step at a time, and collapse it again.
 (use-package macrostep
   :ensure t
