@@ -189,9 +189,10 @@ to their Tree-sitter major modes; otherwise C, C++, Go and Python keep using
 their traditional major modes. A missing grammar therefore degrades cleanly
 instead of breaking file opening: `go-mode` claims `.go` on its own, and the
 remapping only redirects it to `go-ts-mode` once the grammar is built. Rust
-uses `rust-mode`'s separate
-Tree-sitter integration only when the Rust grammar is available at startup;
-otherwise it derives from ordinary `prog-mode`. The Emacs Lisp grammar is not
+is not part of this: `rust-mode` can be told to derive from `rust-ts-mode`, but
+Emacs declares the opposite relationship itself, and the two together make a
+cycle that every Rust buffer reports as an inconsistent hierarchy. Rust
+buffers use `rust-mode`'s own highlighting. The Emacs Lisp grammar is not
 automatically remapped.
 
 Install these prerequisites before building grammars:
@@ -204,7 +205,7 @@ Install these prerequisites before building grammars:
 
 Evaluate `M-: (treesit-available-p) RET` first; it must return non-nil. The
 standalone `tree-sitter` command-line program is not required for the C, C++,
-Emacs Lisp, Go, Python, or Rust recipes. Emacs must be able to find Git and the
+Emacs Lisp, Go, or Python recipes. Emacs must be able to find Git and the
 compilers through `exec-path`.
 
 On each macOS or Linux machine, run once after cloning:
@@ -214,7 +215,7 @@ M-x ms/treesit-install-missing-grammars
 ```
 
 This attempts to download and build the configured C, C++, Emacs Lisp, Go,
-Python, and Rust grammars under the local Emacs directory. The command
+Markdown, and Python grammars under the local Emacs directory. The command
 reports an individual warning for a grammar that fails and continues with the
 others. It then enables remapping only for the grammars that loaded
 successfully. The locally generated binaries will be `.dylib`-compatible on
@@ -223,12 +224,9 @@ macOS and `.so` libraries on Linux, so every machine must build its own copies.
 After installation, `M-x ms/treesit-activate-remappings` is enough to pick up
 C, C++, Go, and Python in the current session.
 `M-x ms/treesit-install-missing-grammars` calls it for you, so the two routes
-behave the same. Restarting is still required if
-`rust-mode` was already loaded, because that package chooses its parent mode
-when it loads. Confirm a buffer is
+behave the same. Confirm a buffer is
 using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, and Python should
-have a `-ts-mode` name; Rust remains named `rust-mode` even when it derives from
-`rust-ts-mode`.
+have a `-ts-mode` name.
 
 The grammar recipes currently follow each repository's default branch. Pin
 revisions in `treesit-language-source-alist` if reproducible grammar builds

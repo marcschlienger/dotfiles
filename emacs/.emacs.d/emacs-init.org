@@ -1166,8 +1166,6 @@ spell checking section of emacs-init.org."
   :hook (emacs-lisp-mode . ms/package-lint-flymake-setup))
 
 ;;; Tree-sitter
-(defvar rust-mode-treesitter-derive)
-
 (use-package treesit
   :ensure nil
   :if (treesit-available-p)
@@ -1181,8 +1179,7 @@ spell checking section of emacs-init.org."
                     nil "tree-sitter-markdown/src")
           (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
                            nil "tree-sitter-markdown-inline/src")
-          (python "https://github.com/tree-sitter/tree-sitter-python")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust")))
+          (python "https://github.com/tree-sitter/tree-sitter-python")))
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
@@ -1198,10 +1195,7 @@ without restarting."
     (dolist (entry ms/treesit-major-mode-remappings)
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
         (when (treesit-language-available-p language)
-          (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
-    ;; `rust-mode' chooses its parent mode when its package is loaded.
-    (setq rust-mode-treesitter-derive
-          (treesit-language-available-p 'rust)))
+          (setf (alist-get source-mode major-mode-remap-alist) target-mode)))))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -1287,6 +1281,11 @@ without restarting."
          ("C-c C-e" . markdown-do)))
 
 ;;; Rust
+;; `rust-mode-treesitter-derive' stays at its default of nil.  Set, it makes
+;; `rust-mode' a child of `rust-ts-mode', while Emacs's own rust-ts-mode.el
+;; declares `rust-mode' a parent of `rust-ts-mode' through
+;; `derived-mode-add-parents'.  The two form a cycle, and every Rust buffer
+;; reports "Inconsistent hierarchy" when its mode ancestry is worked out.
 (defun ms/rust-mode-setup ()
   "Apply personal settings to Rust buffers."
   (prettify-symbols-mode 1)
