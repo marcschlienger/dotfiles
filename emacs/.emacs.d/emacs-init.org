@@ -2445,6 +2445,15 @@ rooted at whatever directory it happens to sit in."
   (setq pdf-view-use-scaling t)
   (setq pdf-view-use-imagemagick nil))
 
+;; AUCTeX's view command only runs a forward search when
+;; `pdf-sync-forward-search' is fboundp; otherwise it just shows the PDF.
+;; PDF Tools defines that function in pdf-sync.el without an autoload, and
+;; nothing loads pdf-sync.el until a PDF buffer exists -- so the first view
+;; of a session opens the PDF at page one instead of at point.  Declaring
+;; the autoload makes the function known from the start; calling it loads
+;; the rest.
+(autoload 'pdf-sync-forward-search "pdf-sync" nil t)
+
 (provide 'init-latex)
 #+end_src
 
