@@ -58,7 +58,9 @@ AUCTeX's preview prefix, so `<f6> C-p` previews at point. A compiled PDF opens
 inside Emacs, in PDF Tools: `C-c C-v` jumps from the source to the matching
 place in the PDF, and `C-<mouse-1>` in the PDF jumps back. An Org file exports
 through my own LaTeX classes with `#+latex_class: msheet` (or `mtest`,
-`mexam`), and a `zotero://` link in a note opens the item in Zotero.
+`mexam`): each top-level heading becomes a numbered exercise, and
+`msheet-sections` keeps ordinary sections for a fact sheet. A `zotero://` link
+in a note opens the item in Zotero.
 
 **Denote names the notes.** It is a convention, not an application: the
 identifier, slug and keywords live in the file name, so a note is a plain Org

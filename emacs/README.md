@@ -45,7 +45,7 @@ Other configured features need these executables:
 | Org LaTeX fragment previews | `latex` and `dvisvgm` |
 | Reading a web page as Org | `pandoc` |
 | Building the PDF Tools server | a C compiler, `autoconf`, `automake`, `pkg-config`, and the Poppler and libpng development files |
-| Org export through the `msheet`, `mtest`, and `mexam` classes | those classes and the `mstuff` package on the TeX search path |
+| Org export through the `msheet`, `msheet-sections`, `mtest`, and `mexam` classes | those classes and the `mstuff` package on the TeX search path |
 | Spell checking (Jinx where its module builds, Flyspell otherwise) | Enchant plus `en_US` and `de_DE` Hunspell dictionaries |
 
 Swift development intentionally belongs to Xcode. Emacs retains `swift-mode`
@@ -265,7 +265,12 @@ become more important than automatically picking up parser updates.
   loads `amssymb` and `capt-of`: the classes' maths font already defines
   `\circledS` and their KOMA base class already defines `\captionof`, so both
   packages fail with "already defined", and under `nonstopmode` LaTeX writes
-  a PDF anyway. Headings map to the standard sectioning commands.
+  a PDF anyway. In these three a top-level heading is an exercise: it becomes
+  `\msection`, which prints "Aufgabe n" with the heading text as its note,
+  and the starred form when the heading is unnumbered. Deeper headings are
+  unnumbered, because their numbers would hang off a section counter that
+  `\msection` never advances. `msheet-sections` is the `msheet` class with
+  ordinary numbered sectioning, for a sheet that is prose under headings.
 - A `zotero:` link type hands `zotero://` links to the system, which opens
   the item in the reference manager.
 - `org-confirm-babel-evaluate` is enabled, so source blocks in cloned or

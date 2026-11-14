@@ -239,25 +239,44 @@
   ;; which define the same two commands again.  LaTeX reports both as
   ;; errors, and under nonstopmode still writes a PDF, so the export looks
   ;; as if it had worked.  ulem stays because Org's underline and
-  ;; strike-through markup compile to its commands.  Headings map to the
-  ;; standard sectioning of the KOMA class underneath.
+  ;; strike-through markup compile to its commands.
+  ;;
+  ;; A top-level heading is an exercise: \msection prints "Aufgabe n" and
+  ;; takes the heading text as its note, and its starred form is what Org
+  ;; asks for when a heading is unnumbered.  The braces keep a bracket in
+  ;; the heading from ending the optional argument early.  Deeper headings
+  ;; are unnumbered, because their numbers hang off \section's counter,
+  ;; which \msection never advances -- a numbered \subsection prints 0.1.
+  ;; "msheet-sections" is the same class with ordinary numbered sectioning,
+  ;; for a sheet that is prose under headings and not a list of exercises.
   (with-eval-after-load 'ox-latex
-    (dolist (class '("msheet" "mtest" "mexam"))
-      (add-to-list
-       'org-latex-classes
-       (list class
+    (let ((preamble
+           (lambda (class)
              (concat "\\documentclass{" class "}\n"
                      "[NO-DEFAULT-PACKAGES]\n"
                      "\\usepackage{mstuff}\n"
                      "\\usepackage{msheet}\n"
                      "\\usepackage[normalem]{ulem}\n"
                      "[PACKAGES]\n"
-                     "[EXTRA]")
-             '("\\section{%s}" . "\\section*{%s}")
-             '("\\subsection{%s}" . "\\subsection*{%s}")
-             '("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-             '("\\paragraph{%s}" . "\\paragraph*{%s}")
-             '("\\subparagraph{%s}" . "\\subparagraph*{%s}")))))
+                     "[EXTRA]")))
+          (exercises
+           '(("\\msection[{%s}]" . "\\msection*[{%s}]")
+             ("\\subsection*{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection*{%s}" . "\\subsubsection*{%s}")
+             ("\\paragraph*{%s}" . "\\paragraph*{%s}")
+             ("\\subparagraph*{%s}" . "\\subparagraph*{%s}")))
+          (sections
+           '(("\\section{%s}" . "\\section*{%s}")
+             ("\\subsection{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+             ("\\paragraph{%s}" . "\\paragraph*{%s}")
+             ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
+      (dolist (class '("msheet" "mtest" "mexam"))
+        (add-to-list 'org-latex-classes
+                     `(,class ,(funcall preamble class) ,@exercises)))
+      (add-to-list 'org-latex-classes
+                   `("msheet-sections" ,(funcall preamble "msheet")
+                     ,@sections))))
   (setq org-export-with-toc t)
   (setq org-export-headline-levels 8)
   (setq org-export-dispatch-use-expert-ui nil)
