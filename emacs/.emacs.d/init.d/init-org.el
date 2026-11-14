@@ -46,8 +46,8 @@
   ;; The call itself lives at the end of the org-agenda block below, not
   ;; here.  Both would be `with-eval-after-load' forms on org-agenda, and
   ;; those run in registration order -- so from here it would run before
-  ;; `org-agenda-files' had been set, build its reminder list from nothing,
-  ;; and leave the first refresh empty until the periodic one caught up.
+  ;; the agenda settings below had been applied, and build its first
+  ;; reminder list without them.
   )
 
 ;; Org mode
@@ -117,15 +117,33 @@
   :ensure nil
   :defer t
   :config
+  ;; Absolute paths: Org resolves a relative target against the current
+  ;; buffer's `default-directory', not against `org-directory', so a bare
+  ;; "projects.org" only finds the file when refiling from a buffer that
+  ;; already sits beside it.  From anywhere else it silently offers a
+  ;; projects.org that does not exist.
   (setq org-refile-targets
-        '(("projects.org" . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
-          ("someday.org" . (:maxlevel . 2))))
+        `((,(expand-file-name "projects.org" org-directory)
+           . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
+          (,(expand-file-name "someday.org" org-directory)
+           . (:maxlevel . 2))))
   (setq org-refile-use-outline-path 'file)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-outline-path-complete-in-steps nil)
-  ;; The cache does not notice files appearing in `org-agenda-files', which
-  ;; is a directory here, so targets go stale until C-0 C-c C-w clears it.
+  ;; The cache is keyed on the target file's name and nothing else, so a
+  ;; heading added to that file is not offered until C-0 C-c C-w clears it.
   (setq org-refile-use-cache nil)
+  ;; Here rather than with the agenda settings, because Org itself reads
+  ;; it: saving the task files after a refile, and refreshing reminders
+  ;; after a save, both ask `org-agenda-files'.  Set in the agenda block it
+  ;; is still nil in a session where the agenda has not been opened, and
+  ;; both quietly do nothing.  A directory entry
+  ;; would expand to every note in `org-directory', so the task files are
+  ;; named instead.  They are the capture targets; the notes themselves
+  ;; are not agenda material.
+  (setq org-agenda-files
+        (mapcar (lambda (name) (expand-file-name name org-directory))
+                '("inbox.org" "notes.org" "projects.org")))
   (setq org-reverse-note-order nil)
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
@@ -280,12 +298,7 @@
   ;; the cache keeps it out of `org-directory' without leaving a fresh
   ;; temporary file behind on each session.
   (setq org-default-notes-file (ms-paths-cache-file "org-default-notes.org"))
-  ;; A directory entry would expand to every note in `org-directory', so
-  ;; the task files are named instead.  They are the capture targets; the
-  ;; notes themselves are not agenda material.
-  (setq org-agenda-files
-        (mapcar (lambda (name) (expand-file-name name org-directory))
-                '("inbox.org" "notes.org" "projects.org")))
+  ;; `org-agenda-files' is set with the refile targets in the Org block.
   (setq org-agenda-span 'week)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
@@ -447,8 +460,8 @@
   (setq org-agenda-remove-tags nil)
   (setq org-agenda-tags-column -100)
 
-  ;; Last, so the first appointment refresh sees the settings above --
-  ;; `org-agenda-files' in particular.  See the appt block near the top.
+  ;; Last, so the first appointment refresh sees the settings above.  See
+  ;; the appt block near the top.
   (ms-org-appt-initialise))
 
 (provide 'init-org)

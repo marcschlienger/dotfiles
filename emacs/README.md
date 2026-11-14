@@ -236,17 +236,22 @@ become more important than automatically picking up parser updates.
 
 ## Org
 
-- `org-directory` is `~/org`; create or restore that directory before using
-  capture, agenda, or refile commands.
-- The agenda contains the directory itself rather than a one-time wildcard
-  expansion, so new `.org` files are discovered without restarting Emacs.
+- `org-directory` is the notes directory, `ms-paths-notes-directory`; capture,
+  agenda, and refile all resolve there.
+- The agenda names the task files -- `inbox.org`, `notes.org`,
+  `projects.org` -- rather than the directory, which would expand to every
+  note. The list is set when Org loads, not when the agenda does, because
+  refiling and saving read it too.
+- Refile targets are absolute paths. Org resolves a relative target against
+  the current buffer's directory, not against `org-directory`.
 - `org-confirm-babel-evaluate` is enabled, so source blocks in cloned or
   downloaded Org files prompt before running.
 - The default-notes and diary files point into the cache directory rather
   than `org-directory`. Neither feature is used; give them real paths if that
   changes.
-- Refile caching is disabled: it did not notice files appearing in a
-  directory-based `org-agenda-files`, so targets went stale.
+- Refile caching is disabled: the cache is keyed on the target file's name
+  alone, so a heading added to that file is not offered until the cache is
+  cleared.
 
 ## Package reproducibility and startup
 

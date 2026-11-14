@@ -40,7 +40,15 @@
   :ensure t
   :bind (("C-c n f" . consult-denote-find)
          ("C-c n g" . consult-denote-grep))
-  :config
-  (consult-denote-mode 1))
+  :init
+  ;; The mode is what gives Denote's own prompts -- the link target, the
+  ;; file to rename -- Consult's preview.  In :config it would run only
+  ;; once one of the two commands above had loaded this package, and
+  ;; `C-c n l' would prompt differently depending on whether `C-c n f' had
+  ;; been used earlier in the session.  Tied to Denote loading it is on
+  ;; from the first prompt; the mode is autoloaded, so calling it is what
+  ;; loads this package.
+  (with-eval-after-load 'denote
+    (consult-denote-mode 1)))
 
 (provide 'init-notes)
