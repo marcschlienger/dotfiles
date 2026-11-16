@@ -1,0 +1,207 @@
+{
+  "profiles": [
+    {
+      "name": "Default profile",
+      "selected": true,
+      "complex_modifications": {
+        "rules": [
+          {
+            "description": "Caps Lock: one-shot Control, hold Control",
+            "manipulators": [
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "caps_lock"
+                },
+                "to": [
+                  {
+                    "key_code": "left_control",
+                    "lazy": true
+                  }
+                ],
+                "to_if_alone": [
+                  {
+                    "sticky_modifier": {
+                      "left_control": "on"
+                    }
+                  }
+                ],
+                "to_delayed_action": {
+                  "to_if_invoked": [
+                    {
+                      "sticky_modifier": {
+                        "left_control": "off"
+                      }
+                    }
+                  ],
+                  "to_if_canceled": []
+                },
+                "parameters": {
+                  "basic.to_if_alone_timeout_milliseconds": 2000,
+                  "basic.to_delayed_action_delay_milliseconds": 2000
+                },
+                "conditions": [
+                  {
+                    "type": "device_if",
+                    "identifiers": [
+                      {
+                        "is_built_in_keyboard": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "description": "Right Command: one-shot right Control, hold right Control",
+            "manipulators": [
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "right_command"
+                },
+                "to": [
+                  {
+                    "key_code": "right_control",
+                    "lazy": true
+                  }
+                ],
+                "to_if_alone": [
+                  {
+                    "sticky_modifier": {
+                      "right_control": "on"
+                    }
+                  }
+                ],
+                "to_delayed_action": {
+                  "to_if_invoked": [
+                    {
+                      "sticky_modifier": {
+                        "right_control": "off"
+                      }
+                    }
+                  ],
+                  "to_if_canceled": []
+                },
+                "parameters": {
+                  "basic.to_if_alone_timeout_milliseconds": 2000,
+                  "basic.to_delayed_action_delay_milliseconds": 2000
+                },
+                "conditions": [
+                  {
+                    "type": "device_if",
+                    "identifiers": [
+                      {
+                        "is_built_in_keyboard": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "description": "Left Shift: one-shot Shift, hold Shift",
+            "manipulators": [
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "left_shift"
+                },
+                "to": [
+                  {
+                    "key_code": "left_shift",
+                    "lazy": true
+                  }
+                ],
+                "to_if_alone": [
+                  {
+                    "sticky_modifier": {
+                      "left_shift": "on"
+                    }
+                  }
+                ],
+                "to_delayed_action": {
+                  "to_if_invoked": [
+                    {
+                      "sticky_modifier": {
+                        "left_shift": "off"
+                      }
+                    }
+                  ],
+                  "to_if_canceled": []
+                },
+                "parameters": {
+                  "basic.to_if_alone_timeout_milliseconds": 2000,
+                  "basic.to_delayed_action_delay_milliseconds": 2000
+                },
+                "conditions": [
+                  {
+                    "type": "device_if",
+                    "identifiers": [
+                      {
+                        "is_built_in_keyboard": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "description": "Right Shift: one-shot right Shift, hold right Shift",
+            "manipulators": [
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "right_shift"
+                },
+                "to": [
+                  {
+                    "key_code": "right_shift",
+                    "lazy": true
+                  }
+                ],
+                "to_if_alone": [
+                  {
+                    "sticky_modifier": {
+                      "right_shift": "on"
+                    }
+                  }
+                ],
+                "to_delayed_action": {
+                  "to_if_invoked": [
+                    {
+                      "sticky_modifier": {
+                        "right_shift": "off"
+                      }
+                    }
+                  ],
+                  "to_if_canceled": []
+                },
+                "parameters": {
+                  "basic.to_if_alone_timeout_milliseconds": 2000,
+                  "basic.to_delayed_action_delay_milliseconds": 2000
+                },
+                "conditions": [
+                  {
+                    "type": "device_if",
+                    "identifiers": [
+                      {
+                        "is_built_in_keyboard": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "virtual_hid_keyboard": {
+        "keyboard_type_v2": "ansi"
+      }
+    }
+  ]
+}
