@@ -189,8 +189,6 @@ spell checking section of emacs-init.org."
   :hook (emacs-lisp-mode . ms/package-lint-flymake-setup))
 
 ;;; Tree-sitter
-(defvar rust-mode-treesitter-derive)
-
 (use-package treesit
   :ensure nil
   :if (treesit-available-p)
@@ -205,7 +203,7 @@ spell checking section of emacs-init.org."
           (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
                            nil "tree-sitter-markdown-inline/src")
           (python "https://github.com/tree-sitter/tree-sitter-python")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust")))
+          (yaml "https://github.com/tree-sitter-grammars/tree-sitter-yaml")))
   (defconst ms/treesit-major-mode-remappings
     '((c c-mode c-ts-mode)
       (cpp c++-mode c++-ts-mode)
@@ -222,9 +220,11 @@ without restarting."
       (pcase-let ((`(,language ,source-mode ,target-mode) entry))
         (when (treesit-language-available-p language)
           (setf (alist-get source-mode major-mode-remap-alist) target-mode))))
-    ;; `rust-mode' chooses its parent mode when its package is loaded.
-    (setq rust-mode-treesitter-derive
-          (treesit-language-available-p 'rust)))
+    ;; YAML has no classic mode in Emacs to remap from, so the tree-sitter
+    ;; mode claims the extension itself.  Without the grammar the entry is
+    ;; not added and a YAML file opens in `fundamental-mode'.
+    (when (treesit-language-available-p 'yaml)
+      (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))))
 
   (defun ms/treesit-install-missing-grammars ()
     "Build missing configured grammars for the current platform."
@@ -274,6 +274,14 @@ without restarting."
   :ensure nil
   :hook (emacs-lisp-mode . flymake-mode))
 
+;; C-x F, C-x V and C-x K jump to the source of a function, a variable, or
+;; the command behind a key, with C-x 4 and C-x 5 variants for another
+;; window or frame.  Emacs 31 made this a mode and marked the older function
+;; obsolete; Emacs 30 has only the function.
+(if (fboundp 'find-function-mode)
+    (find-function-mode 1)
+  (find-function-setup-keys))
+
 ;; Expand a macro in place, one step at a time, and collapse it again.
 (use-package macrostep
   :ensure t
@@ -310,6 +318,11 @@ without restarting."
          ("C-c C-e" . markdown-do)))
 
 ;;; Rust
+;; `rust-mode-treesitter-derive' stays at its default of nil.  Set, it makes
+;; `rust-mode' a child of `rust-ts-mode', while Emacs's own rust-ts-mode.el
+;; declares `rust-mode' a parent of `rust-ts-mode' through
+;; `derived-mode-add-parents'.  The two form a cycle, and every Rust buffer
+;; reports "Inconsistent hierarchy" when its mode ancestry is worked out.
 (defun ms/rust-mode-setup ()
   "Apply personal settings to Rust buffers."
   (prettify-symbols-mode 1)
@@ -327,6 +340,12 @@ without restarting."
 (use-package rustic
   :ensure t
   :after (rust-mode)
+  :init
+  ;; Rustic otherwise calls `eglot-ensure' itself from `rustic-mode-hook',
+  ;; around the remote-file check in `ms/eglot-ensure'.  It reads this when
+  ;; it loads, hence :init.  The server still starts: `rustic-mode' derives
+  ;; from `rust-mode', whose hook is in the Eglot block.
+  (setq rustic-lsp-setup-p nil)
   :config
   (setq rustic-format-trigger 'on-save)
   (setq rustic-lsp-client 'eglot))
@@ -403,6 +422,13 @@ server should hear about the save after these edits, not before."
   "Require two spaces after a sentence in code, as Emacs Lisp does."
   (setq-local sentence-end-double-space t))
 
+(defun ms/text-mode-auto-fill ()
+  "Break long lines automatically, in prose only.
+YAML descends from `text-mode' without being prose: a line broken there is
+a different document."
+  (unless (derived-mode-p 'yaml-ts-mode)
+    (auto-fill-mode 1)))
+
 (use-package text-mode
   :ensure nil
   ;; `auto-mode-alist' is matched against the whole path, so a regexp
@@ -410,7 +436,7 @@ server should hear about the save after these edits, not before."
   ;; -- which is every file you actually open.  Anchor on the separator.
   :mode "\\(?:\\`\\|/\\)\\(README\\|CHANGELOG\\|COPYING\\|LICENSE\\)\\'"
   :hook
-  ((text-mode . turn-on-auto-fill)
+  ((text-mode . ms/text-mode-auto-fill)
    (prog-mode . ms/prog-mode-sentence-spacing))
   :config
   (setq sentence-end-double-space nil)

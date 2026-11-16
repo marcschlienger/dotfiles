@@ -46,8 +46,8 @@
   ;; The call itself lives at the end of the org-agenda block below, not
   ;; here.  Both would be `with-eval-after-load' forms on org-agenda, and
   ;; those run in registration order -- so from here it would run before
-  ;; `org-agenda-files' had been set, build its reminder list from nothing,
-  ;; and leave the first refresh empty until the periodic one caught up.
+  ;; the agenda settings below had been applied, and build its first
+  ;; reminder list without them.
   )
 
 ;; Org mode
@@ -103,6 +103,10 @@
   (setq org-insert-heading-respect-content t)
   (setq org-read-date-prefer-future 'time)
   (setq org-highlight-latex-and-related nil) ; other options affect elisp regexp in src blocks
+  ;; Previews of LaTeX fragments (C-c C-x C-l) as vector images.  The
+  ;; default renders a bitmap at a fixed resolution, which is soft on a
+  ;; high-density display and does not follow the text scale.
+  (setq org-preview-latex-default-process 'dvisvgm)
   (setq org-fontify-quote-and-verse-blocks t)
   (setq org-track-ordered-property-with-tag t)
   (setq org-highest-priority ?A)
@@ -117,15 +121,33 @@
   :ensure nil
   :defer t
   :config
+  ;; Absolute paths: Org resolves a relative target against the current
+  ;; buffer's `default-directory', not against `org-directory', so a bare
+  ;; "projects.org" only finds the file when refiling from a buffer that
+  ;; already sits beside it.  From anywhere else it silently offers a
+  ;; projects.org that does not exist.
   (setq org-refile-targets
-        '(("projects.org" . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
-          ("someday.org" . (:maxlevel . 2))))
+        `((,(expand-file-name "projects.org" org-directory)
+           . (:regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))
+          (,(expand-file-name "someday.org" org-directory)
+           . (:maxlevel . 2))))
   (setq org-refile-use-outline-path 'file)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-outline-path-complete-in-steps nil)
-  ;; The cache does not notice files appearing in `org-agenda-files', which
-  ;; is a directory here, so targets go stale until C-0 C-c C-w clears it.
+  ;; The cache is keyed on the target file's name and nothing else, so a
+  ;; heading added to that file is not offered until C-0 C-c C-w clears it.
   (setq org-refile-use-cache nil)
+  ;; Here rather than with the agenda settings, because Org itself reads
+  ;; it: saving the task files after a refile, and refreshing reminders
+  ;; after a save, both ask `org-agenda-files'.  Set in the agenda block it
+  ;; is still nil in a session where the agenda has not been opened, and
+  ;; both quietly do nothing.  A directory entry
+  ;; would expand to every note in `org-directory', so the task files are
+  ;; named instead.  They are the capture targets; the notes themselves
+  ;; are not agenda material.
+  (setq org-agenda-files
+        (mapcar (lambda (name) (expand-file-name name org-directory))
+                '("inbox.org" "notes.org" "projects.org")))
   (setq org-reverse-note-order nil)
   (setq org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)")))
@@ -164,7 +186,14 @@
   :config
   (setq org-link-context-for-files t)
   (setq org-link-keep-stored-after-insertion nil)
-  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id))
+  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+  ;; A reference manager's item links look like zotero://select/...  Org
+  ;; only follows a scheme it has a link type for; without one it reads the
+  ;; link as a search in the current file and fails.  The URL is handed to
+  ;; the system, which starts the application registered for the scheme.
+  (org-link-set-parameters
+   "zotero"
+   :follow (lambda (path _prefix) (browse-url (concat "zotero:" path)))))
 
 ;;; code blocks
 (use-package org
@@ -203,6 +232,51 @@
   ;; number of passes, and writes the auxiliary files beside the output.
   (setq org-latex-pdf-process
         '("latexmk -pdf -interaction=nonstopmode -output-directory=%o %f"))
+  ;; Document classes of my own, so `#+latex_class: msheet' is a class Org
+  ;; knows.  [NO-DEFAULT-PACKAGES] is load-bearing.  These classes load
+  ;; mathdesign, which defines \circledS, and sit on a KOMA class, which
+  ;; defines \captionof; Org's default list then loads amssymb and capt-of,
+  ;; which define the same two commands again.  LaTeX reports both as
+  ;; errors, and under nonstopmode still writes a PDF, so the export looks
+  ;; as if it had worked.  ulem stays because Org's underline and
+  ;; strike-through markup compile to its commands.
+  ;;
+  ;; A top-level heading is an exercise: \msection prints "Aufgabe n" and
+  ;; takes the heading text as its note, and its starred form is what Org
+  ;; asks for when a heading is unnumbered.  The braces keep a bracket in
+  ;; the heading from ending the optional argument early.  Deeper headings
+  ;; are unnumbered, because their numbers hang off \section's counter,
+  ;; which \msection never advances -- a numbered \subsection prints 0.1.
+  ;; "msheet-sections" is the same class with ordinary numbered sectioning,
+  ;; for a sheet that is prose under headings and not a list of exercises.
+  (with-eval-after-load 'ox-latex
+    (let ((preamble
+           (lambda (class)
+             (concat "\\documentclass{" class "}\n"
+                     "[NO-DEFAULT-PACKAGES]\n"
+                     "\\usepackage{mstuff}\n"
+                     "\\usepackage{msheet}\n"
+                     "\\usepackage[normalem]{ulem}\n"
+                     "[PACKAGES]\n"
+                     "[EXTRA]")))
+          (exercises
+           '(("\\msection[{%s}]" . "\\msection*[{%s}]")
+             ("\\subsection*{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection*{%s}" . "\\subsubsection*{%s}")
+             ("\\paragraph*{%s}" . "\\paragraph*{%s}")
+             ("\\subparagraph*{%s}" . "\\subparagraph*{%s}")))
+          (sections
+           '(("\\section{%s}" . "\\section*{%s}")
+             ("\\subsection{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+             ("\\paragraph{%s}" . "\\paragraph*{%s}")
+             ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
+      (dolist (class '("msheet" "mtest" "mexam"))
+        (add-to-list 'org-latex-classes
+                     `(,class ,(funcall preamble class) ,@exercises)))
+      (add-to-list 'org-latex-classes
+                   `("msheet-sections" ,(funcall preamble "msheet")
+                     ,@sections))))
   (setq org-export-with-toc t)
   (setq org-export-headline-levels 8)
   (setq org-export-dispatch-use-expert-ui nil)
@@ -243,6 +317,17 @@
            "* %?\n%U\n")
           ("L" "Lesson that worked" entry (file+olp+datetree "lab.org")
            "* Lesson: %?  :lesson:\n%U\nGoodNotes: \n")
+          ;; One investigation of how something in Emacs works.  The
+          ;; prediction is written before the experiment, which is what
+          ;; makes the corrected explanation worth having.
+          ("e" "Experiment" entry (file+olp+datetree "lab.org")
+           ,(concat "* Experiment: %?  :experiment:\n%U\n"
+                    "- Question :: \n"
+                    "- Prediction :: \n"
+                    "- Experiment :: \n"
+                    "- Result :: \n"
+                    "- Source read :: \n"
+                    "- Corrected explanation :: \n"))
           ("p" "Project" entry (file "projects.org")
            ,(concat "* %^{Project title} [/] :project:\n"
                     ":PROPERTIES:\n"
@@ -280,12 +365,7 @@
   ;; the cache keeps it out of `org-directory' without leaving a fresh
   ;; temporary file behind on each session.
   (setq org-default-notes-file (ms-paths-cache-file "org-default-notes.org"))
-  ;; A directory entry would expand to every note in `org-directory', so
-  ;; the task files are named instead.  They are the capture targets; the
-  ;; notes themselves are not agenda material.
-  (setq org-agenda-files
-        (mapcar (lambda (name) (expand-file-name name org-directory))
-                '("inbox.org" "notes.org" "projects.org")))
+  ;; `org-agenda-files' is set with the refile targets in the Org block.
   (setq org-agenda-span 'week)
   (setq org-agenda-start-on-weekday 1)
   (setq org-agenda-confirm-kill t)
@@ -447,8 +527,8 @@
   (setq org-agenda-remove-tags nil)
   (setq org-agenda-tags-column -100)
 
-  ;; Last, so the first appointment refresh sees the settings above --
-  ;; `org-agenda-files' in particular.  See the appt block near the top.
+  ;; Last, so the first appointment refresh sees the settings above.  See
+  ;; the appt block near the top.
   (ms-org-appt-initialise))
 
 (provide 'init-org)

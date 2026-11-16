@@ -84,6 +84,7 @@
 
 (use-package wdired
   :ensure nil
+  :defer t
   :config
   (setq wdired-allow-to-change-permissions t)
   (setq wdired-create-parent-directories t))

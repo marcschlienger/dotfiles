@@ -42,6 +42,10 @@ Other configured features need these executables:
 | Markdown export | `multimarkdown` |
 | Org Babel Python | `python3` |
 | Org Babel R | `R` |
+| Org LaTeX fragment previews | `latex` and `dvisvgm` |
+| Reading a web page as Org | `pandoc` |
+| Building the PDF Tools server | a C compiler, `autoconf`, `automake`, `pkg-config`, and the Poppler and libpng development files |
+| Org export through the `msheet`, `msheet-sections`, `mtest`, and `mexam` classes | those classes and the `mstuff` package on the TeX search path |
 | Spell checking (Jinx where its module builds, Flyspell otherwise) | Enchant plus `en_US` and `de_DE` Hunspell dictionaries |
 
 Swift development intentionally belongs to Xcode. Emacs retains `swift-mode`
@@ -55,6 +59,11 @@ language server is absent, Eglot cannot start for that language. If Ruff is
 absent, Python buffers still open normally, but Ruff diagnostics are unavailable
 and formatting reports the missing executable when the buffer is saved. Keeping
 the hooks unconditional makes an incomplete development environment visible.
+
+Locality is the one condition on the Eglot hooks. A file opened over TRAMP
+does not start a server by itself, because that server would have to be
+installed on the remote host and every request to it pays the connection's
+latency. `M-x eglot` starts one there deliberately.
 
 Go's save hook is the one exception. It organizes imports and reformats through
 gopls, and both are server operations, so it checks that a server is managing
@@ -76,12 +85,17 @@ notification, which `eglot--managed-mode` adds at the default depth: the server
 should hear about the save after these edits rather than before. That is the
 ordering the gopls documentation recommends.
 
-AUCTeX uses Skim on macOS when its `displayline` helper is installed, otherwise
-it uses the system `open` command. On Linux it prefers Zathura and falls back to
-`xdg-open`. Skim and `pdf-tools` are optional.
-The deferred PDF Tools configuration is retained and activates after the
-package is installed explicitly and Emacs is restarted. A TeX distribution is
-still required to compile PDFs.
+AUCTeX shows a compiled PDF inside Emacs, in PDF Tools, with SyncTeX in both
+directions. The choice is made per view rather than at startup: on a graphical
+frame it is PDF Tools, and on a terminal frame, which cannot draw a page, it is
+an external viewer -- Skim on macOS when its `displayline` helper is installed,
+otherwise the system `open` command; on Linux Zathura, falling back to
+`xdg-open`. PDF Tools is installed with the other packages but not loaded
+until a PDF is opened. On a machine that has not built its `epdfinfo` server
+yet, the first PDF asks whether to build it; the build uses the prerequisites
+listed above and never calls the system's package manager itself. AUCTeX reverts the PDF buffer when a
+compilation finishes; Auto Revert leaves PDF buffers alone. A TeX distribution
+is still required to compile PDFs.
 
 ## Theme families and automatic switching
 
@@ -189,10 +203,15 @@ to their Tree-sitter major modes; otherwise C, C++, Go and Python keep using
 their traditional major modes. A missing grammar therefore degrades cleanly
 instead of breaking file opening: `go-mode` claims `.go` on its own, and the
 remapping only redirects it to `go-ts-mode` once the grammar is built. Rust
-uses `rust-mode`'s separate
-Tree-sitter integration only when the Rust grammar is available at startup;
-otherwise it derives from ordinary `prog-mode`. The Emacs Lisp grammar is not
-automatically remapped.
+is not part of this: `rust-mode` can be told to derive from `rust-ts-mode`, but
+Emacs declares the opposite relationship itself, and the two together make a
+cycle that every Rust buffer reports as an inconsistent hierarchy. Rust
+buffers use `rust-mode`'s own highlighting. The Emacs Lisp grammar is not
+automatically remapped. YAML is the opposite case: Emacs has no classic YAML
+mode to remap from, so `yaml-ts-mode` claims `.yaml` and `.yml` itself once
+its grammar loads, and without the grammar such a file opens in
+`fundamental-mode`. `yaml-ts-mode` descends from `text-mode`, so it is
+excluded by name from the proportional font and from automatic line breaking.
 
 Install these prerequisites before building grammars:
 
@@ -204,7 +223,7 @@ Install these prerequisites before building grammars:
 
 Evaluate `M-: (treesit-available-p) RET` first; it must return non-nil. The
 standalone `tree-sitter` command-line program is not required for the C, C++,
-Emacs Lisp, Go, Python, or Rust recipes. Emacs must be able to find Git and the
+Emacs Lisp, Go, Python, or YAML recipes. Emacs must be able to find Git and the
 compilers through `exec-path`.
 
 On each macOS or Linux machine, run once after cloning:
@@ -214,21 +233,18 @@ M-x ms/treesit-install-missing-grammars
 ```
 
 This attempts to download and build the configured C, C++, Emacs Lisp, Go,
-Python, and Rust grammars under the local Emacs directory. The command
+Markdown, Python, and YAML grammars under the local Emacs directory. The command
 reports an individual warning for a grammar that fails and continues with the
 others. It then enables remapping only for the grammars that loaded
 successfully. The locally generated binaries will be `.dylib`-compatible on
 macOS and `.so` libraries on Linux, so every machine must build its own copies.
 
 After installation, `M-x ms/treesit-activate-remappings` is enough to pick up
-C, C++, Go, and Python in the current session.
+C, C++, Go, Python, and YAML in the current session.
 `M-x ms/treesit-install-missing-grammars` calls it for you, so the two routes
-behave the same. Restarting is still required if
-`rust-mode` was already loaded, because that package chooses its parent mode
-when it loads. Confirm a buffer is
-using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, and Python should
-have a `-ts-mode` name; Rust remains named `rust-mode` even when it derives from
-`rust-ts-mode`.
+behave the same. Confirm a buffer is
+using Tree-sitter by checking `M-x describe-mode`: C, C++, Go, Python, and YAML
+should have a `-ts-mode` name.
 
 The grammar recipes currently follow each repository's default branch. Pin
 revisions in `treesit-language-source-alist` if reproducible grammar builds
@@ -236,17 +252,35 @@ become more important than automatically picking up parser updates.
 
 ## Org
 
-- `org-directory` is `~/org`; create or restore that directory before using
-  capture, agenda, or refile commands.
-- The agenda contains the directory itself rather than a one-time wildcard
-  expansion, so new `.org` files are discovered without restarting Emacs.
+- `org-directory` is the notes directory, `ms-paths-notes-directory`; capture,
+  agenda, and refile all resolve there.
+- The agenda names the task files -- `inbox.org`, `notes.org`,
+  `projects.org` -- rather than the directory, which would expand to every
+  note. The list is set when Org loads, not when the agenda does, because
+  refiling and saving read it too.
+- Refile targets are absolute paths. Org resolves a relative target against
+  the current buffer's directory, not against `org-directory`.
+- `#+latex_class:` accepts `msheet`, `mtest`, and `mexam` besides Org's own
+  classes. They are registered without Org's default package list, which
+  loads `amssymb` and `capt-of`: the classes' maths font already defines
+  `\circledS` and their KOMA base class already defines `\captionof`, so both
+  packages fail with "already defined", and under `nonstopmode` LaTeX writes
+  a PDF anyway. In these three a top-level heading is an exercise: it becomes
+  `\msection`, which prints "Aufgabe n" with the heading text as its note,
+  and the starred form when the heading is unnumbered. Deeper headings are
+  unnumbered, because their numbers would hang off a section counter that
+  `\msection` never advances. `msheet-sections` is the `msheet` class with
+  ordinary numbered sectioning, for a sheet that is prose under headings.
+- A `zotero:` link type hands `zotero://` links to the system, which opens
+  the item in the reference manager.
 - `org-confirm-babel-evaluate` is enabled, so source blocks in cloned or
   downloaded Org files prompt before running.
 - The default-notes and diary files point into the cache directory rather
   than `org-directory`. Neither feature is used; give them real paths if that
   changes.
-- Refile caching is disabled: it did not notice files appearing in a
-  directory-based `org-agenda-files`, so targets went stale.
+- Refile caching is disabled: the cache is keyed on the target file's name
+  alone, so a heading added to that file is not offered until the cache is
+  cleared.
 
 ## Package reproducibility and startup
 
@@ -336,3 +370,13 @@ Three things are worth knowing before relying on the output:
   rustfmt own it; clangd, gopls, and texlab keep theirs, because nothing else
   formats C, C++, Go, or LaTeX here. Go buffers additionally organize imports
   and reformat through gopls on save.
+- Eglot binds no keys of its own. In a buffer a server manages, `C-c r`
+  renames, `C-c x` offers the code actions, `C-c q` applies a quick fix, and
+  `C-c f` formats the buffer. The bindings live in `eglot-mode-map`, so the
+  four letters are free everywhere else.
+- `C-x F`, `C-x V`, and `C-x K` jump to the source of a function, a variable,
+  or the command behind a key (`find-function-mode`, or its older setup
+  function on Emacs 30).
+- `eglot-extend-to-xref` is on: a definition reached outside the project, in
+  a library for instance, stays with the server it was reached from, so
+  cross references keep working there.

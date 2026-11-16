@@ -52,6 +52,15 @@ outlines, tables, export and teaching material. Babel security still matters,
 because literate configuration and notebooks run code. The languages loaded are
 C, Python, R and shell, with `python3` as the Python command, and PDF export
 runs through latexmk so LaTeX is re-run as often as the references need.
+`C-c C-x C-l` previews LaTeX fragments in the buffer as vector images, which
+needs `dvisvgm` from the TeX distribution. In a LaTeX buffer `<f6>` is
+AUCTeX's preview prefix, so `<f6> C-p` previews at point. A compiled PDF opens
+inside Emacs, in PDF Tools: `C-c C-v` jumps from the source to the matching
+place in the PDF, and `C-<mouse-1>` in the PDF jumps back. An Org file exports
+through my own LaTeX classes with `#+latex_class: msheet` (or `mtest`,
+`mexam`): each top-level heading becomes a numbered exercise, and
+`msheet-sections` keeps ordinary sections for a fact sheet. A `zotero://` link
+in a note opens the item in Zotero.
 
 **Denote names the notes.** It is a convention, not an application: the
 identifier, slug and keywords live in the file name, so a note is a plain Org
@@ -64,12 +73,22 @@ per file, which is what makes a link stable and a conflict small.
   Consult's preview.
 - Keywords are both declared and inferred, so a keyword used once is offered
   the next time.
+- `M-x denote-template` starts a note from a skeleton: `exercise`, with the
+  solution under a heading tagged `:solution:`, or `worksheet`, with the
+  export header that leaves such headings out.
+- `M-x denote-org-extract-org-subtree` turns the heading at point into a note
+  of its own, taking the title, tags and date from the heading. That is how an
+  entry leaves `inbox.org`.
+- `M-x org-web-tools-read-url-as-org` shows a page as Org in a buffer, through
+  Pandoc, without saving anything.
 
 `org-directory` is the notes directory, but `org-agenda-files` names the three
 task files inside it rather than the directory itself: a directory entry would
 expand to every note, and the notes are not agenda material. Capture has a
 fourth target, `lab.org`, a datetree for the lab notebook that the agenda does
-not read. `C-c c` reaches all four.
+not read. `C-c c` reaches all four. `C-c c e` files an experiment there: a
+question about how something in Emacs works, with the prediction written down
+before the experiment and the corrected explanation after it.
 
 The lab notebook is the habit worth keeping: one line when something worked,
 when I decided something, or when a search took longer than it should have.
@@ -193,7 +212,8 @@ makes remote files and Dired behave like local ones and runs processes on the
 host when `default-directory` is remote, so I keep local fonts, clipboard,
 packages and one kill ring, and the host needs no Emacs or dotfiles. Language
 servers need explicit remote configuration, large trees and high latency feel
-slow, and noisy shell startup confuses TRAMP.
+slow, and noisy shell startup confuses TRAMP. So a remote file does not start
+a language server by itself; `M-x eglot` does, when the host has one.
 
 For a long session on a machine that has its own Emacs, I run a daemon there and
 attach with `emacsclient -t`, inside tmux when the terminal layout matters as
