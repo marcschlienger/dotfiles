@@ -21,7 +21,17 @@
 # bracketed-paste escape after it, and the plugins below never match that
 # wait, so the login hangs until it times out.  Such a shell gets a minimal
 # prompt and nothing else.
-[[ $TERM == dumb ]] && unsetopt zle && PS1='$ ' && return
+#
+# A shell the editor starts itself for the user also has TERM=dumb, but it
+# sets INSIDE_EMACS and shows output as text, so it keeps the full
+# configuration.  A remote login cannot have the variable, because ssh does
+# not forward it.  The remote-access library marks its own shells with
+# ",tramp:" in it, and those still get the minimal prompt.
+if [[ $TERM == dumb && ( -z $INSIDE_EMACS || $INSIDE_EMACS == *,tramp:* ) ]]; then
+  unsetopt zle
+  PS1='$ '
+  return
+fi
 
 # Use ls colors
 export CLICOLOR=1
