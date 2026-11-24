@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# A program that drives a shell over a pty -- remote file access from an
+# editor, for instance -- sets TERM=dumb and waits for a plain prompt that
+# ends in one prompt character.  The two-line coloured prompt, zle's
+# bracketed-paste escape after it, and the plugins below never match that
+# wait, so the login hangs until it times out.  Such a shell gets a minimal
+# prompt and nothing else.
+[[ $TERM == dumb ]] && unsetopt zle && PS1='$ ' && return
+
 # Use ls colors
 export CLICOLOR=1
 export LSCOLORS=ExFxCxDxBxegedabagacad
